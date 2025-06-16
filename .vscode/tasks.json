@@ -1,0 +1,12 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run Playwright E2E",
+      "type": "shell",
+      "command": "npx playwright test",
+      "group": "test",
+      "problemMatcher": []
+    }
+  ]
+}
