@@ -1,6 +1,6 @@
 //attendance-check-playwright.js
 const { test, expect } = require('@playwright/test');
-
+// test
 // ฟังก์ชัน sniperClickByRole สำหรับคลิก element เป้าหมายทันทีที่ปรากฏ
 async function sniperClickByRole(page, role, name) {
   await page.getByRole(role, { name }).waitFor({ state: 'visible' });
