@@ -22,11 +22,11 @@ class CISPage {
   async searchPolicy(policyNo) {
     const policyInput = this.page.getByRole(locators.policyInput.role, { name: locators.policyInput.name, exact: locators.policyInput.exact });
     await policyInput.click();
-    await policyInput.fill(policyNo);
+    await policyInput.type(policyNo,{delay: 200}); // ใช้ delay เพื่อให้แน่ใจว่าค่าถูกกรอกอย่างถูกต้อง
+    
     // เช็คให้แน่ใจว่าค่าใน textbox ถูกต้องก่อนคลิกค้นหา
-    await expect(policyInput).toHaveValue(policyNo, { timeout: 5000 });
-    await this.page.waitForTimeout(1000); // รอให้ค่าใน textbox ถูกกรอกเสร็จ
-
+     await expect(policyInput).toHaveValue(policyNo, { timeout: 5000 });
+  
     // คลิกปุ่มค้นหา
     await this.page.getByRole(locators.searchButton.role, { name: locators.searchButton.name, exact: locators.searchButton.exact }).click();
     await waitForLoadingDialogGone(this.page);
