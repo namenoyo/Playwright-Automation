@@ -13,14 +13,14 @@ const { sendTestResultToGoogleSheetGSAppScript } = require('../utils/google-shee
 const { logSelectorsSoftAssert } = require('../Reuseable/log');
 // @ts-ignore
 const { checkValueOnScreen } = require('../utils/check-value.helper');
-const cisLocators = require('../locators/cis.locator');
 
+const Selector = require('../locators/Selector.locator');
 const ENV = process.env.ENV || 'sit';
 
 // ตัวอย่าง selector test (ควรปรับให้เหมาะกับระบบจริง)
 const selectorsToCheck = [
-  { label: 'Customer Name', locator: cisLocators.customerName },
-  { label: 'Policy Number', locator: cisLocators.policyNumber },
+ { label: 'Customer Name', locator: page => page.locator(Selector.SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_1_In_Page_1_Header_Panel) },
+  { label: 'Policy Number', locator: page => Selector.SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_In_Page_11_Detail_Panel(page) },
   // เพิ่ม locator อื่นๆ ได้ที่นี่
 ];
 
