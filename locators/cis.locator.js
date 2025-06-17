@@ -9,4 +9,5 @@ module.exports = {
   diamondButton: { role: 'button', name: '' },
   customerName: page => page.locator('#section-cust-detail'),
   policyNumber: page => page.locator('#root > header > div > div:nth-child(3) > ul:nth-child(3) > li'),
+  customerNumber: page => page.getByText('เลขข้อมูลลูกค้า')
 };
