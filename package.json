@@ -3,18 +3,7 @@
   "version": "1.0.0",
   "description": "ระบบทดสอบแบบอัตโนมัติด้วย [Playwright](https://playwright.dev/) ที่ออกแบบมาเพื่อให้ Maintain ได้ง่าย รองรับการทำงานเป็นทีม และสามารถต่อยอดกับระบบ CI/CD, Google Sheets, Jira และ API ได้ในอนาคต",
   "main": "index.js",
-  "dependencies": {
-    "playwright": "^1.53.0",
-    "playwright-core": "^1.53.0",
-    "undici-types": "^7.8.0"
-  },
-  "devDependencies": {
-    "@playwright/test": "^1.53.0",
-    "@types/node": "^24.0.3"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/namenoyo/Playwright-Automation.git"
@@ -26,5 +15,9 @@
   "bugs": {
     "url": "https://github.com/namenoyo/Playwright-Automation/issues"
   },
-  "homepage": "https://github.com/namenoyo/Playwright-Automation#readme"
+  "homepage": "https://github.com/namenoyo/Playwright-Automation#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.53.0",
+    "@types/node": "^24.0.3"
+  }
 }
