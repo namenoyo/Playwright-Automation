@@ -7,16 +7,27 @@ const { CISPage } = require('../pages/cis.page');
 const { validUser } = require('../data/login.data');
 // @ts-ignore
 const { policyNo } = require('../data/cis.data');
+// @ts-ignore
+const { updateTestStatus } = require('../utils/google-sheet.helper');
 
 const ENV = process.env.ENV || 'sit';
 
-test('CIS Customer Info Search', async ({ page }) => {
+test('TS_Test_Google-Sheet', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page, ENV);
   const cisPage = new CISPage(page);
-  await loginPage.goto();
-  await loginPage.login(validUser.username, validUser.password);
-  await cisPage.goToCustomerInfo();
-  await cisPage.searchPolicy(policyNo);
-  await cisPage.clickDiamondButton();
-  // สามารถเพิ่ม expect ตรวจสอบผลลัพธ์ได้'
+  let status = 'Passed';
+  try {
+    await loginPage.goto();
+    await loginPage.login(validUser.username, validUser.password);
+    await cisPage.goToCustomerInfo();
+    await cisPage.searchPolicy(policyNo);
+    await cisPage.clickDiamondButton();
+    // สามารถเพิ่ม expect ตรวจสอบผลลัพธ์ได้
+  } catch (e) {
+    status = 'Failed';
+    throw e;
+  } finally {
+    // อัปเดตผลลัพธ์ลง Google Sheet
+    await updateTestStatus(testInfo.title, status);
+  }
 });

@@ -1,0 +1,50 @@
+// Google Sheets helper for Playwright test result reporting
+// Requires: npm install googleapis
+
+const { google } = require('googleapis');
+const path = require('path');
+const fs = require('fs');
+
+const SHEET_ID = '1kqtNcJh9Co5eS2jlaaLzYjYFVLiS3OMIJanJTN4-6Tg';
+const SHEET_NAME = 'TEST_SUITE';
+const CREDENTIALS_PATH = path.resolve(__dirname, '../credentials/playwright-463202-b34b88b0bcf3.json'); // You must provide this file
+
+async function authorize() {
+  const credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH, 'utf8'));
+  const scopes = ['https://www.googleapis.com/auth/spreadsheets'];
+  const auth = new google.auth.GoogleAuth({
+    credentials,
+    scopes,
+  });
+  return await auth.getClient();
+}
+
+async function updateTestStatus(testName, status) {
+  const auth = await authorize();
+  const sheets = google.sheets({ version: 'v4', auth });
+
+  // Read all test case names from column A (from row 4)
+  const getRes = await sheets.spreadsheets.values.get({
+    spreadsheetId: SHEET_ID,
+    range: `${SHEET_NAME}!A4:A`,
+  });
+  const rows = getRes.data.values || [];
+  let rowIndex = -1;
+  for (let i = 0; i < rows.length; i++) {
+    if (rows[i][0] && rows[i][0].trim() === testName.trim()) {
+      rowIndex = i + 4; // Because A4 is row 4
+      break;
+    }
+  }
+  if (rowIndex === -1) throw new Error(`Test case '${testName}' not found in column A`);
+
+  // Update status in column J (dropdown: Passed/Failed)
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: SHEET_ID,
+    range: `${SHEET_NAME}!J${rowIndex}`,
+    valueInputOption: 'USER_ENTERED',
+    requestBody: { values: [[status]] },
+  });
+}
+
+module.exports = { updateTestStatus };
