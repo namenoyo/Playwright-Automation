@@ -23,6 +23,7 @@ const selectorsToCheck = [
 ];
 
 test('TS_Test_Google-Sheet', async ({ page }, testInfo) => {
+  timestamp: testInfo.setTimeout(60000); // Set timeout for the test
   const loginPage = new LoginPage(page, ENV);
   const cisPage = new CISPage(page);
   let status = 'Passed';
@@ -32,8 +33,8 @@ test('TS_Test_Google-Sheet', async ({ page }, testInfo) => {
     await loginPage.goto();
     await loginPage.login(validUser.username, validUser.password);
     await cisPage.goToCustomerInfo();
-    await cisPage.searchPolicy(policyNo);
-    await cisPage.clickDiamondButton();
+    const customerId = await cisPage.searchPolicyAndGetCustomerId(policyNo);
+    await cisPage.clickDiamondButtonAndWaitClaimHistory(customerId);
 
     // เรียกใช้ฟังก์ชันกลาง logSelectorsSoftAssert (แบบ locator function)
     const result = await logSelectorsSoftAssert(page, selectorsToCheck, true);
