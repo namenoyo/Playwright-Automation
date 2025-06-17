@@ -4,6 +4,7 @@
 const { google } = require('googleapis');
 const path = require('path');
 const fs = require('fs');
+const fetch = require('node-fetch');
 
 const SHEET_ID = '1kqtNcJh9Co5eS2jlaaLzYjYFVLiS3OMIJanJTN4-6Tg';
 const SHEET_NAME = 'TEST_SUITE';
@@ -47,4 +48,20 @@ async function updateTestStatus(testName, status) {
   });
 }
 
-module.exports = { updateTestStatus };
+/**
+ * ส่งข้อมูล test result ไป Google Sheet ผ่าน Google Apps Script Web App
+ * @param {Array<Array<any>>} dataRows - ตัวอย่าง: [[suite, case, log, status, ...], ...]
+ * @returns {Promise<any>}
+ */
+async function sendTestResultToGoogleSheet(dataRows) {
+  const url = 'https://script.google.com/macros/s/AKfycbyMpeNDkZotK3ebaPHskfUR6VdWSrT2T2E8CFqFlp4BkYbZIM-pv5DqTB4EL6N-9wHHrg/exec';
+  const res = await fetch(url, {
+    method: 'POST',
+    body: JSON.stringify(dataRows),
+    headers: { 'Content-Type': 'application/json' }
+  });
+  if (!res.ok) throw new Error('Google Sheet API error: ' + res.status);
+  return await res.json();
+}
+
+module.exports = { updateTestStatus, sendTestResultToGoogleSheet };
