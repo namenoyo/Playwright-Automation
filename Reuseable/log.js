@@ -14,15 +14,16 @@ async function logSelectorsSoftAssert(page, selectorsToCheck, isLocatorFn = fals
       const count = await loc.count();
       if (count > 0) {
         await loc.first().waitFor({ state: 'visible', timeout: 10000 });
-        // ดึง innerText/textContent ทั้งหมดของ element
         let domText = await loc.first().evaluate(el => el.innerText || el.textContent || '');
+        domText = domText.trim().replace(/\n/g, ' '); // แสดงเป็น 1 บรรทัด
         if (getText) {
-          // ถ้าระบุ getText ให้หา element ย่อยที่ต้องการ
           const sub = loc.first().getByText(getText);
           if (await sub.count() > 0) {
-            domText = await sub.first().evaluate(el => el.innerText || el.textContent || '');
+            let subText = await sub.first().evaluate(el => el.innerText || el.textContent || '');
+            domText = subText.trim().replace(/\n/g, ' ');
           }
         }
+        // log DOM จริงทั้งหมด ไม่ตัดข้อความ
         console.log(`✅ PASS: ${label} | DOM: ${domText}`);
         assertionLog += `✅ PASS: ${label} | DOM: ${domText}\n`;
       } else {
