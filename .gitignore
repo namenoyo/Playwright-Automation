@@ -1,6 +1,7 @@
 # Playwright
 /test-results/
 /playwright-report/
+node_modules/
 /blob-report/
 /playwright/.cache/
 
@@ -8,3 +9,4 @@
 credentials/
 *.json
 !package.json
+
