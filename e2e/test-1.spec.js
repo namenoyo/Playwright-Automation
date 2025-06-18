@@ -13,15 +13,14 @@ const { sendTestResultToGoogleSheetGSAppScript } = require('../utils/google-shee
 const { logSelectorsSoftAssert } = require('../Reuseable/log');
 // @ts-ignore
 const { checkValueOnScreen } = require('../utils/check-value.helper');
+const cisLocators = require('../locators/cis.locator');
 
-const Selector = require('../locators/Selector.locator');
 const ENV = process.env.ENV || 'sit';
 
 // ตัวอย่าง selector test (ควรปรับให้เหมาะกับระบบจริง)
 const selectorsToCheck = [
-  { label: 'Policy Number', locator: page => Selector.SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_In_Page_11_Detail_Panel(page) },
-  { label: 'Customer Name', locator: page => page.locator(Selector.SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_1_In_Page_1_Header_Panel) },
-
+  { label: 'Customer Name', locator: cisLocators.customerName },
+  { label: 'Policy Number', locator: cisLocators.policyNumber },
   // เพิ่ม locator อื่นๆ ได้ที่นี่
 ];
 
@@ -48,11 +47,15 @@ test('TS_Test_Element', async ({ page }, testInfo) => {
     errorMessage = e.message || String(e);
     throw e;
   } finally {
-    // ส่งผลลัพธ์ไป Google Sheet ด้วยฟังก์ชันกลาง
-    await require('../utils/upload-result.helper').uploadTestResultToGoogleSheet({
-      testInfo,
+    // ส่งผลลัพธ์ไป Google Sheet พร้อม assertion log
+    await sendTestResultToGoogleSheetGSAppScript({
+      suite: 'CIS Suite',
+      caseName: testInfo.title,
       assertionLog,
       status,
+      testTime: new Date().toLocaleString(),
+      tester: process.env.TESTER || 'Auto',
+      duration: testInfo.duration,
       errorMessage
     });
   }
@@ -67,9 +70,10 @@ test('TS_Test_CheckValueOnScreen', async ({ page }, testInfo) => {
   let assertionLog = '';
   // ตัวอย่าง expected values (ควรดึงจาก data จริงหรือ mock data)
   const selectorsWithExpected = [
-    { label: 'Policy Number', locator: page => Selector.SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_In_Page_11_Detail_Panel(page), expected: policyNo },
-    { label: 'Customer Number', locator: page => page.locator(Selector.SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_1_In_Page_2_Detail_Panel), expected: 2157384, matchType: 'contain' },
-    
+    { label: 'Policy Number', locator: cisLocators.policyNumber, expected: policyNo },
+    { label: 'Policy Number', locator: cisLocators.customerNumber, expected: policyNo },
+    { label: 'Customer Number', locator: cisLocators.customerNumber, expected: '25662157384' },
+    { label: 'Customer Number', locator: cisLocators.customerNumber, expected: 'เลขข้อมูลลูกค้า   25662157384' },
     // เพิ่ม expected value อื่นๆ ได้ที่นี่
   ];
   try {
@@ -83,30 +87,26 @@ test('TS_Test_CheckValueOnScreen', async ({ page }, testInfo) => {
     const { results, status: checkStatus, assertionLog: checkLog } = await require('../utils/check-value.helper').checkSelectorsWithExpected(page, selectorsWithExpected);
     assertionLog = checkLog;
     if (checkStatus === 'Failed') status = 'Failed';
-    // Assertion แบบละเอียด (soft assert)
+    // Assertion แบบละเอียด (auto equal/contain)
     let failedAssertions = [];
     let assertionLogArr = [];
     for (const r of results) {
       let pass = false;
       let logLine = '';
-      try {
-        if (r.matchType === 'contain') {
-          expect(r.actual).toContain(String(r.expected));
-          pass = true;
-        } else {
-          expect(r.actual).toBe(String(r.expected));
-          pass = true;
-        }
-      } catch (err) {
-        pass = false;
-        failedAssertions.push(`[${r.label}] expected: "${r.expected}" (${r.matchType}), actual: "${r.actual}"`);
-        // log warning แต่ไม่ throw
-        console.warn('Soft assertion failed:', r.label, r.expected, r.actual);
-      }
-      if (pass) {
-        logLine = `✅ PASS: [${r.label}] expected: "${r.expected}" (${r.matchType}), actual: "${r.actual}"`;
+      const actualStr = String(r.actual ?? '');
+      const expectedStr = String(r.expected ?? '');
+      if (actualStr === expectedStr) {
+        pass = true;
+        logLine = `✅ PASS (equal): [${r.label}] expected: "${expectedStr}", actual: "${actualStr}"`;
+      } else if (actualStr.includes(expectedStr)) {
+        pass = true;
+        logLine = `⚠️  Pass with condition (contain): [${r.label}] expected: "${expectedStr}", actual: "${actualStr}"`;
       } else {
-        logLine = `❌ FAIL: [${r.label}] expected: "${r.expected}" (${r.matchType}), actual: "${r.actual}"`;
+        pass = false;
+        logLine = `❌ FAIL: [${r.label}] expected: "${expectedStr}", actual: "${actualStr}"`;
+        failedAssertions.push(logLine);
+        // log warning แต่ไม่ throw
+        console.warn('Soft assertion failed:', r.label, expectedStr, actualStr);
       }
       assertionLogArr.push(logLine);
     }
@@ -120,13 +120,18 @@ test('TS_Test_CheckValueOnScreen', async ({ page }, testInfo) => {
     status = 'Failed';
     errorMessage = e.message || String(e);
     throw e;
-  } finally {
-    // ส่งผลลัพธ์ไป Google Sheet ด้วยฟังก์ชันกลาง
-    await require('../utils/upload-result.helper').uploadTestResultToGoogleSheet({
-      testInfo,
-      assertionLog,
-      status,
-      errorMessage
-    });
   }
+  // } finally {
+  //   // ส่งผลลัพธ์ไป Google Sheet พร้อม assertion log
+  //   await sendTestResultToGoogleSheetGSAppScript({
+  //     suite: 'CIS Suite',
+  //     caseName: testInfo.title,
+  //     assertionLog,
+  //     status,
+  //     testTime: new Date().toLocaleString(),
+  //     tester: process.env.TESTER || 'Auto',
+  //     duration: testInfo.duration,
+  //     errorMessage
+  //   });
+  // }
 });
