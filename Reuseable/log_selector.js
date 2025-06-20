@@ -1,6 +1,6 @@
 /**
  * ฟังก์ชันกลางสำหรับตรวจสอบ locator หลายตัวแบบ soft assert และ log ผลลัพธ์ (รองรับ locator function)
- * log คล้าย log.js แต่เพิ่มการแสดง count
+ * log คล้าย log.js แต่เพิ่มการแสดง count, visible, hidden
  * @param {import('@playwright/test').Page} page
  * @param {Array<{label: string, locator: function, getText?: string}>} selectorsToCheck
  * @param {boolean} isLocatorFn - ถ้า true จะใช้ locator function แทน string selector
@@ -15,23 +15,37 @@ async function logSelectorsSoftAssert(page, selectorsToCheck, isLocatorFn = fals
       const count = await loc.count();
       let domText = '';
       if (count > 0) {
-        await loc.first().waitFor({ state: 'visible', timeout: 10000 });
-        domText = await loc.first().evaluate(el => el.innerText || el.textContent || '');
-        domText = domText.trim().replace(/\n/g, ' '); // แสดงเป็น 1 บรรทัด
-        if (getText) {
-          const sub = loc.first().getByText(getText);
-          if (await sub.count() > 0) {
-            let subText = await sub.first().evaluate(el => el.innerText || el.textContent || '');
-            domText = subText.trim().replace(/\n/g, ' ');
+        let visibleCount = 0;
+        let hiddenCount = 0;
+        let firstVisibleText = '';
+        for (let i = 0; i < count; i++) {
+          const el = loc.nth(i);
+          const isVisible = await el.isVisible();
+          if (isVisible) {
+            visibleCount++;
+            if (!firstVisibleText) {
+              firstVisibleText = (await el.evaluate(e => e.innerText || e.textContent || '')).trim().replace(/\n/g, ' ');
+            }
+          } else {
+            hiddenCount++;
           }
         }
-        // log DOM จริงทั้งหมด ไม่ตัดข้อความ
-        if (count === 1) {
-          console.log(`✅ PASS: ${label} | Count: 1 | DOM: ${domText}`);
-          assertionLog += `✅ PASS: ${label} | Count: 1 | DOM: ${domText}\n`;
+        // getText เฉพาะตัวแรกที่ visible
+        if (getText && visibleCount > 0) {
+          const sub = loc.filter({ hasText: getText }).first();
+          if (await sub.count() > 0) {
+            let subText = await sub.evaluate(el => el.innerText || el.textContent || '');
+            firstVisibleText = subText.trim().replace(/\n/g, ' ');
+          }
+        }
+        if (visibleCount > 0) {
+          console.log(`✅ PASS: ${label} | Total: ${count} | Visible: ${visibleCount} | Hidden: ${hiddenCount} | DOM: ${firstVisibleText}`);
+          assertionLog += `✅ PASS: ${label} | Total: ${count} | Visible: ${visibleCount} | Hidden: ${hiddenCount} | DOM: ${firstVisibleText}\n`;
         } else {
-          console.log(`⚠️ WARN: ${label} | Count: ${count} | DOM: ${domText}`);
-          assertionLog += `⚠️ WARN: ${label} | Count: ${count} | DOM: ${domText}\n`;
+          // ไม่มี visible เลย
+          const firstHiddenText = await loc.first().evaluate(el => el.innerText || el.textContent || '').catch(() => '');
+          console.log(`⚠️ WARN: ${label} | Total: ${count} | Visible: 0 | Hidden: ${hiddenCount} | DOM (hidden): ${firstHiddenText}`);
+          assertionLog += `⚠️ WARN: ${label} | Total: ${count} | Visible: 0 | Hidden: ${hiddenCount} | DOM (hidden): ${firstHiddenText}\n`;
           status = 'Failed';
         }
       } else {

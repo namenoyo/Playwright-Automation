@@ -1,43 +1,17 @@
-module.exports = { 
-  // Panel ข้อมูลลูกค้า
-  SELECTOR_1_div_main_customer_info_panel: 'div.MuiGrid-container.MuiGrid-wrap-xs-nowrap[style*="background-color: rgb(255, 255, 255)"]',
-  SELECTOR_2_div_avatar_wrapper: 'div.MuiGrid-container.MuiGrid-wrap-xs-nowrap[style*="background-color: rgb(255, 255, 255)"] > div:nth-child(1)',
-  SELECTOR_3_div_avatar: 'div.MuiAvatar-root.MuiAvatar-circle',
-  SELECTOR_4_icon_avatar_face: 'i.mdi.OLIIcon-mdi-51.mdi-face',
-  SELECTOR_5_div_customer_details_wrapper: 'div.MuiGrid-container.MuiGrid-wrap-xs-nowrap[style*="background-color: rgb(255, 255, 255)"] > div:nth-child(2)',
-  SELECTOR_6_div_customer_details_inner_wrapper_1: 'div.MuiGrid-container.MuiGrid-wrap-xs-nowrap[style*="background-color: rgb(255, 255, 255)"] > div:nth-child(2) > div:nth-child(1)',
-  SELECTOR_7_div_customer_id_row_wrapper: 'div.MuiGrid-container.MuiGrid-direction-xs-column > div:nth-child(1)',
-  SELECTOR_8_div_customer_id_label_value_wrapper: 'div.MuiGrid-container.MuiGrid-direction-xs-column > div:nth-child(1) > div:nth-child(1)',
-  SELECTOR_9_p_customer_id_text: 'p.MuiTypography-root.MuiTypography-body1[style*="white-space: pre;"]',
-  SELECTOR_10_div_customer_name_status_row_wrapper: 'div.MuiGrid-container.MuiGrid-direction-xs-column > div:nth-child(2)',
-  SELECTOR_11_div_customer_name_status_container: 'div.MuiGrid-container.MuiGrid-direction-xs-column > div:nth-child(2) > div:nth-child(1)',
-  SELECTOR_12_span_gender_name_status_flex: 'span[style*="display: flex; align-items: center; gap: 2px;"]',
-  SELECTOR_13_div_gender_name_wrapper: 'span[style*="display: flex; align-items: center; gap: 2px;"] > div:nth-child(1)',
-  SELECTOR_14_div_gender_icon_wrapper: 'span[style*="display: flex; align-items: center; gap: 2px;"] > div:nth-child(1) > div:nth-child(1)',
-  SELECTOR_15_icon_gender_male: 'i.mdi.OLIIcon-mdi-51.mdi-human-male[title="ผู้ชาย"]',
-  SELECTOR_16_div_customer_name_wrapper: 'span[style*="display: flex; align-items: center; gap: 2px;"] > div:nth-child(1) > div:nth-child(2)',
-  SELECTOR_17_p_customer_name: 'p.MuiTypography-root.MuiTypography-body1:has-text("นาย เจทีพันบี ดีเก้าพีบี")',
-  SELECTOR_18_icon_checkbox_marked_circle: 'i.mdi.OLIIcon-mdi-51.mdi-checkbox-marked-circle',
-  SELECTOR_19_p_status_active: 'p.MuiTypography-root.MuiTypography-body1.MuiTypography-colorPrimary[style*="width: 130px;"]',
-  SELECTOR_20_div_english_name_row_wrapper: 'div.MuiGrid-container.MuiGrid-direction-xs-column > div:nth-child(3)',
-  SELECTOR_21_div_english_name_container: 'div.MuiGrid-container.MuiGrid-direction-xs-column > div:nth-child(3) > div:nth-child(1)',
-  SELECTOR_22_div_english_name_label_wrapper: 'div.MuiGrid-container.MuiGrid-direction-xs-column > div:nth-child(3) > div:nth-child(1) > div:nth-child(1)',
-  SELECTOR_23_p_english_name_label: 'p.MuiTypography-root.MuiTypography-body1:has-text("ชื่อภาษาอังกฤษ")',
-  SELECTOR_24_div_english_name_value_wrapper: 'div.MuiGrid-container.MuiGrid-direction-xs-column > div:nth-child(3) > div:nth-child(1) > div:nth-child(2)',
-  SELECTOR_25_p_english_name_value: 'div.MuiGrid-container.MuiGrid-direction-xs-column > div:nth-child(3) > div:nth-child(1) > div:nth-child(2) > p',
-  SELECTOR_26_div_previous_name_row_wrapper: 'div.MuiGrid-container.MuiGrid-direction-xs-column > div:nth-child(4)',
-  SELECTOR_27_div_previous_name_container: 'div.MuiGrid-container.MuiGrid-direction-xs-column > div:nth-child(4) > div:nth-child(1)',
-  SELECTOR_28_div_previous_name_label_wrapper: 'div.MuiGrid-container.MuiGrid-direction-xs-column > div:nth-child(4) > div:nth-child(1) > div:nth-child(1)',
-  SELECTOR_29_p_previous_name_label: 'p.MuiTypography-root.MuiTypography-body1:has-text("ชื่อเดิม")',
-  SELECTOR_30_div_previous_name_value_wrapper: 'div.MuiGrid-container.MuiGrid-direction-xs-column > div:nth-child(4) > div:nth-child(1) > div:nth-child(2)',
-  SELECTOR_31_p_previous_name_value: 'div.MuiGrid-container.MuiGrid-direction-xs-column > div:nth-child(4) > div:nth-child(1) > div:nth-child(2) > p',
-  SELECTOR_32_div_id_card_row_wrapper: 'div.MuiGrid-container.MuiGrid-direction-xs-column > div:nth-child(5)',
-  SELECTOR_33_div_id_card_container: 'div.MuiGrid-container.MuiGrid-direction-xs-column > div:nth-child(5) > div:nth-child(1)',
-  SELECTOR_34_div_id_card_icon_value_wrapper: 'div.MuiGrid-container.MuiGrid-direction-xs-column > div:nth-child(5) > div:nth-child(1) > div:nth-child(1)',
-  SELECTOR_35_div_id_card_icon_wrapper: 'div.MuiGrid-container.MuiGrid-direction-xs-column > div:nth-child(5) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1)',
-  SELECTOR_36_icon_id_card: 'i.mdi.OLIIcon-mdi-51.mdi-account-card-details[title="บัตรประจำตัวประชาชน"]',
-  SELECTOR_37_div_id_card_value_wrapper: 'div.MuiGrid-container.MuiGrid-direction-xs-column > div:nth-child(5) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2)',
-  SELECTOR_38_p_id_card_value: 'p.MuiTypography-root.MuiTypography-body1:has-text("3801600686912")',
-  SELECTOR_39_div_last_confirmed_row_wrapper: 'div.MuiGrid-container.MuiGrid-direction-xs-column > div:nth-child(6)',
-  SELECTOR_40_p_last_confirmed_text: 'p.MuiTypography-root.MuiTypography-body1:has-text("ยืนยันล่าสุด\u00A0 โดย")',
+
+// selector20250620.locator.js
+module.exports = {
+
+SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_4_In_Page_1_Header_Panel: '#tab\\/cisapp_customer\\/display > div > div > div > div:nth-child(2) > div > div:nth-child(1) > div:nth-child(5) > div > div.MuiButtonBase-root.MuiExpansionPanelSummary-root.makeStyles-root-48 > div.MuiExpansionPanelSummary-content > div > div.MuiGrid-root.ExpansionPanelSummaryTitle.MuiGrid-item',
+  
+SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_4_In_Page_4_Head_Column_Data_Grid: '#tab\\/cisapp_customer\\/display > div > div > div > div:nth-child(2) > div > div:nth-child(1) > div:nth-child(5) > div > div.MuiCollapse-container.MuiCollapse-entered > div > div > div > div > div > div > div > div.MUIDataTable-responsiveScroll-4 > table > thead > tr > th:nth-child(3) > span > div',
+SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_4_In_Page_5_Head_Column_Data_Grid: '#tab\\/cisapp_customer\\/display > div > div > div > div:nth-child(2) > div > div:nth-child(1) > div:nth-child(5) > div > div.MuiCollapse-container.MuiCollapse-entered > div > div > div > div > div > div > div > div.MUIDataTable-responsiveScroll-4 > table > thead > tr > th:nth-child(4) > span > div',
+SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_4_In_Page_6_Head_Column_Data_Grid: '#tab\\/cisapp_customer\\/display > div > div > div > div:nth-child(2) > div > div:nth-child(1) > div:nth-child(5) > div > div.MuiCollapse-container.MuiCollapse-entered > div > div > div > div > div > div > div > div.MUIDataTable-responsiveScroll-4 > table > thead > tr > th:nth-child(5) > span > div',
+SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_4_In_Page_7_Head_Column_Data_Grid: '#tab\\/cisapp_customer\\/display > div > div > div > div:nth-child(2) > div > div:nth-child(1) > div:nth-child(5) > div > div.MuiCollapse-container.MuiCollapse-entered > div > div > div > div > div > div > div > div.MUIDataTable-responsiveScroll-4 > table > thead > tr > th:nth-child(6) > span > div',
+SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_4_In_Page_8_Head_Column_Data_Grid: '#tab\\/cisapp_customer\\/display > div > div > div > div:nth-child(2) > div > div:nth-child(1) > div:nth-child(5) > div > div.MuiCollapse-container.MuiCollapse-entered > div > div > div > div > div > div > div > div.MUIDataTable-responsiveScroll-4 > table > thead > tr > th:nth-child(7) > span > div',
+
 };
+
+
+
+
