@@ -110,7 +110,6 @@ async function checkTableValuesWithExpected(page, rowLocator, expectedRows, opti
   for (let i = 0; i < expectedRows.length; i++) {
     const expectedRow = expectedRows[i].map(String);
     let actualRow = [];
-    let pass = true;
     let cellResults = [];
     if (i < rowCount) {
       const rowEl = rowEls.nth(i);
@@ -130,13 +129,17 @@ async function checkTableValuesWithExpected(page, rowLocator, expectedRows, opti
           actual = (await cellEls.nth(j).textContent())?.trim() || '';
           const actualStr = String(actual ?? '');
           const expectedStr = expectedRow[j];
-          if (actualStr === expectedStr) {
+          // ถ้า expected ว่างแต่ actual มีค่า ให้ fail
+          if (expectedStr === '' && actualStr !== '') {
+            cellPass = false;
+            matchType = 'none';
+          } else if (expectedStr === '' && actualStr === '') {
             cellPass = true;
             matchType = 'equal';
-          } else if (
-            expectedStr !== '' &&
-            actualStr.includes(expectedStr)
-          ) {
+          } else if (actualStr === expectedStr) {
+            cellPass = true;
+            matchType = 'equal';
+          } else if (expectedStr !== '' && actualStr.includes(expectedStr)) {
             cellPass = true;
             matchType = 'contain';
           } else {
@@ -150,25 +153,35 @@ async function checkTableValuesWithExpected(page, rowLocator, expectedRows, opti
         }
         cellResults.push({ colIndex: j, expected: expectedRow[j], actual, pass: cellPass, matchType });
         actualRow.push(actual);
-        if (!cellPass) pass = false;
       }
+      // ปรับ logic row.pass: เฉพาะ cell ที่ actual !== '[NO CELL]' ทุก cell.pass เป็น true (และต้องมี cell ที่เช็คจริง)
+      const checkedCells = cellResults.filter(cell => cell.actual !== '[NO CELL]');
+      let pass = checkedCells.length > 0 ? checkedCells.every(cell => cell.pass) : true;
+      results.push({ rowIndex: i, expected: expectedRow, actual: actualRow, pass, cellResults });
+      assertionLog += `\n[Row ${i+1}] ${pass ? '✅' : '❌'}\n`;
+      cellResults.forEach(cell => {
+        let logResult = '';
+        if (cell.pass && cell.matchType === 'equal') logResult = '✅ (equal)';
+        else if (cell.pass && cell.matchType === 'contain') logResult = '⚠️  Pass with condition (contain)';
+        else logResult = '❌';
+        assertionLog += `  [col ${cell.colIndex+1}] expected: "${cell.expected}", actual: "${cell.actual}" => ${logResult}\n`;
+      });
+      if (!pass) status = 'Failed';
     } else {
       // ไม่มี row จริง
       actualRow = Array(expectedRow.length).fill('[NO ROW]');
       cellResults = expectedRow.map((exp, j) => ({ colIndex: j, expected: exp, actual: '[NO ROW]', pass: false, matchType: 'none' }));
-      pass = false;
+      results.push({ rowIndex: i, expected: expectedRow, actual: actualRow, pass: false, cellResults });
+      assertionLog += `\n[Row ${i+1}] ❌\n`;
+      cellResults.forEach(cell => {
+        let logResult = '';
+        if (cell.pass && cell.matchType === 'equal') logResult = '✅ (equal)';
+        else if (cell.pass && cell.matchType === 'contain') logResult = '⚠️  Pass with condition (contain)';
+        else logResult = '❌';
+        assertionLog += `  [col ${cell.colIndex+1}] expected: "${cell.expected}", actual: "${cell.actual}" => ${logResult}\n`;
+      });
+      status = 'Failed';
     }
-    results.push({ rowIndex: i, expected: expectedRow, actual: actualRow, pass, cellResults });
-    // log
-    assertionLog += `\n[Row ${i+1}] ${pass ? '✅' : '❌'}\n`;
-    cellResults.forEach(cell => {
-      let logResult = '';
-      if (cell.pass && cell.matchType === 'equal') logResult = '✅ (equal)';
-      else if (cell.pass && cell.matchType === 'contain') logResult = '⚠️  Pass with condition (contain)';
-      else logResult = '❌';
-      assertionLog += `  [col ${cell.colIndex+1}] expected: "${cell.expected}", actual: "${cell.actual}" => ${logResult}\n`;
-    });
-    if (!pass) status = 'Failed';
   }
   return { results, status, assertionLog };
 }
