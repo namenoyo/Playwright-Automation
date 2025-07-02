@@ -1,35 +1,11 @@
-module.exports = {
-  // CIS Customer Search Page (new selectors)
-  // SELECTOR_CIS_MENU_SUB_1_SEARCH_1_In_Page_1_Menu_Bar_Label: 'p.MuiTypography-root.MuiTypography-body1.MuiTypography-colorPrimary[style*="font-weight: bold;"]:contains("ค้นหาข้อมูล")',
-  // SELECTOR_CIS_MENU_SUB_1_SEARCH_1_In_Page_2_Input_Text: '#cardId',
-  // SELECTOR_CIS_MENU_SUB_1_SEARCH_1_In_Page_3_Input_Text: '#customerName',
-  // SELECTOR_CIS_MENU_SUB_1_SEARCH_1_In_Page_4_Input_Text: '#customerLastName',
-  // SELECTOR_CIS_MENU_SUB_1_SEARCH_1_In_Page_5_Input_Text: '#tel',
-  // SELECTOR_CIS_MENU_SUB_1_SEARCH_1_In_Page_6_Input_Text: '#policyNo',
-  // SELECTOR_CIS_MENU_SUB_1_SEARCH_1_In_Page_7_Head_Column_Data_Grid: 'div.MUIDataTableHeadCell-data-47:contains("ดูข้อมูล")',
-  // SELECTOR_CIS_MENU_SUB_1_SEARCH_1_In_Page_8_Head_Column_Data_Grid: 'div.MUIDataTableHeadCell-data-47:contains("ประเภทบัตร / หมายเลขบัตร")',
-  // SELECTOR_CIS_MENU_SUB_1_SEARCH_1_In_Page_9_Head_Column_Data_Grid: 'div.MUIDataTableHeadCell-data-47:contains("เลขที่กรมธรรม์")',
-  // SELECTOR_CIS_MENU_SUB_1_SEARCH_1_In_Page_10_Head_Column_Data_Grid: 'div.MUIDataTableHeadCell-data-47:contains("ชื่อ - นามสกุล")',
-  // SELECTOR_CIS_MENU_SUB_1_SEARCH_1_In_Page_11_Head_Column_Data_Grid: 'div.MUIDataTableHeadCell-data-47:contains("ความสัมพันธ์กับกรมธรรม์")',
-  // SELECTOR_CIS_MENU_SUB_1_SEARCH_1_In_Page_12_Head_Column_Data_Grid: 'div.MUIDataTableHeadCell-data-47:contains("วัน / เดือน / ปีเกิด")',
-  // SELECTOR_CIS_MENU_SUB_1_SEARCH_1_In_Page_13_Head_Column_Data_Grid: 'div.MUIDataTableHeadCell-data-47:contains("หมายเลขโทรศัพท์")',
-  // SELECTOR_CIS_MENU_SUB_1_SEARCH_1_In_Page_14_Head_Column_Data_Grid: 'div.MUIDataTableHeadCell-data-47:contains("สถานะลูกค้า")',
-  // SELECTOR_CIS_MENU_SUB_1_SEARCH_1_In_Page_15_Button: 'span.MuiButton-label:contains("ล้างเงื่อนไข")',
-  // SELECTOR_CIS_MENU_SUB_1_SEARCH_1_In_Page_16_Button: 'button.MuiButtonBase-root.MuiButton-root.MuiButton-contained.MuiButton-containedPrimary[type="button"]',
-  // SELECTOR_CIS_MENU_SUB_1_SEARCH_1_In_Page_17_Button: 'span.MuiButton-label.MuiButton-label:contains("สร้าง Case")',
-  // SELECTOR_CIS_MENU_SUB_1_SEARCH_1_In_Page_18_Menu_Bar_Label: '#tab\\/cisapp_customer\\/search > div > div > div > div.MuiGrid-root.MuiGrid-item.MuiGrid-grid-xs-true > div > div > div.MuiToolbar-root.MuiToolbar-regular.MUIDataTableToolbar-root-52.MuiToolbar-gutters > div.MUIDataTableToolbar-left-53 > span > span:nth-child(4)',
-  // SELECTOR_CIS_MENU_SUB_1_SEARCH_1_In_Page_19_Button: '#MUIDataTableBodyRow-0 > td:nth-child(2) > button',
+export const searchcustomerCISLocators = (page) => ({
+  buttonSearch: page.getByRole('button', { name: 'ค้นหา', exact: true }),
+  policyInput: page.getByLabel('เลขที่กรมธรรม์'),
+  checkdatagridPolicy: (policy) => page.getByRole('gridcell', { name: policy, exact: true }),
+  customerdetailButton: page.getByRole('gridcell', { name: '' })
+})
 
-  // SELECTOR_CIS_MENU_SUB_1_SEARCH_1_In_Page_20_Data_Grid: '#MUIDataTableBodyRow-0 > td:nth-child(4) > div > div:nth-child(1) > i',
-  // SELECTOR_CIS_MENU_SUB_1_SEARCH_1_In_Page_21_Data_Grid: '#MUIDataTableBodyRow-0 > td:nth-child(4) > div > div:nth-child(2) > p',
-  // SELECTOR_CIS_MENU_SUB_1_SEARCH_1_In_Page_22_Data_Grid: '#MUIDataTableBodyRow-0 > td:nth-child(6)',
-  // SELECTOR_CIS_MENU_SUB_1_SEARCH_1_In_Page_23_Data_Grid: '#MUIDataTableBodyRow-0 > td:nth-child(8) > div > div:nth-child(1) > i',
-  // SELECTOR_CIS_MENU_SUB_1_SEARCH_1_In_Page_24_Data_Grid: '#MUIDataTableBodyRow-0 > td:nth-child(8) > div > div:nth-child(2) > p',
-  // SELECTOR_CIS_MENU_SUB_1_SEARCH_1_In_Page_25_Data_Grid: '#MUIDataTableBodyRow-0 > td:nth-child(10)',
-  // SELECTOR_CIS_MENU_SUB_1_SEARCH_1_In_Page_26_Data_Grid: '#MUIDataTableBodyRow-0 > td:nth-child(12) > span > div > div:nth-child(1) > p',
-  // SELECTOR_CIS_MENU_SUB_1_SEARCH_1_In_Page_27_Data_Grid: '#MUIDataTableBodyRow-0 > td:nth-child(14) > p',
-  // SELECTOR_CIS_MENU_SUB_1_SEARCH_1_In_Page_28_Data_Grid: '#MUIDataTableBodyRow-0 > td:nth-child(16) > p',
-
+export const detailcustomerCISLocatorsArraykey = (page) => ({
   //CIS หน้าจอค้นหาข้อมูลลูกค้า > ดูรายละเอียด  CIS_MENU_SUB_1_SEARCH_1_Detail_1
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_In_Page_1_Menu_Bar_Label: '#root > header > div > div:nth-child(1) > ul:nth-child(2)',
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_In_Page_2_Menu_Bar_Label: '#menu-list > ul:nth-child(2) > li',
@@ -41,8 +17,8 @@ module.exports = {
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_In_Page_8_Menu_Bar_Label: '#menu-list > ul:nth-child(9) > li',
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_In_Page_9_Menu_Bar_Label: '#menu-list > ul:nth-child(10) > li',
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_In_Page_10_Menu_Bar_Label: '#menu-list > ul:nth-child(11) > li',
-  SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_In_Page_11_Detail_Panel: page => page.locator('#root > header > div > div:nth-child(3) > ul:nth-child(3) > li'),
-  
+  SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_In_Page_11_Detail_Panel: page.locator('#root > header > div > div:nth-child(3) > ul:nth-child(3) > li'),
+
   // CIS หน้าจอค้นหาข้อมูลลูกค้า > ดูรายละเอียด > panel ข้อมูลส่วนตัว
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_1_In_Page_1_Header_Panel: '#section-cust-detail > div > div.MuiButtonBase-root.MuiExpansionPanelSummary-root.makeStyles-root-48.uncollapsible.Mui-expanded > div > div > div.MuiGrid-root.ExpansionPanelSummaryTitle.MuiGrid-item',
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_1_In_Page_2_Detail_Panel: '#section-cust-detail > div > div.MuiCollapse-container.MuiCollapse-entered > div > div > div > div > div > div:nth-child(1) > div > div:nth-child(2) > div > div > div > div:nth-child(1) > div > div > p',
@@ -101,7 +77,7 @@ module.exports = {
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_2_In_Page_12_Head_Column_Data_Grid: '#section-cust-address > div > div.MuiCollapse-container.MuiCollapse-entered > div > div > div > div > div > div > div > div.MUIDataTable-responsiveScroll-4 > table > thead > tr > th:nth-child(4)',
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_2_In_Page_13_Data_Grid: '#MUIDataTableBodyRow-0 > td:nth-child(8)',
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_2_In_Page_14_Data_Grid: '#MUIDataTableBodyRow-1 > td:nth-child(8)',
-  SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_2_In_Page_15_Data_Grid : page => page.locator('tbody.MuiTableBody-root').nth(1).locator('tr'),
+  SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_2_In_Page_15_Data_Grid: page.locator('tbody.MuiTableBody-root').nth(1).locator('tr'),
 
   // CIS หน้าจอค้นหาข้อมูลลูกค้า > ดูรายละเอียด > panel ข้อมูลที่ติดต่อ
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_3_In_Page_1_Header_Panel: '#tab\\/cisapp_customer\\/display > div > div > div > div:nth-child(2) > div > div:nth-child(1) > div:nth-child(4) > :nth-child(1) > .MuiExpansionPanel-root > .MuiExpansionPanelSummary-root > .MuiExpansionPanelSummary-content > :nth-child(1) > .ExpansionPanelSummaryTitle',
@@ -116,9 +92,9 @@ module.exports = {
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_3_In_Page_10_Data_Grid: '#MUIDataTableBodyRow-0 > td:nth-child(8)',
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_3_In_Page_11_Head_Column_Data_Grid: '#tab\\/cisapp_customer\\/display > div > div > div > div:nth-child(2) > div > div:nth-child(1) > div:nth-child(4) > div > div > div.MuiCollapse-container.MuiCollapse-entered > div > div > div > div > div > div > div > div.MUIDataTable-responsiveScroll-4 > table > thead > tr > th:nth-child(5) > span > div.MUIDataTableHeadCell-data-47',
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_3_In_Page_12_Data_Grid: '#MUIDataTableBodyRow-0 > td:nth-child(10) > div',
-  SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_3_In_Page_13_Data_Grid : page => page.locator('tbody.MuiTableBody-root').nth(2).locator('tr'),
+  SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_3_In_Page_13_Data_Grid: page.locator('tbody.MuiTableBody-root').nth(2).locator('tr'),
 
- 
+
   // CIS หน้าจอค้นหาข้อมูลลูกค้า > ดูรายละเอียด > panel ข้อมูลครอบครัว
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_4_In_Page_1_Header_Panel: '#tab\\/cisapp_customer\\/display > div > div > div > div:nth-child(2) > div > div:nth-child(1) > div:nth-child(5) > div > div.MuiButtonBase-root.MuiExpansionPanelSummary-root.makeStyles-root-48 > div.MuiExpansionPanelSummary-content > div > div.MuiGrid-root.ExpansionPanelSummaryTitle.MuiGrid-item',
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_4_In_Page_2_Head_Column_Data_Grid: '#tab\\/cisapp_customer\\/display > div > div > div > div:nth-child(2) > div > div:nth-child(1) > div:nth-child(5) > div > div.MuiCollapse-container > div > div > div > div > div > div > div > div.MUIDataTable-responsiveScroll-4 > table > thead > tr > th:nth-child(1) > span > div',
@@ -171,8 +147,8 @@ module.exports = {
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_7_In_Page_12_Head_Column_Data_Grid: '#section-payment-history-undefined > div > div.MuiCollapse-container.MuiCollapse-entered > div > div > div > div > div > div > div > div.MUIDataTable-responsiveScroll-4 > table > thead > tr > th:nth-child(11) > span > div',
 
   // CIS หน้าจอค้นหาข้อมูลลูกค้า > ดูรายละเอียด > panel ข้อมูลกรมธรรม์
-  SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_15_In_Page_1_Detail_Panel_Data : page => page.locator('tbody.MuiTableBody-root').nth(7).locator('tr'),
-  
+  SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_15_In_Page_1_Detail_Panel_Data: page.locator('tbody.MuiTableBody-root').nth(7).locator('tr'),
+
   // CIS หน้าจอค้นหาข้อมูลลูกค้า > ดูรายละเอียด > panel รายละเอียดกรมธรรม์
   // Panel 8 selectors as dynamic functions
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_8_In_Page_1_Header_Panel: (policyNo) => `#section-policy-detail-${policyNo} > .MuiPaper-root > .MuiButtonBase-root > .MuiExpansionPanelSummary-content > :nth-child(1) > .ExpansionPanelSummaryTitle`,
@@ -232,8 +208,8 @@ module.exports = {
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_10_In_Page_9_Detail_Panel_Data: (policyNo) => `#tab${policyNo} > div:nth-child(3) > div.MuiCollapse-container.MuiCollapse-entered > div > div > div > div > div > div:nth-child(3) > div:nth-child(2) > div:nth-child(2) > div > p`,
 
   //CIS หน้าจอค้นหาข้อมูลลูกค้า > ดูรายละเอียด > panel ข้อมูลที่อยู่
-  SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_16_In_Page_1_Detail_Panel_Data : page => page.locator('tbody.MuiTableBody-root').nth(8).locator('tr'),
-  
+  SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_16_In_Page_1_Detail_Panel_Data: page.locator('tbody.MuiTableBody-root').nth(8).locator('tr'),
+
   // CIS หน้าจอค้นหาข้อมูลลูกค้า > ดูรายละเอียด > panel ข้อมูลติดต่อ (panel_11)
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_11_In_Page_1_Header_Panel: (policyNo) => `#tab${policyNo} > div:nth-child(5) > div.MuiButtonBase-root.MuiExpansionPanelSummary-root.makeStyles-root-48.uncollapsible.Mui-expanded > div > div > div.MuiGrid-root.ExpansionPanelSummaryTitle.MuiGrid-item`,
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_11_In_Page_2_Detail_Panel: (policyNo) => `#tab${policyNo} > div:nth-child(5) > div.MuiCollapse-container.MuiCollapse-entered > div > div > div > div > div > div > div > div.MUIDataTable-responsiveScroll-4 > table > thead > tr > th:nth-child(1) > span > div`,
@@ -250,7 +226,7 @@ module.exports = {
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_11_In_Page_13_Detail_Panel_Data: `#MUIDataTableBodyRow-0 > td:nth-child(12)`,
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_11_In_Page_14_Detail_Panel: (policyNo) => `#tab${policyNo} > div:nth-child(5) > div.MuiCollapse-container.MuiCollapse-entered > div > div > div > div > div > div > div > div.MUIDataTable-responsiveScroll-4 > table > thead > tr > th:nth-child(7) > span > div`,
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_11_In_Page_15_Detail_Panel_Data: `#MUIDataTableBodyRow-0 > td:nth-child(14)`,
-  SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_11_In_Page_16_Detail_Panel_Data : page => page.locator('tbody.MuiTableBody-root').nth(9).locator('tr'),
+  SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_11_In_Page_16_Detail_Panel_Data: page.locator('tbody.MuiTableBody-root').nth(9).locator('tr'),
 
   // CIS หน้าจอค้นหาข้อมูลลูกค้า > ดูรายละเอียด > panel ผู้รับผลประโยชน์ (panel_12)
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_12_In_Page_1_Header_Panel: (policyNo) => `#section-beneficiary-${policyNo} > div > div.MuiButtonBase-root.MuiExpansionPanelSummary-root.makeStyles-root-48.uncollapsible.Mui-expanded > div > div > div.MuiGrid-root.ExpansionPanelSummaryTitle.MuiGrid-item`,
@@ -264,7 +240,7 @@ module.exports = {
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_12_In_Page_9_Detail_Panel_Data: `#MUIDataTableBodyRow-0 > td:nth-child(8)`,
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_12_In_Page_10_Detail_Panel: (policyNo) => `#section-beneficiary-${policyNo} > div > div.MuiCollapse-container.MuiCollapse-entered > div > div > div > div > div > div > div > div.MUIDataTable-responsiveScroll-4 > table > thead > tr > th:nth-child(5) > span > div`,
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_12_In_Page_11_Detail_Panel_Data: `#MUIDataTableBodyRow-0 > td:nth-child(10)`,
-  SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_12_In_Page_12_Detail_Panel_Data : page => page.locator('tbody.MuiTableBody-root').nth(10).locator('tr'),
+  SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_12_In_Page_12_Detail_Panel_Data: page.locator('tbody.MuiTableBody-root').nth(10).locator('tr'),
 
   // CIS หน้าจอค้นหาข้อมูลลูกค้า > ดูรายละเอียด > panel บัญชีธนาคาร/บัญชีพร้อมเพย์ (panel_13)
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_13_In_Page_1_Header_Panel: (policyNo) => `#section-bank-account-${policyNo} > div > div.MuiButtonBase-root.MuiExpansionPanelSummary-root.makeStyles-root-48.uncollapsible.Mui-expanded > div > div > div.MuiGrid-root.ExpansionPanelSummaryTitle.MuiGrid-item`,
@@ -290,8 +266,8 @@ module.exports = {
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_13_In_Page_21_Detail_Panel_Data: `#MUIDataTableBodyRow-0 > td:nth-child(20)`,
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_13_In_Page_22_Detail_Panel: (policyNo) => `#section-bank-account-${policyNo} > div > div.MuiCollapse-container.MuiCollapse-entered > div > div > div > div > div.MuiGrid-root.MuiGrid-item.MuiGrid-grid-xs-true > div > div > div.MUIDataTable-responsiveScroll-4 > table > thead > tr > th:nth-child(11) > span > div`,
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_13_In_Page_23_Detail_Panel_Data: `#MUIDataTableBodyRow-0 > td:nth-child(22)`,
-  SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_13_In_Page_24_Detail_Panel_Data : page => page.locator('tbody.MuiTableBody-root').nth(11).locator('tr'),
-  
+  SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_13_In_Page_24_Detail_Panel_Data: page.locator('tbody.MuiTableBody-root').nth(11).locator('tr'),
+
   // CIS หน้าจอค้นหาข้อมูลลูกค้า > ดูรายละเอียด > panel ประวัติการชำระเบี้ย (panel_14)
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_14_In_Page_1_Header_Panel: (policyNo) => `#section-payment-history-${policyNo} > div > div.MuiButtonBase-root.MuiExpansionPanelSummary-root.makeStyles-root-48.uncollapsible.Mui-expanded > div > div > div.MuiGrid-root.ExpansionPanelSummaryTitle.MuiGrid-item`,
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_14_In_Page_2_Detail_Panel: (policyNo) => `#section-payment-history-${policyNo} > div > div.MuiCollapse-container.MuiCollapse-entered > div > div > div > div > div > div > div > div.MUIDataTable-responsiveScroll-4 > table > thead > tr > th:nth-child(1) > span > div`,
@@ -321,5 +297,5 @@ module.exports = {
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_14_In_Page_26_Detail_Panel: (policyNo) => `#section-payment-history-${policyNo} > div > div.MuiCollapse-container.MuiCollapse-entered > div > div > div > div > div > div > div > div.MUIDataTable-responsiveScroll-4 > table > thead > tr > th:nth-child(13) > span > div`,
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_14_In_Page_27_Detail_Panel_Data: `#MUIDataTableBodyRow-0 > td:nth-child(26)`,
   SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_14_In_Page_28_Button: (policyNo) => `#section-payment-history-${policyNo} > div > div.MuiButtonBase-root.MuiExpansionPanelSummary-root.makeStyles-root-48.uncollapsible.Mui-expanded > div > div > div.MuiGrid-root.MuiGrid-item.MuiGrid-grid-xs-true > div > div > button > span.MuiButton-label`,
-  SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_14_In_Page_29_Detail_Panel_Data : page => page.locator('tbody.MuiTableBody-root').nth(12).locator('tr'),
-};
+  SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_14_In_Page_29_Detail_Panel_Data: page.locator('tbody.MuiTableBody-root').nth(12).locator('tr'),
+})
