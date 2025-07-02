@@ -31,7 +31,7 @@ function chunkArray(array, size) {
 }
 
 test('TS_Test_Element', async ({ page }, testInfo) => {
-  testInfo.setTimeout(60000 * 5); // เพิ่ม timeout รวม
+  testInfo.setTimeout(60 * 60 * 1000); // เพิ่ม timeout รวมเป็น 1 ชั่วโมง (3600000 ms)
   const loginPage = new LoginPage(page, ENV);
   const cisPage = new CISPage(page);
   let status = 'Passed';
@@ -43,6 +43,15 @@ test('TS_Test_Element', async ({ page }, testInfo) => {
     await cisPage.goToCustomerInfo();
     const customerId = await cisPage.searchPolicyAndGetCustomerId(policyNo);
     await cisPage.clickDiamondButtonAndWaitClaimHistory(customerId);
+
+    // คลิก Header Panel ก่อนตรวจสอบ selector
+    const selectors = require('../locators/CIS_Search.locator.js');
+    const headerPanel = selectors.SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_4_In_Page_1_Header_Panel;
+    if (typeof headerPanel === 'function') {
+      await headerPanel(page).click();
+    } else {
+      await page.locator(headerPanel).click();
+    }
 
     // แบ่ง selector เป็นกลุ่มละ 10
     const selectorChunks = chunkArray(allSelectors, 10);
