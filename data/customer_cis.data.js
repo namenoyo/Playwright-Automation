@@ -7,7 +7,7 @@ export const customerCISDataArraykey = [
     {
         policy_no: '1652002',
         SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_1_In_Page_2_Detail_Panel: ['เลขข้อมูลลูกค้า   25662157384'],
-        SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_2_In_Page_1_Detail_Panel: [
+        SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_2_In_Page_15_Data_Grid: [
             ['ที่อยู่ตามทะเบียนบ้าน','แอลน โอสี่วี ณ  ตำบล ควนชะลิก  อำเภอ หัวไทร  จังหวัด นครศรีธรรมราช  80170','10/03/2566(2 ปี 3 เดือน 18 วัน)','New Case Batch'],
             ['ที่อยู่ที่ติดต่อ','แอลน โอสี่วี ณ  ตำบล ควนชะลิก  อำเภอ หัวไทร  จังหวัด นครศรีธรรมราช  80170','10/03/2566(2 ปี 3 เดือน 18 วัน)','New Case Batch'],
         ],
@@ -29,62 +29,62 @@ export const customerCISDataArraykey_label = [
             label: 'เลขข้อมูลลูกค้า',
             data: [['เลขข้อมูลลูกค้า   25662157384']]
         }],
-        SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_2_In_Page_1_Detail_Panel: [{
+        SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_2_In_Page_15_Data_Grid: [{
             label: 'ข้อมูลที่อยู่',
             data: [['ที่อยู่ตามทะเบียนบ้าน','แอลน โอสี่วี ณ ตำบล ควนชะลิก อำเภอ หัวไทร จังหวัด นครศรีธรรมราช 80170','10/03/2566(2 ปี 3 เดือน 18 วัน)','New Case Batch'],
                    ['ที่อยู่ที่ติดต่อ','แอลน โอสี่วี ณ ตำบล ควนชะลิก อำเภอ หัวไทร จังหวัด นครศรีธรรมราช 80170','10/03/2566(2 ปี 3 เดือน 18 วัน)','New Case Batch'],]
         }],
-        SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_3_In_Page_1_Detail_Panel: [{
+        SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_3_In_Page_13_Data_Grid: [{
             label: 'ข้อมูลผู้ติดต่อ',
             data: [['โทรศัพท์มือถือ (สำหรับติดต่อ)','0802157384','10/03/2566(2 ปี 3 เดือน 21 วัน)','New Case Batch',''],
                    ]
         }],
-        SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_4_In_Page_1_Detail_Panel: [{
+        SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_4_In_Page_9_Data_Grid: [{
             label: 'ข้อมูลครอบครัว',
             data: [['ไม่พบข้อมูล'],
                    ]
         }],
-        SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_5_In_Page_1_Detail_Panel: [{
+        SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_5_In_Page_14_Data_Grid: [{
             label: 'ประวัติการเรียกร้องสินไหม (ช่องทางสาขา)',
             data: [['ไม่พบข้อมูล'],
                    ]
         }],
-        SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_6_In_Page_1_Detail_Panel: [{
+        SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_6_In_Page_20_Data_Grid: [{
             label: 'ประวัติการรับเรื่องสินไหม',
             data: [['ไม่พบข้อมูล'],
                    ]
         }],
-        SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_7_In_Page_1_Detail_Panel: [{
+        SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_7_In_Page_13_Data_Grid: [{
             label: 'ประวัติการพิจารณาสินไหม',
             data: [['ไม่พบข้อมูล'],
                    ]
         }],
-        SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_8_In_Page_1_Detail_Panel: [{
+        SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_15_In_Page_1_Detail_Panel_Data: [{
             label: 'ข้อมูลกรมธรรม์',
             data: [['สร้าง Case','เลือกธุรกรรม','ดูรายละเอียด','1652002','อุทัยธานี (7000)','เล่มกรมธรรม์','ผู้เอาประกัน','นาย เจทีพันบี ดีเก้าพีบี','28/07/2504','สามัญ','เพื่อนคู่ชีวิต B450 (20/15)','10/03/2566','10/03/2586','120,000 บาท','Lapse','02/11','1,184.80 บาท','09/02/2568','1 (เดือน)','ดีโอ โอสี่วี ณ ตำบล ควนชะลิก อำเภอ หัวไทร จังหวัด นครศรีธรรมราช 80170','0801647747'],
                    ]
         }],
-        SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_2_1_In_Page_1_Detail_Panel: [{
+        SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_16_In_Page_1_Detail_Panel_Data: [{
             label: 'ข้อมูลที่อยู่',
             data: [['ที่อยู่ตามทะเบียนบ้าน','ดีโอ โอสี่วี ณ ตำบล ควนชะลิก อำเภอ หัวไทร จังหวัด นครศรีธรรมราช 80170','10/03/2566(2 ปี 3 เดือน 18 วัน)','New Case Batch'],
                    ['ที่อยู่ที่ติดต่อ','ดีโอ โอสี่วี ณ ตำบล ควนชะลิก อำเภอ หัวไทร จังหวัด นครศรีธรรมราช 80170','10/03/2566(2 ปี 3 เดือน 18 วัน)','New Case Batch'],]
         }],
-        SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_11_In_Page_1_Detail_Panel: [{
+        SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_11_In_Page_16_Detail_Panel_Data: [{
             label: 'ข้อมูลผู้ติดต่อ',
             data: [['โทรศัพท์มือถือ (สำหรับติดต่อ)','0801647747','','','10/03/2566(2 ปี 3 เดือน 21 วัน)','New Case Batch',''],
                    ]
         }],
-        SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_12_In_Page_1_Detail_Panel: [{
+        SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_12_In_Page_12_Detail_Panel_Data: [{
             label: 'ผู้รับผลประโยชน์',
             data: [['ภรรยา','','นาง พีเอฟบี นารีหวานดี','','100',],
                    ]
         }],
-        SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_13_In_Page_1_Detail_Panel: [{
+        SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_13_In_Page_24_Detail_Panel_Data: [{
             label: 'บัญชีธนาคาร/บัญชีพร้อมเพย์',
             data: [['บัญชีรับผลประโยชน์','ผู้เอาประกัน','ใช้งาน','ธนาคาร','ออมทรัพย์','นางนายเจทีพันบี ดีเก้าพีบี','017152615825','ธนาคารเพื่อการเกษตรและสหกรณ์การเกษตร','ดอนแค','','NBS',],
                    ]
         }],
-        SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_14_In_Page_1_Detail_Panel: [{
+        SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_14_In_Page_29_Detail_Panel_Data: [{
             label: 'ประวัติการชำระเบี้ย',
             data: [['17/01/2568','10000004994267','2','11','10/01/2568','09/02/2568','922.80','262.00','0.00','0.00','0.00','1,184.80','สาขา'],
                    ['19/12/2567','10000004993517','2','10','10/12/2567','09/01/2568','922.80','262.00','0.00','0.00','0.00','1,184.80','สาขา'],]
@@ -96,7 +96,7 @@ export const customerCISDataArraykey_label = [
             label: 'เลขข้อมูลลูกค้า',
             data: [['25662157627']]
         }],
-        SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_2_In_Page_1_Detail_Panel: [{
+        SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_2_In_Page_15_Data_Grid: [{
             label: 'ข้อมูลผู้ติดต่อ',
             data: [['ที่อยู่ตามทะเบียนบ้าน','แอล โอสี่วี เจ ตำบล หูช้าง อำเภอ บ้านไร่ จังหวัด อุทัยธานี 61180','13/03/2566(2 ปี 3 เดือน 15 วัน)','New Case Batch'],
                    ['ที่อยู่ที่ติดต่อ','แอล โอสี่วี เจ ตำบล หูช้าง อำเภอ บ้านไร่ จังหวัด อุทัยธานี 61180','13/03/2566(2 ปี 3 เดือน 15 วัน)','New Case Batch'],]
