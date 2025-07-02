@@ -3,10 +3,11 @@ import { LoginPage } from '../pages/login_t.page.js';
 import { gotoMenu } from '../pages/menu.page.js';
 import { searchCustomerCIS, detailCustomerCIS } from "../pages/customer_cis.page.js";
 import { loginData } from '../data/login_t.data.js';
-import { customerCISData, customerCISDataArraykey, customerCISDataArraykey_label } from '../data/customer_cis.data.js'
-import { detailcustomerCISLocatorsArraykey } from "../locators/customer_cis.locators";
+import { customerCISData, customerCISDataArraykey } from '../data/customer_cis.data.js'
+import { customerCISDataArraykey_label } from '../data/cis_array_full.data.js'
+import { detailcustomerCISLocatorsArraykey } from "../locators/CIS_Search_Master.locator.js";
 import { LogoutPage } from '../pages/logout.page.js';
-import { sendTestResultToGoogleSheetGSAppScript } from '../utils/google-sheet-gsappscript.helper.js';
+import { sendTestResultToGoogleSheetGSAppScript, sendBatchTestResultToGoogleSheetGSAppScript } from '../utils/google-sheet-gsappscript.helper.js';
 
 test.describe('Loop at data - ไม่มีหัว', () => {
 
@@ -206,7 +207,7 @@ test.describe('Loop at data - มีหัว', () => {
                                 // เปลี่นเลข index สำหรับดึงข้อมูลจาก data ที่เราเตรียมไว้
                                 let changeindexdata = (j / 2) - 0.5
                                 // ใช้ function เช็คข้อมูล expected กับ หน้าจอ
-                                result = await detailcustomercis.checkdatadetailCIS(cell, expectedvalue[0].data[i][changeindexdata]);
+                                result = await detailcustomercis.checkdatadetailCIS(cell, expectedvalue[0].data[i][changeindexdata], row.policy_no);
                                 // นำค่า status ที่ return เข้า array
                                 status_result_array.push(result.status_result)
                                 // นำค่า assertion ที่ return เข้า array
@@ -225,7 +226,7 @@ test.describe('Loop at data - มีหัว', () => {
                         // loop ตามข้อมูล data ใน array
                         for (const [i, expectedarray] of expectedvalue.entries()) {
                             // ใช้ function เช็คข้อมูล expected กับ หน้าจอ
-                            result = await detailcustomercis.checkdatadetailCIS(locator, expectedarray.data[i][i]);
+                            result = await detailcustomercis.checkdatadetailCIS(locator, expectedarray.data[i][i], row.policy_no);
                             // นำค่า status ที่ return เข้า array
                             status_result_array.push(result.status_result)
                             // นำค่า assertion ที่ return เข้า array
@@ -275,6 +276,9 @@ test.describe('Loop at data - มีหัว', () => {
             let status_result_format = ''
             let status_result_array_check = []
 
+            console.log('จำนวนชุดข้อมูล สถานะ', status_result_array.length, '\n')
+
+            console.log('เริ่ม loop สถานะ')
             // loop เพื่อเก็บสถานะของแต่ละ label
             for (const split_status_log of status_result_array) {
                 if (split_status_log == '') {
@@ -288,57 +292,62 @@ test.describe('Loop at data - มีหัว', () => {
                     status_result_format += split_status_log
                 }
             }
+            console.log('สิ้นสุด loop สถานะ\n')
 
+            // console.log('เริ่ม loop ลงผล google sheet')
+            // // loop เพื่อลงผลใน google sheet แต่ละ label
+            // let number_loop = 0
+            // for (const split_assertion_log of assertion_result_array) {
+            //     if (split_assertion_log == '') {
+            //         // เก็บผลลัพธ์ที่ google sheet
+            //         await sendTestResultToGoogleSheetGSAppScript({
+            //             suite: 'Test Suite',
+            //             caseName: testinfo.title,
+            //             assertionLog: assertion_result_format,
+            //             status: status_result_array_check[number_loop],
+            //             tester: 'Toppy',
+            //             duration: 'Test duration',
+            //             errorMessage: 'Test Error'
+            //         })
+            //         assertion_result_format = ''
+            //         number_loop = number_loop + 1
+            //     } else {
+            //         assertion_result_format += split_assertion_log + '\n'
+            //     }
+            // }
+            // console.log('สิ้นสุด loop ลงผล google sheet\n')
+
+            let googledatabatch = []
+            console.log('เริ่ม loop เก็บค่า parameter ของ google')
             // loop เพื่อลงผลใน google sheet แต่ละ label
             let number_loop = 0
             for (const split_assertion_log of assertion_result_array) {
                 if (split_assertion_log == '') {
                     // เก็บผลลัพธ์ที่ google sheet
-                    await sendTestResultToGoogleSheetGSAppScript({
-                        suite: 'Test Suite',
-                        caseName: testinfo.title,
-                        assertionLog: assertion_result_format,
-                        status: status_result_array_check[number_loop],
-                        tester: 'Toppy',
-                        duration: 'Test duration',
-                        errorMessage: 'Test Error'
-                    })
+                    googledatabatch.push([
+                        'Test Suite',
+                        testinfo.title,
+                         assertion_result_format,
+                        status_result_array_check[number_loop],
+                        'Toppy',
+                        'Test duration',
+                        'Test Error'
+                    ])
                     assertion_result_format = ''
                     number_loop = number_loop + 1
                 } else {
                     assertion_result_format += split_assertion_log + '\n'
                 }
             }
+            console.log('สิ้นสุด loop เก็บค่า parameter ของ google\n')
+
+            console.log('เริ่ม การส่งข้อมูลไปที่ google sheet')
+            if (googledatabatch.length > 0) {
+                await sendBatchTestResultToGoogleSheetGSAppScript(googledatabatch)
+            }
+            console.log('สิ้นสุด การส่งข้อมูลไปที่ google sheet\n')
+
             //////////////////////////////////////////////////////////// กรณีหลาย row ตาม label ////////////////////////////////////////////////////////
-
-            // // ดึง row ทั้งหมดใน tbody
-            // const rows = page.locator('tbody.MuiTableBody-root').nth(12).locator('tr')
-            // // นับจำนวน row ที่ดึงมา
-            // const rowcount = await rows.count()
-            // // แสดงจำนวน row ที่ดึงมา
-            // console.log(rowcount)
-
-            // // loop ตรวจสอบแต่ละ cell ในแต่ละ row
-            // for (let i = 0; i < dataarray.length; i++) {
-            //     // ดึงบรรทัดตามเลข loop
-            //     const row = rows.nth(i);
-            //     // นำบรรทัดที่ loop ไปดึงข้อมูลใน tag td
-            //     const cells = row.locator('td');
-            //     // นับจำนวน tag td ที่อยู่ในบรรทัด
-            //     const cellcount = await cells.count();
-
-            //     // ตรวจสอบ column แต่ละช่อง
-            //     for (let j = 1; j < cellcount; j += 2) {
-            //         // ดึง column ตามเลข loop พร้อมดึงข้อความบนหน้าจอมาเก็บไว้ในตัวแปร
-            //         const cell = await cells.nth(j).textContent();
-            //         console.log(j)
-            //         // เปลี่นเลข index สำหรับดึงข้อมูลจาก data ที่เราเตรียมไว้
-            //         let changeindexdata = (j/2)-0.5
-            //         console.log(changeindexdata)
-            //         console.log(cell)
-            //         console.log(dataarray[i][changeindexdata])
-            //     }
-            // }
 
         });
     }

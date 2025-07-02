@@ -51,10 +51,10 @@ export class detailCustomerCIS {
         this.expect = expect;
     }
 
-    async checkdatadetailCIS(locators, expectedarray) {
+    async checkdatadetailCIS(locators, expectedarray, policyno) {
         const checkvalueexpected = new checkvalueExpected(this.page, this.expect)
 
-        let result = await checkvalueexpected.checkvalueOnscreen(locators, expectedarray);
+        let result = await checkvalueexpected.checkvalueOnscreen(locators, expectedarray, policyno);
 
         return result
     }
