@@ -276,8 +276,6 @@ test.describe('Loop at data - มีหัว', () => {
             let status_result_format = ''
             let status_result_array_check = []
 
-            console.log('จำนวนชุดข้อมูล สถานะ', status_result_array.length, '\n')
-
             console.log('เริ่ม loop สถานะ')
             // loop เพื่อเก็บสถานะของแต่ละ label
             for (const split_status_log of status_result_array) {
