@@ -56,4 +56,36 @@ async function sendTestResultToGoogleSheetGSAppScript({
   });
 }
 
-module.exports = { sendTestResultToGoogleSheetGSAppScript };
+/**
+ * ส่งข้อมูล test result หลาย records ไป Google Sheet ในครั้งเดียว
+ * @param {Array<Array>} batchData - Array of arrays ที่มี test results
+ * @returns {Promise<any>}
+ */
+async function sendBatchTestResultToGoogleSheetGSAppScript(batchData) {
+  const url = 'https://script.google.com/macros/s/AKfycbyMpeNDkZotK3ebaPHskfUR6VdWSrT2T2E8CFqFlp4BkYbZIM-pv5DqTB4EL6N-9wHHrg/exec';
+  
+  return new Promise((resolve, reject) => {
+    const req = https.request(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    }, res => {
+      let body = '';
+      res.on('data', chunk => body += chunk);
+      res.on('end', () => {
+        try {
+          resolve(JSON.parse(body));
+        } catch (e) {
+          resolve({ status: 'not-json', body });
+        }
+      });
+    });
+    req.on('error', reject);
+    req.write(JSON.stringify(batchData)); // ส่ง batchData ตรงๆ
+    req.end();
+  });
+}
+
+module.exports = { 
+  sendTestResultToGoogleSheetGSAppScript,
+  sendBatchTestResultToGoogleSheetGSAppScript // เพิ่มฟังก์ชันใหม่
+};

@@ -6,10 +6,22 @@ export class checkvalueExpected {
         this.expect = expect
     }
 
-    async checkvalueOnscreen(locators, expectedvalue) {
+    async checkvalueOnscreen(locators, expectedvalue, policyno) {
         let status_result = ''
         let assertion_result = ''
-        const actualvalue = await locators.textContent();
+
+        // เช็คว่า locators ที่ดึงมาเป็นประเภทอะไร และใช้ตามปะรเภท
+        let formatlocator = ''
+        if (typeof locators === 'string') {
+            formatlocator = await this.page.locator(locators);
+        } else if (typeof locators === 'object') {
+            formatlocator = await locators;
+        } else if (typeof locators === 'function') {
+            formatlocator = await this.page.locator(locators(policyno));
+        } else { }
+
+        await this.expect(formatlocator).toBeVisible();
+        const actualvalue = await formatlocator.textContent();
         const cleanactualvalue = normalizeText(actualvalue)
         const matchactual = cleanactualvalue?.trim();
         const cleanexpectedvalue = normalizeText(expectedvalue)
