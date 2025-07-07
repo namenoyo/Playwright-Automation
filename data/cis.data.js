@@ -1,5 +1,5 @@
 // ข้อมูลสำหรับการค้นหากรมธรรม์
 module.exports = {
-  //policyNo: '1652002',
-   policyNo: '0233590',
+  policyNo: '1652002',
+   //policyNo: '0233590',
 };
