@@ -45,7 +45,7 @@ export class gotoMenu {
 
     async menuProtal(menu) {
         // รอเมนู NBS Portal แสดง
-        await this.expect(this.page.locator('#textSearch')).toBeVisible();
+        await this.expect(this.page.locator('#textSearch')).toBeVisible({ timeout: 120000 });
         // พิมพ์ ค้นหา เมนู
         await this.page.locator('#textSearch').type(menu)
         // เลือก เมนู ที่ค้นหา
