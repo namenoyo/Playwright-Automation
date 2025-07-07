@@ -136,12 +136,6 @@ test.describe('Loop at data - มีหัว', () => {
     for (const [index, row] of customercisdataarraykey.entries()) {
 
         test(`CIS test check data (เลขกรมธรรม์ : ${row.policy_no})`, async ({ page }, testinfo) => {
-
-            let status_result_array = []
-            let assertion_result_array = []
-
-            let result = ''
-
             // ตั้งค่า timeout สำหรับการทดสอบ
             test.setTimeout(120000); // 120 วินาที
 
@@ -149,14 +143,12 @@ test.describe('Loop at data - มีหัว', () => {
             const loginPage = new LoginPage(page);
             const gotomenu = new gotoMenu(page, expect);
             const searchcustomercis = new searchCustomerCIS(page, expect);
-            const detailcustomercis = new detailCustomerCIS(page, expect);
             const logoutpage = new LogoutPage(page, expect);
             const mapsdataarray = new mapsdataArray(page, expect);
             const uploadgooglesheet = new uploadGoogleSheet(page, expect);
 
             // Data
             const logindata = loginData;
-            const customercisdata = customerCISData;
             const detailcustomercislocatorsarraykey = detailcustomerCISLocatorsArraykey(page);
 
             // ไปยังหน้า NBS
