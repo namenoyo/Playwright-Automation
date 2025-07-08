@@ -5,9 +5,12 @@ import { LogoutPage } from '../pages/logout.page'
 import { gotoMenu } from '../pages/menu.page'
 import { menuAlteration } from '../pages/Alteration/menu_alteration'
 import { searchAlterationAll } from '../pages/Alteration/search_alteration'
+import { mapsdataArray } from '../utils/maps-data'
+import { uploadGoogleSheet } from '../utils/uploadresult-google-sheet'
 
 import { loginData } from '../data/login_t.data'
 import { inquiryformArraykey_label } from '../data/Alteration/InquiryForm.data'
+import { detailinquiryformLocator } from '../locators/Alteration/alteration.locators'
 
 test.describe('loop data', () => {
 
@@ -25,8 +28,11 @@ test.describe('loop data', () => {
             const logoutpage = new LogoutPage(page, expect);
             const menualteration = new menuAlteration(page, expect);
             const searchalterationall = new searchAlterationAll(page, expect);
+            const mapsdataarray = new mapsdataArray(page, expect);
+            const uploadgooglesheet = new uploadGoogleSheet(page, expect);
 
             const logindata = loginData;
+            const detailinquiryformlocator = detailinquiryformLocator(page);
 
             // ไปยังหน้า NBS
             await loginpage.gotoNBS();
@@ -43,8 +49,14 @@ test.describe('loop data', () => {
             // กดดู รายละเอียด ใบสอบถาม
             await searchalterationall.clickdetailInquiryForm(inquiryformarray.policyno);
 
-            // // logout NBS Portal
-            // await logoutpage.logoutNBSPortal();
+            // เช็คข้อมูลบนหน้าจอกับ expected
+            const result_function_maps = await mapsdataarray.mapsdataarrayfile_checkdata(detailinquiryformlocator, inquiryformarray);
+
+            // logout NBS Portal
+            await logoutpage.logoutNBSPortal();
+
+            // นำข้อมูลขึ้น google sheet
+            await uploadgooglesheet.uploaddatatoGoogleSheet(result_function_maps.status_result_array, result_function_maps.assertion_result_array, testinfo);
         })
 
     }
