@@ -40,6 +40,41 @@ export class checkvalueExpected {
         }
         return { status_result, assertion_result }
     }
+
+    async checkvalueOndatabase (locators, valuedatabase, policyno) {
+        let status_result = ''
+        let assertion_result = ''
+
+        // เช็คว่า locators ที่ดึงมาเป็นประเภทอะไร และใช้ตามปะรเภท
+        let formatlocator = ''
+        if (typeof locators === 'string') {
+            formatlocator = await this.page.locator(locators);
+        } else if (typeof locators === 'object') {
+            formatlocator = await locators;
+        } else if (typeof locators === 'function') {
+            formatlocator = await this.page.locator(locators(policyno));
+        } else { }
+
+        await this.expect(formatlocator).toBeVisible();
+        const actualvalue = await formatlocator.textContent();
+        const cleanactualvalue = normalizeText(actualvalue)
+        const matchactual = cleanactualvalue?.trim();
+        const cleanvaluedatabase = normalizeText(valuedatabase)
+        if(matchactual === cleanvaluedatabase) {
+            console.log(`✅ Match: Expected = ${cleanvaluedatabase} : Actual   = ${matchactual}`)
+            status_result = 'Passed'
+            assertion_result = `✅ Match: Expected = ${cleanvaluedatabase} : Actual   = ${matchactual}`
+        } else if(matchactual.includes(cleanvaluedatabase)) {
+            console.log(`⚠️  Contains: Expected = ${cleanvaluedatabase} : Actual   = ${matchactual}`)
+            status_result = 'Passed'
+            assertion_result = `⚠️  Contains: Expected = ${cleanvaluedatabase} : Actual   = ${matchactual}`
+        } else {
+            console.log(`❌ Mismatch: Expected = ${cleanvaluedatabase} : Actual   = ${matchactual}`)
+            status_result = 'Failed'
+            assertion_result = `❌ Mismatch: Expected = ${cleanvaluedatabase} : Actual   = ${matchactual}`
+        }
+        return { status_result, assertion_result }
+    }
 }
 
 module.exports = { checkvalueExpected }
