@@ -61,17 +61,17 @@ export class checkvalueExpected {
         const matchactual = cleanactualvalue?.trim();
         const cleanvaluedatabase = normalizeText(valuedatabase)
         if(matchactual === cleanvaluedatabase) {
-            console.log(`✅ Match: Expected = ${cleanvaluedatabase} : Actual   = ${matchactual}`)
+            console.log(`✅ Match: Expected in database = ${cleanvaluedatabase} : Actual on screen = ${matchactual}`)
             status_result = 'Passed'
-            assertion_result = `✅ Match: Expected = ${cleanvaluedatabase} : Actual   = ${matchactual}`
+            assertion_result = `✅ Match: Expected in database = ${cleanvaluedatabase} : Actual on screen = ${matchactual}`
         } else if(matchactual.includes(cleanvaluedatabase)) {
-            console.log(`⚠️  Contains: Expected = ${cleanvaluedatabase} : Actual   = ${matchactual}`)
+            console.log(`⚠️  Contains: Expected in database = ${cleanvaluedatabase} : Actual on screen = ${matchactual}`)
             status_result = 'Passed'
-            assertion_result = `⚠️  Contains: Expected = ${cleanvaluedatabase} : Actual   = ${matchactual}`
+            assertion_result = `⚠️  Contains: Expected in database = ${cleanvaluedatabase} : Actual on screen = ${matchactual}`
         } else {
-            console.log(`❌ Mismatch: Expected = ${cleanvaluedatabase} : Actual   = ${matchactual}`)
+            console.log(`❌ Mismatch: Expected in database = ${cleanvaluedatabase} : Actual on screen = ${matchactual}`)
             status_result = 'Failed'
-            assertion_result = `❌ Mismatch: Expected = ${cleanvaluedatabase} : Actual   = ${matchactual}`
+            assertion_result = `❌ Mismatch: Expected in database = ${cleanvaluedatabase} : Actual on screen = ${matchactual}`
         }
         return { status_result, assertion_result }
     }

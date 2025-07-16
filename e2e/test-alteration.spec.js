@@ -9,7 +9,7 @@ import { mapsdataArray } from '../utils/maps-data'
 import { uploadGoogleSheet } from '../utils/uploadresult-google-sheet'
 
 import { loginData } from '../data/login_t.data'
-import { inquiryformArraykey_label } from '../data/Alteration/InquiryForm.data'
+import { inquiryformArraykey_label } from '../data/Alteration/inquiryform.data'
 import { detailinquiryformLocator } from '../locators/Alteration/alteration.locators'
 
 test.describe('loop data', () => {
@@ -93,11 +93,11 @@ test.describe('loop data', () => {
             // เช็คข้อมูลบนหน้าจอกับ expected
             const result_function_maps = await mapsdataarray.mapsdataarrayfile_checkdata_database(detailinquiryformlocator, inquiryformarray);
 
-            // // logout NBS Portal
-            // await logoutpage.logoutNBSPortal();
+            // logout NBS Portal
+            await logoutpage.logoutNBSPortal();
 
-            // // นำข้อมูลขึ้น google sheet
-            // await uploadgooglesheet.uploaddatatoGoogleSheet(result_function_maps.status_result_array, result_function_maps.assertion_result_array, testinfo);
+            // นำข้อมูลขึ้น google sheet
+            await uploadgooglesheet.uploaddatatoGoogleSheet(result_function_maps.status_result_array, result_function_maps.assertion_result_array, testinfo);
         })
 
     }
