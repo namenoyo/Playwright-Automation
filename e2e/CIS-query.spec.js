@@ -173,8 +173,11 @@ test.describe('Loop at data - มีหัว', () => {
             // Process map key ระหว่างไฟล์ และเช็คข้อมูล expected และ ข้อมูลบนหน้าจอ
             console.log('เลขกรมธรรม์ :', row.policy_no)
 
-            // เช็คข้อมูลบนหน้าจอกับ expected
-            const result_function_maps = await mapsdataarray.mapsdataarrayfile_checkdata_database(detailcustomercislocatorsarraykey, row);
+            // // เช็คข้อมูลบนหน้าจอกับ expected ผ่าน database และกำหนด field ผ่าน query
+            // const result_function_maps = await mapsdataarray.mapsdataarrayfile_checkdata_database(detailcustomercislocatorsarraykey, row);
+
+            // เช็คข้อมูลบนหน้าจอกับ expected ผ่าน database และกำหนด field ผ่าน data keys ที่กำหนดไว้ใน data
+            const result_function_maps = await mapsdataarray.mapsdataarrayfile_checkdata_database_keys(detailcustomercislocatorsarraykey, row);
 
             // ออกจากระบบ
             await logoutpage.logoutNBSPortal();

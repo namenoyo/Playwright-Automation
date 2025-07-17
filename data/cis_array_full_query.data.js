@@ -4,8 +4,9 @@ export const customerCISDataArraykey_label = [
     SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_1_In_Page_2_Detail_Panel: [{
       label: 'Panel ข้อมูลส่วนตัว > เลขข้อมูลลูกค้า',
       data: [['25662157384']],
-      query: 'SELECT label FROM bk_grid_label_expected g WHERE g.label = $1',
-      wherefield: ['Payment History']
+      query: 'SELECT * FROM bk_grid_label_expected g WHERE g.label = $1',
+      wherefield: ['Payment History'],
+      fieldneeds: ['label'],
     }],
     SELECTOR_CIS_MENU_SUB_1_SEARCH_1_Detail_1_panel_14_In_Page_29_Detail_Panel_Data: [{
       label: 'Panel_Policy_Detail > ประวัติชำระเบี้ย',
@@ -86,8 +87,9 @@ export const customerCISDataArraykey_label = [
           'สาขา'
         ]
       ],
-      query: 'SELECT r.col1, r.col2, r.col3, r.col4, r.col5, r.col6, r.col7, r.col8, r.col9, r.col10, r.col11, r.col12, r.col13 FROM bk_grid_label_expected g JOIN bk_grid_data_expected r ON g.id = r.grid_id WHERE g.label = $1 ORDER BY r.row_index',
-      wherefield: ['Payment History']
+      query: 'SELECT r.* FROM bk_grid_label_expected g JOIN bk_grid_data_expected r ON g.id = r.grid_id WHERE g.label = $1 ORDER BY r.row_index',
+      wherefield: ['Payment History'],
+      fieldneeds: ['col1', 'col2', 'col3', 'col4', 'col5', 'col6', 'col7', 'col8', 'col9', 'col10', 'col11', 'col12', 'col13'],
     }]
   },
 ]
