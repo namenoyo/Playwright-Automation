@@ -20,8 +20,10 @@ export const detailinquiryformLocator = (page) => ({
     /// ชีทสำหรับกำหนด Selector >> https://docs.google.com/spreadsheets/d/1kqtNcJh9Co5eS2jlaaLzYjYFVLiS3OMIJanJTN4-6Tg/edit?gid=1739637696#gid=1739637696
     // เข้าสู่หน้าจอระบบ Alteration > หน้าจอ ค้นหาใบสอบถาม> ดูรายละเอียด> Panel ข้อมูลผู้เอาประกันภัย
     //SELECTOR_Alteration_MENU_SUB_1_In_Page_2_Detail_Panel_Data: page.locator('div.MuiGrid-root.item.MuiGrid-container:has(div[class*="itemLabel"] > p:text-is("ชื่อ-นามสกุล")) >> div[class*="itemValue"] >> div >> p'),
+    
     SELECTOR_Alteration_MENU_SUB_1_In_Page_2_Detail_Panel_Data: page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("ข้อมูลผู้เอาประกันภัย")) ' + 'div.PanelDetailContentColumn-root:has(p:text-is("ชื่อ-นามสกุล")) div.itemValue p'),
     SELECTOR_Alteration_MENU_SUB_1_In_Page_4_Detail_Panel_Data: page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("ข้อมูลผู้เอาประกันภัย")) ' + 'div.PanelDetailContentColumn-root:has(p:text-is("ประเภทบัตร/เลขที่บัตร")) div.itemValue p'),
+    
     SELECTOR_Alteration_MENU_SUB_1_In_Page_6_Detail_Panel_Data: page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("ข้อมูลผู้เอาประกันภัย")) ' + 'div.PanelDetailContentColumn-root:has(p:text-is("สัญชาติ")) div.itemValue p'),
     SELECTOR_Alteration_MENU_SUB_1_In_Page_8_Detail_Panel_Data: page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("ข้อมูลผู้เอาประกันภัย")) ' + 'div.PanelDetailContentColumn-root:has(p:text-is("วันเดือนปี เกิด")) div.itemValue p'),
     SELECTOR_Alteration_MENU_SUB_1_In_Page_10_Detail_Panel_Data: page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("ข้อมูลผู้เอาประกันภัย")) ' + 'div.PanelDetailContentColumn-root:has(p:text-is("อายุ ณ วันเริ่มสัญญา")) div.itemValue p'),
@@ -52,10 +54,18 @@ export const detailinquiryformLocator = (page) => ({
     SELECTOR_Alteration_MENU_SUB_3_In_Page_2_Detail_Panel_Data: page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("รายละเอียดรับเรื่อง")) ' + 'div.PanelDetailContentColumn-root:has(p:text-is("หน่วยงานรับเรื่อง")) div.itemValue p'),
 
     //เข้าสู่หน้าจอระบบ Alteration > หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel สลักหลัง Non Finance
-    //SELECTOR_Alteration_MENU_SUB_4_In_Page_2_Detail_Panel_Data: page.locator('div.MuiGrid-root.item.MuiGrid-container:has(div[class*="itemLabel"] > p:text-is("ชื่อ - นามสกุล")) >> div[class*="itemValue"] >> div >> p'),
-
-    SELECTOR_Alteration_MENU_SUB_4_In_Page_2_Detail_Panel_Data: page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) ' + 'div.MuiExpansionPanel-root:has(p:text-is("เปลี่ยนแปลงคำนำหน้าชื่อ ชื่อ - นามสกุล ผู้เอาประกัน")) ' +  'div.PanelDetailContentColumn-root:has(p:text-is("ชื่อ - นามสกุล")) div.itemValue p'),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data : page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) ' + 'div.MuiExpansionPanel-root:has(p:text-is("เปลี่ยนแปลงคำนำหน้าชื่อ ชื่อ - นามสกุล ผู้เอาประกัน")) ' +  'div.PanelDetailContentColumn-root:has(p:text-is("ชื่อ - นามสกุล")) div.itemValue p'),
+    
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_10_Detail_Panel_Data : page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) ' + 'div.MuiExpansionPanel-root:has(p:text-is("ข้อมูลผู้ชำระเบี้ยเดิม")) ' +  'div.PanelDetailContentColumn-root:has(p:text-is("ประเภทผู้ชำระเบี้ย")) div.itemValue p'),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_12_Detail_Panel_Data : page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) ' + 'div.MuiExpansionPanel-root:has(p:text-is("ข้อมูลผู้ชำระเบี้ยเดิม")) ' +  'div.PanelDetailContentColumn-root:has(p:text-is("ชื่อ - นามสกุล")) div.itemValue p'),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_14_Detail_Panel_Data : page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) ' + 'div.MuiExpansionPanel-root:has(p:text-is("ข้อมูลผู้ชำระเบี้ยเดิม")) ' +  'div.PanelDetailContentColumn-root:has(p:text-is("ประเภทบัตร/เลขที่บัตร")) div.itemValue p'),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_16_Detail_Panel_Data : page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) ' + 'div.MuiExpansionPanel-root:has(p:text-is("ข้อมูลผู้ชำระเบี้ยเดิม")) ' +  'div.PanelDetailContentColumn-root:has(p:text-is("วันเดือนปี เกิด")) div.itemValue p'),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_18_Detail_Panel_Data : page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) ' + 'div.MuiExpansionPanel-root:has(p:text-is("ข้อมูลผู้ชำระเบี้ยเดิม")) ' +  'div.PanelDetailContentColumn-root:has(p:text-is("อายุ ปัจจุบัน")) div.itemValue p'),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_20_Detail_Panel_Data : page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) ' + 'div.MuiExpansionPanel-root:has(p:text-is("ข้อมูลผู้ชำระเบี้ยเดิม")) ' +  'div.PanelDetailContentColumn-root:has(p:text-is("ความสัมพันธ์")) div.itemValue p'),
+    
     //เข้าสู่หน้าจอระบบ Alteration > หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel รายละเอียดผู้ติดต่อขอเปลี่ยนแปลงกรมธรรม์
-    SELECTOR_Alteration_MENU_SUB_6_In_Page_2_Detail_Panel_Data: page.locator('div.MuiGrid-root.item.MuiGrid-container:has(div[class*="itemLabel"] > p:text-is("ประเภทติดต่อ (ผู้ติดต่อ)")) >> div[class*="itemValue"] >> div >> p'),
-    SELECTOR_Alteration_MENU_SUB_6_In_Page_6_Detail_Panel_Data: page.locator('div.MuiGrid-root.item.MuiGrid-container:has(div[class*="itemLabel"] > p:text-is("สาขา")) >> div[class*="itemValue"] >> div >> p'),
+    SELECTOR_Alteration_MENU_SUB_6_In_Page_2_Detail_Panel_Data: page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("รายละเอียดผู้ติดต่อขอเปลี่ยนแปลงกรมธรรม์")) div.PanelDetailContentColumn-root:has(p:text-is("ประเภทติดต่อ (ผู้ติดต่อ)"))  div.itemValue p'),
+    SELECTOR_Alteration_MENU_SUB_6_In_Page_4_Detail_Panel_Data: page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("รายละเอียดผู้ติดต่อขอเปลี่ยนแปลงกรมธรรม์")) div.PanelDetailContentColumn-root:has(p:text-is("ชื่อ - นามสกุล"))  div.itemValue p'),
+    SELECTOR_Alteration_MENU_SUB_6_In_Page_6_Detail_Panel_Data: page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("รายละเอียดผู้ติดต่อขอเปลี่ยนแปลงกรมธรรม์")) div.PanelDetailContentColumn-root:has(p:text-is("สาขา"))  div.itemValue p'),
+   
 })
