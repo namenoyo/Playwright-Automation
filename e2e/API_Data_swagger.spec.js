@@ -4,6 +4,8 @@ const fs = require('fs');
 const cisData = require('../data/cis.data');
 const { sendTestResultToGoogleSheetGSAppScript } = require('../utils/google-sheet-gsappscript.helper');
 
+import { googleSheet } from '../utils/google-sheet.helper';
+
 test.describe('API Customer Policy', () => {
   let context;
   let results = [];
@@ -108,3 +110,25 @@ test.describe('API Customer Policy', () => {
     await context.dispose();
   });
 });
+
+
+test ('Prepare Test Data - Step 2', async ({ request }) => {
+  const googlesheet = new googleSheet();
+
+  const tokenapi = 'my-secret-token';
+  const spreadsheetid = '17Is4JKQymvdsOV32YgFBUvzUzghAy5r1QIF31nRBTVw';
+  const sheetname = 'Jira';
+  const columns = '';
+
+  const apiUrl = `https://script.google.com/a/macros/ocean.co.th/s/AKfycbz5QSaYwBQRqBU5YM1qEA1ie9MNsTmmVcdM0PY0zTB9X1VS3y8xoIYcyOUl-n37gp6t/exec?token=${tokenapi}&spreadsheet=${spreadsheetid}&sheet=${sheetname}&cols=${columns}`;
+
+  console.log('Fetching data from API Google Sheet:', apiUrl);
+
+  const response = await request.get(apiUrl);
+  console.log(response);
+  // const data = await response.json();
+  // console.log('Fetched data:', data);
+
+  // const data = await googlesheet.fetchDataFromAPIGoogleSheet(apiUrl);
+  // console.log(data)
+})

@@ -10,6 +10,7 @@ const SHEET_ID = '1kqtNcJh9Co5eS2jlaaLzYjYFVLiS3OMIJanJTN4-6Tg';
 const SHEET_NAME = 'TEST_SUITE';
 const CREDENTIALS_PATH = path.resolve(__dirname, '../credentials/playwright-463202-b34b88b0bcf3.json'); // You must provide this file
 
+
 async function authorize() {
   const credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH, 'utf8'));
   const scopes = ['https://www.googleapis.com/auth/spreadsheets'];
@@ -65,3 +66,55 @@ async function sendTestResultToGoogleSheet(dataRows) {
 }
 
 module.exports = { updateTestStatus, sendTestResultToGoogleSheet };
+
+const CREDENTIALS_PATH_TOPPY = path.resolve(__dirname, '../credentials/playwright-463202-01ab1136a2c6.json'); // You must provide this file
+export class googleSheet {
+  async googlesheet_auth() {
+    // โหลด Credentials
+    const auth = new google.auth.GoogleAuth({
+      keyFile: CREDENTIALS_PATH_TOPPY, // ใช้ไฟล์ credentials ที่คุณมี
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
+    return auth
+  }
+
+  async getSheetData(spreadsheetId, sheetName, columns) {
+    const auth = await this.googlesheet_auth();
+    const sheets = google.sheets({ version: 'v4', auth: await auth.getClient() });
+
+    // ดึงข้อมูลทั้งแถว
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${sheetName}!A:Z`, // ดึงทั้งแถว (หรือระบุ range)
+    });
+
+    const rows = response.data.values;
+
+    if (!rows || rows.length === 0) {
+      console.log('ไม่พบข้อมูล');
+      return [];
+    }
+
+    // หาหัวข้อ column
+    const headers = rows[0];
+    const colIndexes = columns.map(col => headers.indexOf(col));
+
+    // คืนค่าเฉพาะคอลัมน์ที่ต้องการ
+    return rows.slice(1).map(row => colIndexes.map(i => row[i] || ''));
+
+  }
+
+  async fetchDataFromAPIGoogleSheet(apiUrl) {
+    // ใช้ fetch global ถ้ามี ไม่งั้น fallback ไป node-fetch
+    const fetchFn = typeof fetch === 'function'
+      ? fetch
+      : (await import('node-fetch')).default;
+
+    const response = await fetchFn(apiUrl);
+    
+    if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
+    return await response.json();
+  }
+}
+
+module.exports = { googleSheet };
