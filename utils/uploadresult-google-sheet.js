@@ -6,7 +6,7 @@ export class uploadGoogleSheet {
             this.expect = expect
     }
 
-    async uploaddatatoGoogleSheet(status, assertion, info) {
+    async uploadresulttestdatatoGoogleSheet(status, assertion, info) {
         let assertion_result_format = ''
         let status_result_format = ''
         let status_result_array_check = []

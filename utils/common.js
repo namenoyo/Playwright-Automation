@@ -4,3 +4,13 @@ export const normalizeText = (text) => {
     // เปลี่ยน ค่าว่างหลายช่อง ให้เป็นค่าว่างช่องเดียว
     return codespace.replace(/\s+/g, ' ');
 }
+
+export const changeobjecttoarray = (dataobject) => {
+    const resultchangeobj = dataobject.rows.map(obj => Object.values(obj));
+    return resultchangeobj;
+}
+
+export const pulldataobjectfromkeys = (dataobject, field) => {
+    const resultdatabasekeys = dataobject.rows.map(obj => field.map(key => obj[key]));
+    return resultdatabasekeys;
+}

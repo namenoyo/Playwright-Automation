@@ -1,10 +1,12 @@
 import { checkvalueExpected } from "./check-value";
 const db = require('../database/database');
+import { changeobjecttoarray } from "./common";
+import { pulldataobjectfromkeys } from "./common";
 
 export class mapsdataArray {
     constructor(page, expect) {
         this.page = page,
-            this.expect = expect
+        this.expect = expect
     }
 
     async mapsdataarrayfile_checkdata(locatorarray, expectedarray) {
@@ -108,8 +110,8 @@ export class mapsdataArray {
 
                 // ดึงข้อมูลจาก database
                 const resultvariable = await db.query(expectedvalue[0].query, expectedvalue[0].wherefield)
-                // แปลง object เป็น array
-                const resultchangeobj = resultvariable.rows.map(obj => Object.values(obj));
+                // เรียกใช้ function แปลง object เป็น array
+                const resultchangeobj = changeobjecttoarray(resultvariable);
 
                 // เช็คเงื่อนไข ถ้ามีข้อมูลใน key data มากกว่า 1 แสดงว่าเป็นข้อมูล data grid
                 if (resultchangeobj[0].length > 1) {
@@ -194,8 +196,8 @@ export class mapsdataArray {
 
                 // ดึงข้อมูลจาก database
                 const resultvariable = await db.query(expectedvalue[0].query, expectedvalue[0].wherefield)
-                // ดึงข้อมูลเฉพาะ keys ที่ต้องการ ผ่าน object
-                const resultdatabasekeys = resultvariable.rows.map(obj => expectedvalue[0].fieldneeds.map(key => obj[key]));
+                // เรียกใช้ function ดึงข้อมูลเฉพาะ keys ที่ต้องการ ผ่าน object
+                const resultdatabasekeys = pulldataobjectfromkeys(resultvariable, expectedvalue[0].fieldneeds);
 
                 // เช็คเงื่อนไข ถ้ามีข้อมูลใน key data มากกว่า 1 แสดงว่าเป็นข้อมูล data grid
                 if (resultdatabasekeys[0].length > 1) {

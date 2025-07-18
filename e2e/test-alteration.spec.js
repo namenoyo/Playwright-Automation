@@ -59,7 +59,7 @@ test.describe('loop data', () => {
             await logoutpage.logoutNBSPortal();
 
             // นำข้อมูลขึ้น google sheet
-            await uploadgooglesheet.uploaddatatoGoogleSheet(result_function_maps.status_result_array, result_function_maps.assertion_result_array, testinfo);
+            await uploadgooglesheet.uploadresulttestdatatoGoogleSheet(result_function_maps.status_result_array, result_function_maps.assertion_result_array, testinfo);
         })
 
         test(`test alteration check data in database เลขกรมธรรม์ : ${policyno}`, async ({ page }, testinfo) => {
@@ -100,7 +100,7 @@ test.describe('loop data', () => {
             await logoutpage.logoutNBSPortal();
 
             // นำข้อมูลขึ้น google sheet
-            await uploadgooglesheet.uploaddatatoGoogleSheet(result_function_maps.status_result_array, result_function_maps.assertion_result_array, testinfo);
+            await uploadgooglesheet.uploadresulttestdatatoGoogleSheet(result_function_maps.status_result_array, result_function_maps.assertion_result_array, testinfo);
         })
 
         test(`test alteration check data in database keys เลขกรมธรรม์ : ${policyno}`, async ({ page }, testinfo) => {
@@ -141,7 +141,7 @@ test.describe('loop data', () => {
             await logoutpage.logoutNBSPortal();
 
             // นำข้อมูลขึ้น google sheet
-            await uploadgooglesheet.uploaddatatoGoogleSheet(result_function_maps.status_result_array, result_function_maps.assertion_result_array, testinfo);
+            await uploadgooglesheet.uploadresulttestdatatoGoogleSheet(result_function_maps.status_result_array, result_function_maps.assertion_result_array, testinfo);
         })
 
     }
