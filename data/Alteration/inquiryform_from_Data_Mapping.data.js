@@ -26,8 +26,9 @@ export const inquiryformArraykey_label = [
     SELECTOR_Alteration_MENU_SUB_2_In_Page_6_Detail_Panel_Data: [{label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel รายละเอียดการชำระล่าสุด > ปีที/งวดที่', data: [['10000004994267']]}],
     SELECTOR_Alteration_MENU_SUB_2_In_Page_8_Detail_Panel_Data: [{label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel รายละเอียดการชำระล่าสุด > วันที่ชำระตั้งแต่', data: [['10/01/2568']]}],
     SELECTOR_Alteration_MENU_SUB_2_In_Page_10_Detail_Panel_Data: [{label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel รายละเอียดการชำระล่าสุด > วันที่ชำระถึง', data: [['09/02/2568']]}],
-
-   // SELECTOR_Alteration_MENU_SUB_4_In_Page_2_Detail_Panel_Data: [{ label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel สลักหลัง Non Finance > เปลี่ยนแปลงคำนำหน้าชื่อ ชื่อ - นามสกุล ผู้เอาประกัน > ชื่อ - นามสกุล', data: [['นายเจทีพันบี ดีเก้าพีบี']] }],
+    SELECTOR_Alteration_MENU_SUB_6_In_Page_2_Detail_Panel_Data: [{label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel รายละเอียดผู้ติดต่อขอเปลี่ยนแปลงกรมธรรม์ > ประเภทติดต่อ (ผู้ติดต่อ)', data: [['Branch สาขา']]}],
+    SELECTOR_Alteration_MENU_SUB_6_In_Page_6_Detail_Panel_Data: [{label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel รายละเอียดผู้ติดต่อขอเปลี่ยนแปลงกรมธรรม์ > สาขา', data: [['0116 : อโศก']]}],
+   
   },
   {
     // เขตแบ่งข้อมูล
@@ -56,7 +57,9 @@ export const inquiryformArraykey_label = [
     SELECTOR_Alteration_MENU_SUB_2_In_Page_6_Detail_Panel_Data: [{label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel รายละเอียดการชำระล่าสุด > ปีที/งวดที่', data: [['40000007175575']]}],
     SELECTOR_Alteration_MENU_SUB_2_In_Page_8_Detail_Panel_Data: [{label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel รายละเอียดการชำระล่าสุด > วันที่ชำระตั้งแต่', data: [['05/06/2568']]}],
     SELECTOR_Alteration_MENU_SUB_2_In_Page_10_Detail_Panel_Data: [{label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel รายละเอียดการชำระล่าสุด > วันที่ชำระถึง', data: [['04/06/2569']]}],
-    SELECTOR_Alteration_MENU_SUB_4_In_Page_2_Detail_Panel_Data: [{ label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel สลักหลัง Non Finance > เปลี่ยนแปลงคำนำหน้าชื่อ ชื่อ - นามสกุล ผู้เอาประกัน > ชื่อ - นามสกุล', data: [['น.ส.ซีเอสอง ยูพันแอล']] }],
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data: [{ label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel สลักหลัง Non Finance > เปลี่ยนแปลงคำนำหน้าชื่อ ชื่อ - นามสกุล ผู้เอาประกัน > ชื่อ - นามสกุล', data: [['น.ส.ซีเอสอง ยูพันแอล']] }],
+    SELECTOR_Alteration_MENU_SUB_6_In_Page_2_Detail_Panel_Data: [{label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel รายละเอียดผู้ติดต่อขอเปลี่ยนแปลงกรมธรรม์ > ประเภทติดต่อ (ผู้ติดต่อ)', data: [['ฝ่ายปฏิบัติการประกันชีวิต']]}],
+    SELECTOR_Alteration_MENU_SUB_6_In_Page_4_Detail_Panel_Data: [{label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel รายละเอียดผู้ติดต่อขอเปลี่ยนแปลงกรมธรรม์ > ชื่อ - นามสกุล', data: [['น.ส.ซีเอสอง ยูพันแอล']]}],
   },
   {
     // เขตแบ่งข้อมูล
@@ -85,7 +88,16 @@ export const inquiryformArraykey_label = [
     SELECTOR_Alteration_MENU_SUB_2_In_Page_6_Detail_Panel_Data: [{label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel รายละเอียดการชำระล่าสุด > ปีที/งวดที่', data: [['40000007086435']]}],
     SELECTOR_Alteration_MENU_SUB_2_In_Page_8_Detail_Panel_Data: [{label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel รายละเอียดการชำระล่าสุด > วันที่ชำระตั้งแต่', data: [['30/04/2568']]}],
     SELECTOR_Alteration_MENU_SUB_2_In_Page_10_Detail_Panel_Data: [{label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel รายละเอียดการชำระล่าสุด > วันที่ชำระถึง', data: [['29/04/2569']]}],
-    SELECTOR_Alteration_MENU_SUB_4_In_Page_2_Detail_Panel_Data: [{ label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel สลักหลัง Non Finance > เปลี่ยนแปลงคำนำหน้าชื่อ ชื่อ - นามสกุล ผู้เอาประกัน > ชื่อ - นามสกุล', data: [['นายบีหกซี แอลพันดี']] }],
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data: [{ label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel สลักหลัง Non Finance > เปลี่ยนแปลงคำนำหน้าชื่อ ชื่อ - นามสกุล ผู้เอาประกัน > ชื่อ - นามสกุล', data: [['นายบีหกซี แอลพันดี']] }],
+    SELECTOR_Alteration_MENU_SUB_6_In_Page_2_Detail_Panel_Data: [{label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel รายละเอียดผู้ติดต่อขอเปลี่ยนแปลงกรมธรรม์ > ประเภทติดต่อ (ผู้ติดต่อ)', data: [['ฝ่ายลูกค้าสัมพันธ์']]}],
+    SELECTOR_Alteration_MENU_SUB_6_In_Page_4_Detail_Panel_Data: [{label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel รายละเอียดผู้ติดต่อขอเปลี่ยนแปลงกรมธรรม์ > ชื่อ - นามสกุล', data: [['นายบีหกซี แอลพันดี']]}],
+  
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_10_Detail_Panel_Data: [{ label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel สลักหลัง Non Finance > Sub Panel เปลี่ยนแปลงผู้ชำระเบี้ยประกัน > ข้อมูลผู้ชำระเบี้ยเดิม > ประเภทผู้ชำระเบี้ย', data: [['ผู้เอาประกันภัย']] }],
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_12_Detail_Panel_Data: [{ label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel สลักหลัง Non Finance > Sub Panel เปลี่ยนแปลงผู้ชำระเบี้ยประกัน > ข้อมูลผู้ชำระเบี้ยเดิม > ชื่อ - นามสกุล', data: [['นายบีหกซี แอลพันดี']] }],
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_14_Detail_Panel_Data: [{ label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel สลักหลัง Non Finance > Sub Panel เปลี่ยนแปลงผู้ชำระเบี้ยประกัน > ข้อมูลผู้ชำระเบี้ยเดิม > ประเภทบัตร/เลขที่บัตร', data: [['3-101X-XXXX0-761']] }],
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_16_Detail_Panel_Data: [{ label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel สลักหลัง Non Finance > Sub Panel เปลี่ยนแปลงผู้ชำระเบี้ยประกัน > ข้อมูลผู้ชำระเบี้ยเดิม > วันเดือนปี เกิด', data: [['24/02/2511']] }],
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_18_Detail_Panel_Data: [{ label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel สลักหลัง Non Finance > Sub Panel เปลี่ยนแปลงผู้ชำระเบี้ยประกัน > ข้อมูลผู้ชำระเบี้ยเดิม > อายุ ปัจจุบัน', data: [['57 ปี']] }],
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_20_Detail_Panel_Data: [{ label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel สลักหลัง Non Finance > Sub Panel เปลี่ยนแปลงผู้ชำระเบี้ยประกัน > ข้อมูลผู้ชำระเบี้ยเดิม > ความสัมพันธ์', data: [['ผู้เอาประกันภัย']] }],
   },
   // {
   //   // เขตแบ่งข้อมูล
