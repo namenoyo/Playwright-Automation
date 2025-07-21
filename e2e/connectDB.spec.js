@@ -10,6 +10,7 @@ test('test show data on query database', async ({ page }) => {
     const query = 'SELECT * FROM bk_grid_label_expected g'
     const wherefield = ['Payment History']
     const resultvariable = await db.query(query)
+    console.log(resultvariable.rows);
     console.log(resultvariable.rows[0].label)
 
     // แปลง object เป็น array
