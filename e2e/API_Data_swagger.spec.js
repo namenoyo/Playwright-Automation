@@ -3,6 +3,8 @@ const { test, expect } = require('@playwright/test');
 const fs = require('fs');
 const cisData = require('../data/cis.data');
 const { sendTestResultToGoogleSheetGSAppScript } = require('../utils/google-sheet-gsappscript.helper');
+const { GoogleSheet } = require('../utils/google-sheet-OAuth.helper');
+const { formatQuery } = require('../utils/common');
 
 test.describe('API Customer Policy', () => {
   let context;
@@ -108,3 +110,33 @@ test.describe('API Customer Policy', () => {
     await context.dispose();
   });
 });
+
+
+test ('Prepare Test Data - Step 2', async () => {
+  const gs = new GoogleSheet();
+
+  // เริ่มต้น Auth
+  const auth = await gs.initAuth();
+
+  // ส่ง spreadsheetId และ range มาจากไฟล์ test
+  const spreadsheetId = '1HTN4nBwcEt2Uff4Al2vaa49db-kbc_LTe0G_99lB3FY'; 
+  const range = 'ดึงจาก API_Data_swagger.spec.js!G2:H'; 
+
+  const rows = await gs.fetchSheetData(auth, spreadsheetId, range);
+
+  console.log('=== Google Sheet Data ===');
+  console.table(rows);
+
+  // ตัวอย่างการตรวจสอบข้อมูล
+  expect(rows.length).toBeGreaterThan(0);
+
+  const query_step2 = await gs.fetchSheetData(auth, spreadsheetId, 'Step_Prepare_Test Data!E7');
+  console.log('=== Query Step 2 ===', typeof query_step2[0][0]);
+
+  console.log('=== Formatted Query ===', formatQuery(query_step2[0][0]));
+
+  // // update ข้อมูลลง google sheet
+  // const updatedRows = await gs.updateRows(auth, spreadsheetId, 'ดึงจาก API_Data_swagger.spec.js!G9:H', rows);
+  // console.log('=== Updated Rows ===', updatedRows);
+});
+

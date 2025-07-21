@@ -10,6 +10,7 @@ const SHEET_ID = '1kqtNcJh9Co5eS2jlaaLzYjYFVLiS3OMIJanJTN4-6Tg';
 const SHEET_NAME = 'TEST_SUITE';
 const CREDENTIALS_PATH = path.resolve(__dirname, '../credentials/playwright-463202-b34b88b0bcf3.json'); // You must provide this file
 
+
 async function authorize() {
   const credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH, 'utf8'));
   const scopes = ['https://www.googleapis.com/auth/spreadsheets'];
@@ -65,3 +66,5 @@ async function sendTestResultToGoogleSheet(dataRows) {
 }
 
 module.exports = { updateTestStatus, sendTestResultToGoogleSheet };
+
+const CREDENTIALS_PATH_TOPPY = path.resolve(__dirname, '../credentials/client_secret_484402800987-2hlrd7m1rbh4lbrq1bupbjr898b4mrn1.apps.googleusercontent.com.json'); // You must provide this file
