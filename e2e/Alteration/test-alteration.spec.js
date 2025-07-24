@@ -1,16 +1,16 @@
 import { test, expect } from '@playwright/test'
 
-import { LoginPage } from '../pages/login_t.page'
-import { LogoutPage } from '../pages/logout.page'
-import { gotoMenu } from '../pages/menu.page'
-import { menuAlteration } from '../pages/Alteration/menu_alteration'
-import { searchAlterationAll } from '../pages/Alteration/search_alteration'
-import { mapsdataArray } from '../utils/maps-data'
-import { uploadGoogleSheet } from '../utils/uploadresult-google-sheet'
+import { LoginPage } from '../../pages/login_t.page'
+import { LogoutPage } from '../../pages/logout.page'
+import { gotoMenu } from '../../pages/menu.page'
+import { menuAlteration } from '../../pages/Alteration/menu_alteration'
+import { searchAlterationAll } from '../../pages/Alteration/search_alteration'
+import { mapsdataArray } from '../../utils/maps-data'
+import { uploadGoogleSheet } from '../../utils/uploadresult-google-sheet'
 
-import { loginData } from '../data/login_t.data'
-import { inquiryformArraykey_label } from '../data/Alteration/inquiryform.data'
-import { detailinquiryformLocator } from '../locators/Alteration/alteration.locators'
+import { loginData } from '../../data/login_t.data'
+import { inquiryformArraykey_label } from '../../data/Alteration/inquiryform.data'
+import { detailinquiryformLocator } from '../../locators/Alteration/alteration.locators'
 // import { inquiryformArraykey_label } from '../data/Alteration/inquiryform_from_Data_Mapping.data'
 
 test.describe('loop data', () => {
