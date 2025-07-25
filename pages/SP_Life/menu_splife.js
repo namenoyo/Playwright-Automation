@@ -9,8 +9,16 @@ class menuSPLife {
     async menuSPLife(mainmenu) {
         const menusplifelocator = menusplifeLocator(this.page, mainmenu);
 
-        await this.expect(menusplifelocator.mainmenu).toBeVisible();
+        await this.expect(menusplifelocator.mainmenu).toBeVisible({ timeout: 5000 });
         await menusplifelocator.mainmenu.click();
+        
+        if (mainmenu === 'สร้างใบเสนอราคา') {
+            await this.expect(this.page).toHaveURL(/.*#quotation/); // ใช้ regex
+        } else if (mainmenu === 'หน้าหลัก') {
+            await this.expect(this.page).toHaveURL(/.*#home/); // ใช้ regex
+        } else if (mainmenu === 'รายงานการทำประกันชีวิต') {
+            await this.expect(this.page).toHaveURL(/.*#report/); // ใช้ regex สำหรับเมนูอื่นๆ
+        }
 
     }
 }

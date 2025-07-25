@@ -76,11 +76,45 @@ class GoogleSheet {
     return authClient;
   }
 
-  // อ่านข้อมูลจาก Google Sheet โดยรับ spreadsheetId และ range
+  // // อ่านข้อมูลจาก Google Sheet โดยรับ spreadsheetId และ range
+  // async fetchSheetData(auth, spreadsheetId, range) {
+  //   const sheets = google.sheets({ version: 'v4', auth });
+  //   const res = await sheets.spreadsheets.values.get({ spreadsheetId, range });
+  //   return res.data.values || [];
+  // }
+
   async fetchSheetData(auth, spreadsheetId, range) {
     const sheets = google.sheets({ version: 'v4', auth });
     const res = await sheets.spreadsheets.values.get({ spreadsheetId, range });
-    return res.data.values || [];
+
+    const values = res.data.values || [];
+
+    // หาจำนวน column ตาม range ที่กำหนด (เช่น A1:D10 → columns = 4)
+    const columnCount = range.match(/([A-Z]+):([A-Z]+)/);
+    let maxCols = 0;
+    if (columnCount) {
+      const colStart = columnCount[1];
+      const colEnd = columnCount[2];
+      const colToNumber = col => {
+        let num = 0;
+        for (let i = 0; i < col.length; i++) {
+          num *= 26;
+          num += col.charCodeAt(i) - 64; // 'A' = 65
+        }
+        return num;
+      };
+      maxCols = colToNumber(colEnd) - colToNumber(colStart) + 1;
+    }
+
+    // เติมช่องว่างถ้าข้อมูลไม่ครบ column
+    const normalized = values.map(row => {
+      while (row.length < maxCols) {
+        row.push('');
+      }
+      return row;
+    });
+
+    return normalized;
   }
 
   // บันทึกข้อมูลลง Google Sheet โดยรับ spreadsheetId และ range และ rows (ข้อมูลที่เป็น array 2D)
@@ -101,6 +135,21 @@ class GoogleSheet {
       range,
       valueInputOption: 'RAW',
       requestBody: { values: rows }  // rows ต้องเป็น 2D array เช่น [['A1', 'B1'], ['A2', 'B2']]
+    });
+    return res.data;
+  }
+
+  // เพิ่มแถวใหม่ที่ range ที่กำหนด โดยไม่ลบข้อมูลเก่า ใช้สำหรับ append ข้อมูลใหม่ต่อท้ายข้อมูลเก่า
+  async appendRows(auth, spreadsheetId, range, rows) {
+    const sheets = google.sheets({ version: 'v4', auth });
+    const res = await sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range, // เช่น 'Sheet1!C:D'
+      valueInputOption: 'RAW',
+      insertDataOption: 'INSERT_ROWS',
+      requestBody: {
+        values: rows, // rows ต้องเป็น 2D array เช่น [['A1', 'B1'], ['A2', 'B2']]
+      },
     });
     return res.data;
   }

@@ -21,7 +21,7 @@ export class checkvalueExpected {
             formatlocator = await this.page.locator(locators(policyno));
         } else { }
 
-        await this.expect(formatlocator).toBeVisible();
+        await this.expect(formatlocator).toBeVisible({ timeout: 5000 });
         const actualvalue = await formatlocator.textContent();
         const cleanactualvalue = normalizeText(actualvalue)
         const matchactual = cleanactualvalue?.trim();
@@ -56,7 +56,7 @@ export class checkvalueExpected {
             formatlocator = await this.page.locator(locators(policyno));
         } else { }
 
-        await this.expect(formatlocator).toBeVisible();
+        await this.expect(formatlocator).toBeVisible({ timeout: 5000 });
         const actualvalue = await formatlocator.textContent();
         const cleanactualvalue = normalizeText(actualvalue)
         const matchactual = cleanactualvalue?.trim();
@@ -91,24 +91,24 @@ export class checkvalueExpected {
             formatlocator = await this.page.locator(locators(policyno));
         } else { }
 
-        await this.expect(formatlocator).toBeVisible();
+        await this.expect(formatlocator).toBeVisible({ timeout: 5000 });
         const actualvalue = await formatlocator.textContent();
         const cleanactualvalue = normalizeText(actualvalue)
         const matchactual = cleanactualvalue?.trim();
         const split_total = split_total_unit(matchactual); // แยกตัวเลขออกจากหน่วย "บาท"
         const cleanexpectedvalue = normalizeText(expectedvalue)
         if(split_total === cleanexpectedvalue) {
-            console.log(`✅ Match: Expected = ${cleanexpectedvalue} : Actual   = ${split_total}`)
+            console.log(`✅ Match: Expected = ${cleanexpectedvalue} : Actual = ${split_total}`)
             status_result = 'Passed'
-            assertion_result = `✅ Match: Expected = ${cleanexpectedvalue} : Actual   = ${split_total}`
+            assertion_result = `✅ Match: Expected = ${cleanexpectedvalue} : Actual = ${split_total}`
         } else if(split_total.includes(cleanexpectedvalue)) {
-            console.log(`⚠️  Contains: Expected = ${cleanexpectedvalue} : Actual   = ${split_total}`)
+            console.log(`⚠️  Contains: Expected = ${cleanexpectedvalue} : Actual = ${split_total}`)
             status_result = 'Passed'
-            assertion_result = `⚠️  Contains: Expected = ${cleanexpectedvalue} : Actual   = ${split_total}`
+            assertion_result = `⚠️  Contains: Expected = ${cleanexpectedvalue} : Actual = ${split_total}`
         } else {
-            console.log(`❌ Mismatch: Expected = ${cleanexpectedvalue} : Actual   = ${split_total}`)
+            console.log(`❌ Mismatch: Expected = ${cleanexpectedvalue} : Actual = ${split_total}`)
             status_result = 'Failed'
-            assertion_result = `❌ Mismatch: Expected = ${cleanexpectedvalue} : Actual   = ${split_total}`
+            assertion_result = `❌ Mismatch: Expected = ${cleanexpectedvalue} : Actual = ${split_total}`
         }
         return { status_result, assertion_result }
     }
