@@ -21,3 +21,8 @@ export const formatQuery = (query) => {
     .replace(/\s*\n\s*/g, ' ')  // แปลงบรรทัดใหม่เป็น space
     .trim();
 }
+
+export const split_total_unit = (total_unit) => {
+    const split_total = total_unit.replace(' บาท', '');
+    return split_total;
+}
