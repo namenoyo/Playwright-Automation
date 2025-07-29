@@ -40,8 +40,10 @@ export default defineConfig({
     {
       name: 'chromium',
       use: {
-        ...devices['Desktop Chrome'],
-        viewport: { width: 1080, height: 1920 },
+        // ...devices['Desktop Chrome'],
+        headless: true,
+        viewport: { width: 1920, height: 1080 },
+        screen: { width: 1920, height: 1080 },
         launchOptions: {
           args: ['--window-size=1080,1920'],
         },
@@ -51,8 +53,10 @@ export default defineConfig({
     {
       name: 'firefox',
       use: {
-        ...devices['Desktop Firefox'],
-        viewport: { width: 1080, height: 1920 },
+        // ...devices['Desktop Firefox'],
+        headless: true,
+        viewport: { width: 1920, height: 1080 },
+        screen: { width: 1920, height: 1080 },
         launchOptions: {
           args: ['--window-size=1080,1920'],
         },
@@ -62,8 +66,10 @@ export default defineConfig({
     {
       name: 'webkit',
       use: {
-        ...devices['Desktop Safari'],
-        viewport: { width: 1080, height: 1920 },
+        // ...devices['Desktop Safari'],
+        headless: true,
+        viewport: { width: 1920, height: 1080 },
+        screen: { width: 1920, height: 1080 },
         launchOptions: {
           args: ['--window-size=1080,1920'],
         },
