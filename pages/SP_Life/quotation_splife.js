@@ -48,10 +48,18 @@ class quotationSPLife {
         const menusplife = new menuSPLife(this.page, this.expect);
         const mainsplife = new mainSPLife(this.page, this.expect);
 
+        // if (this.quatationlocator.insurancesum.not.toHaveValue({ timeout: 5000 })) {
+        //     await this.quatationlocator.insurancesum.fill(insurancesum); // กรอกจำนวนเงินเอาประกันภัย
+        // } else {
+        //     await this.quatationlocator.insurancesum.fill(insurancesum); // กรอกจำนวนเงินเอาประกันภัย
+        // }
+
         // รอให้มีค่า default ขึ้นมาใน input
+        await this.quatationlocator.insurancesum.click(); // คลิกที่ช่องกรอกจำนวนเงินเอาประกันภัย
         await this.expect(this.quatationlocator.insurancesum).not.toHaveValue('', { timeout: 5000 }); // รอจนค่าขึ้นมา (ไม่ใช่ค่าว่าง)
         await this.quatationlocator.insurancesum.fill(insurancesum); // กรอกจำนวนเงินเอาประกันภัย
         // รอให้มีค่า default ขึ้นมาใน input
+        await this.quatationlocator.coverageyear.click(); // คลิกที่ช่องกรอกระยะเวลาคุ้มครอง
         await this.expect(this.quatationlocator.coverageyear).not.toHaveValue('', { timeout: 5000 }); // รอจนค่าขึ้นมา (ไม่ใช่ค่าว่าง)
         await this.quatationlocator.coverageyear.fill(coverageyear); // กรอกระยะเวลาคุ้มครอง
         // รอให้ปุ่มปรากฏและพร้อมใช้งาน (visible + enabled)
