@@ -52,6 +52,7 @@ export class uploadGoogleSheet {
         console.log('สิ้นสุด loop เก็บค่า parameter ของ google\n')
 
         console.log('เริ่ม การส่งข้อมูลไปที่ google sheet')
+        console.log(googledatabatch)
         if (googledatabatch.length > 0) {
             await sendBatchTestResultToGoogleSheetGSAppScript(googledatabatch)
         }

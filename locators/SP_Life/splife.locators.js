@@ -25,6 +25,11 @@ const quotationLocator = (page, insurancename, titlename) => ({
     coverageyear: page.locator('input[name="coverageYear"]'), // กรอกระยะเวลาคุ้มครอง
     calisurance: page.locator('span[class="MuiButton-label"]', { hasText: 'คำนวณเบี้ย' }), // ปุ่มคำนวณเบี้ย
     totalinsurancepremium: page.locator('div[class="MuiPaper-root quotation-paper MuiPaper-elevation2 MuiPaper-rounded"]').locator('p[class="MuiTypography-root MuiTypography-body1"]').nth(1), // แสดงเบี้ยประกันภัยทั้งหมด
+
+    // pop-up แจ้งเตือน
+    popupAlert: page.locator('div[class="MuiDialogContent-root"] > h6'), // pop-up แจ้งเตือน
+    // ปุ่มปิด pop-up
+    closePopupButton: page.locator('div[class="MuiPaper-root MuiDialog-paper MuiDialog-paperScrollPaper MuiDialog-paperWidthXs MuiPaper-elevation24 MuiPaper-rounded"]').locator('span[class="MuiIconButton-label"]'),
 })
 
 module.exports = { menusplifeLocator, mainmenuLocator, quotationLocator };
