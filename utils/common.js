@@ -47,12 +47,12 @@ class popupAlert {
 
             // ถ้ามี pop-up แจ้งเตือน ให้ปิด pop-up
             await this.quatationlocator.closePopupButton.click();
-        } else if (await this.quatationlocator.popupError502.isVisible({ timeout: 10000 })) {
+        } else if (await this.quatationlocator.popupAlertServer.isVisible({ timeout: 10000 })) {
             // ถ้า pop-up แจ้งเตือนปรากฏขึ้น ให้ดึงข้อความใน pop-up
-            popupmessage = await this.quatationlocator.popupError502.innerText();
+            popupmessage = await this.quatationlocator.popupAlertServer.innerText();
 
             // ถ้ามี pop-up แจ้งเตือน ให้ปิด pop-up
-            await this.quatationlocator.closePopupError502Button.click();
+            await this.quatationlocator.closePopupErrorServerButton.click();
         }
 
         return { popupmessage };

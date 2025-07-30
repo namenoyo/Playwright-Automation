@@ -5,19 +5,46 @@ const { menuSPLife } = require('../../pages/SP_Life/menu_splife');
 const { mainSPLife } = require('../../pages/SP_Life/main_splife');
 const { quotationSPLife } = require('../../pages/SP_Life/quotation_splife');
 const { uploadGoogleSheet } = require('../../utils/uploadresult-google-sheet');
+const { popupAlert } = require('../../utils/common');
 
 
 test.describe.only('SP Life Insurance Premium Calculation Tests', () => {
 
     // กำหนดช่วงแถวที่ต้องการทดสอบ
     const ranges = [
-        { start: 2117, end: 2117 }, // ทดสอบแถวเดียว
+        { start: 7, end: 2116 }, // ทดสอบแถวเดียว
 
-        // { start: 7, end: 428 }, // ช่วงแรก
-        // { start: 429, end: 850 }, // ช่วงที่สอง
-        // { start: 851, end: 1272 }, // ช่วงที่สาม
-        // { start: 1273, end: 1694 }, // ช่วงที่สี่
-        // { start: 1695, end: 2116 }, // ช่วงที่ห้า
+        // // // 3 เครื่อง แบ่งเป็นช่วงละ 704 โดยเริ่มที่ 7
+        // { start: 7, end: 710 }, // ช่วงแรก (704)
+        // { start: 711, end: 1414 }, // ช่วงที่สอง (704)
+        // { start: 1415, end: 2116 }, // ช่วงที่สาม (702)
+
+        // // 5 เครื่อง แบ่งเป็นช่วงละ 422 โดยเริ่มที่ 7
+        // { start: 7, end: 428 }, // ช่วงแรก (422)
+        // { start: 429, end: 850 }, // ช่วงที่สอง (422)
+        // { start: 851, end: 1272 }, // ช่วงที่สาม (422)
+        // { start: 1273, end: 1694 }, // ช่วงที่สี่ (422)
+        // { start: 1695, end: 2116 }, // ช่วงที่ห้า (422)
+
+        // // 10 เครื่อง แบ่งเป็นช่วงละ 211 โดยเริ่มที่ 7
+        // { start: 7, end: 218 }, // ช่วงแรก (211)
+        // { start: 219, end: 430 }, // ช่วงที่สอง (211)
+        // { start: 431, end: 642 }, // ช่วงที่สาม (211)
+        // { start: 643, end: 854 }, // ช่วงที่สี่ (211)
+        // { start: 855, end: 1066 }, // ช่วงที่ห้า (211)
+        // { start: 1067, end: 1278 }, // ช่วงที่หก (211)
+        // { start: 1279, end: 1490 }, // ช่วงที่เจ็ด (211)
+        // { start: 1491, end: 1702 }, // ช่วงที่แปด (211)
+        // { start: 1703, end: 1914 }, // ช่วงที่เก้า (211)
+        // { start: 1915, end: 2116 }, // ช่วงที่สิบ (202)
+
+        // // 6 เครื่อง แบ่งเป็นช่วงละ 100 โดยเริ่มที่ 7
+        // { start: 7, end: 106 }, // ช่วงแรก (100)
+        // { start: 107, end: 206 }, // ช่วงที่สอง (100)
+        // { start: 207, end: 306 }, // ช่วงที่สาม (100)
+        // { start: 307, end: 406 }, // ช่วงที่สี่ (100)
+        // { start: 407, end: 506 }, // ช่วงที่ห้า (100)
+        // { start: 507, end: 606 }, // ช่วงที่หก (100)
     ];
 
     // // ดึง worker index (0,1,2,...)
@@ -26,7 +53,7 @@ test.describe.only('SP Life Insurance Premium Calculation Tests', () => {
     for (const [index, row] of ranges.entries()) {
         test(`Calculate Insurance Premium - Worker ${index + 1}`, async ({ page }) => {
             // กำหนดเวลา timeout สำหรับ test case นี้เป็น 24 ชั่วโมง (86400000 มิลลิวินาที)
-            test.setTimeout(3300000);
+            test.setTimeout(7200000);
 
             console.log(`Worker ${index + 1} processing rows from ${row.start} to ${row.end}`);
 
@@ -38,6 +65,8 @@ test.describe.only('SP Life Insurance Premium Calculation Tests', () => {
             const mainsplife = new mainSPLife(page, expect);
             const quotationsplife = new quotationSPLife(page, expect);
             const uploadgooglesheet = new uploadGoogleSheet(page, expect);
+
+            const popupalert = new popupAlert(page);
 
             // เริ่มต้น Auth
             const auth = await googlesheet.initAuth();
@@ -66,6 +95,9 @@ test.describe.only('SP Life Insurance Premium Calculation Tests', () => {
             await loginpagesplife.login(datalogin[0][0], datalogin[1][0]);
             // Wait for the page to load completely
             await page.waitForLoadState('networkidle');
+
+            // รอให้ pop-up แจ้งเตือนปรากฏ
+            await popupalert.popupAlertMessage();
 
             // // กดเมนูหลัก
             // await menusplife.menuSPLife('รายงานการทำประกันชีวิต');
@@ -119,13 +151,17 @@ test.describe.only('SP Life Insurance Premium Calculation Tests', () => {
                 }
 
                 // เลือกแบบประกันตามข้อมูลในแถว
-                await quotationsplife.selectInsurancePlan(insurancename);
+                const quotationspliferesult = await quotationsplife.selectInsurancePlan(insurancename);
 
                 // กรอกข้อมูลผู้เอาประกันภัย
                 const insuredInformationresult = await quotationsplife.insuredInformation(idcard, titlename, name, surname, birthdate, formattedExpireDate, mobileno);
 
                 // คำนวณเบี้ยประกันภัยและวิธีการชำระเบี้ย
                 const quotation_result = await quotationsplife.calculatepremiumandpaymentmode(insurancesum, coverageYear, expectedinsurancesum, datalogin[0][0], datalogin[1][0]); // กรอกจำนวนเงินเอาประกันภัย และระยะเวลาคุ้มครอง
+
+                let result_format_array_quotationspliferesult = quotationspliferesult.popuparray
+                    .filter(item => item) // กรองเฉพาะค่าที่ไม่เป็น falsy ('' / null / undefined / 0 / false)
+                    .join(' | ');
 
                 let result_format_array_insuredInformationresult = insuredInformationresult.popuparray
                     .filter(item => item) // กรองเฉพาะค่าที่ไม่เป็น falsy ('' / null / undefined / 0 / false)
@@ -136,7 +172,7 @@ test.describe.only('SP Life Insurance Premium Calculation Tests', () => {
                     .join(' | ');
 
                 // เอา assertion result และ status มาเก็บใน array
-                combined_result_array.push([rowdata, quotation_result.checkvalue.status_result, `${quotation_result.checkvalue.assertion_result} | ประเภท : ${insurancegroup} | ชื่อแบบประกัน : ${insurancename} | เพศ : ${unisex} | อายุ : ${age} | ทุน : ${insurancesum} | coverage : ${coverageYear} |`, getBangkokTimestamp(), `${result_format_array_insuredInformationresult} | ${result_format_array_quotation_result}`]);
+                combined_result_array.push([rowdata, quotation_result.checkvalue.status_result, `${quotation_result.checkvalue.assertion_result} | ประเภท : ${insurancegroup} | ชื่อแบบประกัน : ${insurancename} | เพศ : ${unisex} | อายุ : ${age} | ทุน : ${insurancesum} | coverage : ${coverageYear} |`, getBangkokTimestamp(), `${result_format_array_quotationspliferesult} | ${result_format_array_insuredInformationresult} | ${result_format_array_quotation_result}`]);
 
                 const endTime = Date.now();    // จบจับเวลา
                 const duration = (endTime - startTime) / 1000; // วินาที
