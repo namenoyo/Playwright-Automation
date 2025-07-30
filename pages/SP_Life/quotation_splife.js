@@ -19,11 +19,20 @@ class quotationSPLife {
     }
 
     async selectInsurancePlan(insurancename) {
+        const popupalert = new popupAlert(this.page);
+        
+        let popupmessage = '';
+        let popuparray = [];
+
         // รอให้หน้า "สร้างใบเสนอราคา" โหลด
         await this.page.waitForTimeout(500); // รอครึ่งวินาที
         // ดึงข้อมูล locator ใส่ในตัวแปรเพอื่ให้เรียกใช้ได้ง่ายขึ้น
         await this.expect(quotationLocator(this.page, insurancename).insurancePlan).toBeVisible({ timeout: 10000 });
         await quotationLocator(this.page, insurancename).insurancePlan.click();
+        popupmessage = await popupalert.popupAlertMessage(); // ดึงข้อความใน pop-up แจ้งเตือน (ถ้ามี)
+        popuparray.push(popupmessage.popupmessage); // เก็บข้อความ pop-up แจ้งเตือน (ถ้ามี)
+
+        return { popuparray };
     }
 
     async insuredInformation(idcard, titlename, name, surname, birthdate, cardexpiredate, mobileno) {
