@@ -11,11 +11,13 @@ test.describe.only('SP Life Insurance Premium Calculation Tests', () => {
 
     // กำหนดช่วงแถวที่ต้องการทดสอบ
     const ranges = [
-        { start: 7, end: 206 }, // ช่วงแรก
-        // { start: 207, end: 406 }, // ช่วงที่สอง
-        // { start: 407, end: 606 }, // ช่วงที่สาม
-        // { start: 607, end: 806 }, // ช่วงที่สี่
-        // { start: 807, end: 1006 }, // ช่วงที่ห้า
+        // { start: 2137, end: 2137 }, // ทดสอบแถวเดียว
+
+        { start: 7, end: 306 }, // ช่วงแรก
+        // { start: 307, end: 606 }, // ช่วงที่สอง
+        // { start: 607, end: 906 }, // ช่วงที่สาม
+        // { start: 907, end: 1106 }, // ช่วงที่สี่
+        // { start: 1107, end: 1306 }, // ช่วงที่ห้า
     ];
 
     // // ดึง worker index (0,1,2,...)
@@ -24,7 +26,7 @@ test.describe.only('SP Life Insurance Premium Calculation Tests', () => {
     for (const [index, row] of ranges.entries()) {
         test(`Calculate Insurance Premium - Worker ${index + 1}`, async ({ page }) => {
             // กำหนดเวลา timeout สำหรับ test case นี้เป็น 24 ชั่วโมง (86400000 มิลลิวินาที)
-            test.setTimeout(900000);
+            test.setTimeout(1800000);
 
             console.log(`Worker ${index + 1} processing rows from ${row.start} to ${row.end}`);
 
@@ -79,6 +81,8 @@ test.describe.only('SP Life Insurance Premium Calculation Tests', () => {
 
             for (const row in data) {
 
+                let popupmessagearray = []; // Array สำหรับเก็บข้อความ pop-up แจ้งเตือน
+
                 const rowdata = data[row][0]; // ข้อมูลแถวปัจจุบัน
                 const insurancegroup = data[row][1]; // กลุ่มแบบประกัน
                 const insurancename = data[row][2]; // ชื่อแบบประกัน
@@ -118,13 +122,21 @@ test.describe.only('SP Life Insurance Premium Calculation Tests', () => {
                 await quotationsplife.selectInsurancePlan(insurancename);
 
                 // กรอกข้อมูลผู้เอาประกันภัย
-                await quotationsplife.insuredInformation(idcard, titlename, name, surname, birthdate, formattedExpireDate, mobileno);
+                const insuredInformationresult = await quotationsplife.insuredInformation(idcard, titlename, name, surname, birthdate, formattedExpireDate, mobileno);
 
                 // คำนวณเบี้ยประกันภัยและวิธีการชำระเบี้ย
-                const quotation_result = await quotationsplife.calculatepremiumandpaymentmode(insurancesum, coverageYear, expectedinsurancesum); // กรอกจำนวนเงินเอาประกันภัย และระยะเวลาคุ้มครอง
+                const quotation_result = await quotationsplife.calculatepremiumandpaymentmode(insurancesum, coverageYear, expectedinsurancesum, datalogin[0][0], datalogin[1][0]); // กรอกจำนวนเงินเอาประกันภัย และระยะเวลาคุ้มครอง
+
+                let result_format_array_insuredInformationresult = insuredInformationresult.popuparray
+                    .filter(item => item) // กรองเฉพาะค่าที่ไม่เป็น falsy ('' / null / undefined / 0 / false)
+                    .join(' | ');
+
+                let result_format_array_quotation_result = quotation_result.popuparray
+                    .filter(item => item) // กรองเฉพาะค่าที่ไม่เป็น falsy ('' / null / undefined / 0 / false)
+                    .join(' | ');
 
                 // เอา assertion result และ status มาเก็บใน array
-                combined_result_array.push([rowdata, quotation_result.checkvalue.status_result, `${quotation_result.checkvalue.assertion_result} | ประเภท : ${insurancegroup} | ชื่อแบบประกัน : ${insurancename} | เพศ : ${unisex} | อายุ : ${age} | ทุน : ${insurancesum} | coverage : ${coverageYear} |`, getBangkokTimestamp(), quotation_result.popupmessage]);
+                combined_result_array.push([rowdata, quotation_result.checkvalue.status_result, `${quotation_result.checkvalue.assertion_result} | ประเภท : ${insurancegroup} | ชื่อแบบประกัน : ${insurancename} | เพศ : ${unisex} | อายุ : ${age} | ทุน : ${insurancesum} | coverage : ${coverageYear} |`, getBangkokTimestamp(), `${result_format_array_insuredInformationresult} | ${result_format_array_quotation_result}`]);
 
                 const endTime = Date.now();    // จบจับเวลา
                 const duration = (endTime - startTime) / 1000; // วินาที
@@ -136,6 +148,8 @@ test.describe.only('SP Life Insurance Premium Calculation Tests', () => {
 
             // อัพโหลดผลลัพธ์ไปยัง Google Sheet เป็นการ append ที่ range ที่กำหนด แบบต่อท้าย โดยจะไม่ลบข้อมูลเก่าใน Google Sheet
             await googlesheet.appendRows(auth, spreadsheetId_write, range_write, combined_result_array);
+
+            console.log(`Worker ${index + 1} completed processing rows from ${row.start} to ${row.end}`);
 
         });
     }

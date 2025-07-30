@@ -1,21 +1,21 @@
-export const normalizeText = (text) => {
+const normalizeText = (text) => {
     // เปลี่ยน code &nbsp เป็น ค่าว่าง
     const codespace = String(text).replace(/\u00A0/g, ' ');
     // เปลี่ยน ค่าว่างหลายช่อง ให้เป็นค่าว่างช่องเดียว
     return codespace.replace(/\s+/g, ' ');
 }
 
-export const changeobjecttoarray = (dataobject) => {
+const changeobjecttoarray = (dataobject) => {
     const resultchangeobj = dataobject.rows.map(obj => Object.values(obj));
     return resultchangeobj;
 }
 
-export const pulldataobjectfromkeys = (dataobject, field) => {
+const pulldataobjectfromkeys = (dataobject, field) => {
     const resultdatabasekeys = dataobject.rows.map(obj => field.map(key => obj[key]));
     return resultdatabasekeys;
 }
 
-export const formatQuery = (query) => {
+const formatQuery = (query) => {
     return query
     .replace(/--.*$/gm, '')     // ลบ comment `-- ...` ทุกบรรทัด
     .replace(/\s*\n\s*/g, ' ')  // แปลงบรรทัดใหม่เป็น space
@@ -26,3 +26,36 @@ export const split_total_unit = (total_unit) => {
     const split_total = total_unit.replace(' บาท', '');
     return split_total;
 }
+
+const { quotationLocator } = require('../locators/SP_Life/splife.locators');
+class popupAlert {
+    constructor(page) {
+        this.page = page;
+        this.quatationlocator = quotationLocator(page);
+    }
+
+    async popupAlertMessage() {
+
+        // ดึงข้อความใน pop-up แจ้งเตือน
+        let popupmessage = '';
+
+        if (await this.quatationlocator.popupAlert.isVisible({ timeout: 5000 })) {
+            // ถ้า pop-up แจ้งเตือนปรากฏขึ้น ให้ดึงข้อความใน pop-up
+            popupmessage = await this.quatationlocator.popupAlert.innerText();
+
+            // ถ้ามี pop-up แจ้งเตือน ให้ปิด pop-up
+            await this.quatationlocator.closePopupButton.click();
+        }
+        // } else if (await this.quatationlocator..isVisible({ timeout: 5000 })) {
+        //     // ถ้า pop-up แจ้งเตือนปรากฏขึ้น ให้ดึงข้อความใน pop-up
+        //     popupmessage = await this.quatationlocator..innerText();
+
+        //     // ถ้ามี pop-up แจ้งเตือน ให้ปิด pop-up
+        //     await this.quatationlocator..click();
+        // }
+
+        return { popupmessage };
+    }
+}
+
+module.exports = { popupAlert, normalizeText, changeobjecttoarray, pulldataobjectfromkeys, formatQuery, split_total_unit };
