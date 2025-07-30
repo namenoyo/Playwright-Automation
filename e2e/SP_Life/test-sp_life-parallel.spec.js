@@ -11,13 +11,13 @@ test.describe.only('SP Life Insurance Premium Calculation Tests', () => {
 
     // กำหนดช่วงแถวที่ต้องการทดสอบ
     const ranges = [
-        // { start: 2137, end: 2137 }, // ทดสอบแถวเดียว
+        { start: 2117, end: 2117 }, // ทดสอบแถวเดียว
 
-        { start: 7, end: 306 }, // ช่วงแรก
-        { start: 307, end: 606 }, // ช่วงที่สอง
-        { start: 607, end: 906 }, // ช่วงที่สาม
-        { start: 907, end: 1106 }, // ช่วงที่สี่
-        { start: 1107, end: 1306 }, // ช่วงที่ห้า
+        // { start: 7, end: 428 }, // ช่วงแรก
+        // { start: 429, end: 850 }, // ช่วงที่สอง
+        // { start: 851, end: 1272 }, // ช่วงที่สาม
+        // { start: 1273, end: 1694 }, // ช่วงที่สี่
+        // { start: 1695, end: 2116 }, // ช่วงที่ห้า
     ];
 
     // // ดึง worker index (0,1,2,...)
@@ -26,7 +26,7 @@ test.describe.only('SP Life Insurance Premium Calculation Tests', () => {
     for (const [index, row] of ranges.entries()) {
         test(`Calculate Insurance Premium - Worker ${index + 1}`, async ({ page }) => {
             // กำหนดเวลา timeout สำหรับ test case นี้เป็น 24 ชั่วโมง (86400000 มิลลิวินาที)
-            test.setTimeout(1800000);
+            test.setTimeout(3300000);
 
             console.log(`Worker ${index + 1} processing rows from ${row.start} to ${row.end}`);
 

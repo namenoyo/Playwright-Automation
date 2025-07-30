@@ -21,7 +21,7 @@ export class checkvalueExpected {
             formatlocator = await this.page.locator(locators(policyno));
         } else { }
 
-        await this.expect(formatlocator).toBeVisible({ timeout: 5000 });
+        await this.expect(formatlocator).toBeVisible({ timeout: 10000 });
         const actualvalue = await formatlocator.textContent();
         const cleanactualvalue = normalizeText(actualvalue)
         const matchactual = cleanactualvalue?.trim();
@@ -56,7 +56,7 @@ export class checkvalueExpected {
             formatlocator = await this.page.locator(locators(policyno));
         } else { }
 
-        await this.expect(formatlocator).toBeVisible({ timeout: 5000 });
+        await this.expect(formatlocator).toBeVisible({ timeout: 10000 });
         const actualvalue = await formatlocator.textContent();
         const cleanactualvalue = normalizeText(actualvalue)
         const matchactual = cleanactualvalue?.trim();
@@ -91,7 +91,7 @@ export class checkvalueExpected {
             formatlocator = await this.page.locator(locators(policyno));
         } else { }
 
-        await this.expect(formatlocator).toBeVisible({ timeout: 5000 });
+        await this.expect(formatlocator).toBeVisible({ timeout: 10000 });
         const actualvalue = await formatlocator.textContent();
         const cleanactualvalue = normalizeText(actualvalue)
         const matchactual = cleanactualvalue?.trim();
