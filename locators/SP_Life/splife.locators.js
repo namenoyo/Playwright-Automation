@@ -30,6 +30,10 @@ const quotationLocator = (page, insurancename, titlename) => ({
     popupAlert: page.locator('div[class="MuiDialogContent-root"] > h6'), // pop-up แจ้งเตือน
     // ปุ่มปิด pop-up
     closePopupButton: page.locator('div[class="MuiPaper-root MuiDialog-paper MuiDialog-paperScrollPaper MuiDialog-paperWidthXs MuiPaper-elevation24 MuiPaper-rounded"]').locator('span[class="MuiIconButton-label"]'),
+    // pop-up error 502
+    popupError502: page.locator('div[class="MuiPaper-root MuiDialog-paper jss6129 MuiDialog-paperScrollPaper MuiDialog-paperWidthSm MuiPaper-elevation24 MuiPaper-rounded"]').locator('div[class="MuiDialogContent-root jss6134"]').locator('div[class="MuiGrid-root MuiGrid-item"]').nth(1), // pop-up แจ้งเตือน error 502
+    // ปุ่มปิด pop-up error 502
+    closePopupError502Button: page.locator('div[class="MuiPaper-root MuiDialog-paper jss6129 MuiDialog-paperScrollPaper MuiDialog-paperWidthSm MuiPaper-elevation24 MuiPaper-rounded"]').locator('span[class="MuiButton-label"]').nth(1),
 })
 
 module.exports = { menusplifeLocator, mainmenuLocator, quotationLocator };
