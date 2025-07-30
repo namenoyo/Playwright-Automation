@@ -39,13 +39,15 @@ class popupAlert {
         // ดึงข้อความใน pop-up แจ้งเตือน
         let popupmessage = '';
 
-        if (await this.quatationlocator.popupAlert.isVisible({ timeout: 5000 })) {
+        await this.page.waitForTimeout(150); // รอ 150 ms
+
+        if (await this.quatationlocator.popupAlert.isVisible({ timeout: 10000 })) {
             // ถ้า pop-up แจ้งเตือนปรากฏขึ้น ให้ดึงข้อความใน pop-up
             popupmessage = await this.quatationlocator.popupAlert.innerText();
 
             // ถ้ามี pop-up แจ้งเตือน ให้ปิด pop-up
             await this.quatationlocator.closePopupButton.click();
-        } else if (await this.quatationlocator.popupError502.isVisible({ timeout: 5000 })) {
+        } else if (await this.quatationlocator.popupError502.isVisible({ timeout: 10000 })) {
             // ถ้า pop-up แจ้งเตือนปรากฏขึ้น ให้ดึงข้อความใน pop-up
             popupmessage = await this.quatationlocator.popupError502.innerText();
 

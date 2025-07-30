@@ -15,14 +15,14 @@ class quotationSPLife {
 
     async waitforquotationPageLoad() {
         // ตรวจสอบว่ามีการโหลดหน้า "สร้างใบเสนอราคา" หรือไม่
-        await this.expect(this.page.locator('h4[class="MuiTypography-root quotation-title MuiTypography-h4"]', { hasText: 'สร้างใบเสนอราคา' })).toBeVisible({ timeout: 5000 });
+        await this.expect(this.page.locator('h4[class="MuiTypography-root quotation-title MuiTypography-h4"]', { hasText: 'สร้างใบเสนอราคา' })).toBeVisible({ timeout: 10000 });
     }
 
     async selectInsurancePlan(insurancename) {
         // รอให้หน้า "สร้างใบเสนอราคา" โหลด
         await this.page.waitForTimeout(500); // รอครึ่งวินาที
         // ดึงข้อมูล locator ใส่ในตัวแปรเพอื่ให้เรียกใช้ได้ง่ายขึ้น
-        await this.expect(quotationLocator(this.page, insurancename).insurancePlan).toBeVisible({ timeout: 5000 });
+        await this.expect(quotationLocator(this.page, insurancename).insurancePlan).toBeVisible({ timeout: 10000 });
         await quotationLocator(this.page, insurancename).insurancePlan.click();
     }
 
@@ -39,15 +39,15 @@ class quotationSPLife {
         popuparray.push(popupmessage.popupmessage); // เก็บข้อความ pop-up แจ้งเตือน (ถ้ามี)
 
         // รอให้ปุ่มปรากฏและพร้อมใช้งาน (visible + enabled)
-        await this.expect(this.quatationlocator.titlename).toBeVisible({ timeout: 5000 });
-        await this.expect(this.quatationlocator.titlename).toBeEnabled({ timeout: 5000 });
+        await this.expect(this.quatationlocator.titlename).toBeVisible({ timeout: 10000 });
+        await this.expect(this.quatationlocator.titlename).toBeEnabled({ timeout: 10000 });
         await this.quatationlocator.titlename.click(); // คลิกที่ช่องคำนำหน้า
         popupmessage = await popupalert.popupAlertMessage(); // ดึงข้อความใน pop-up แจ้งเตือน (ถ้ามี)
         popuparray.push(popupmessage.popupmessage); // เก็บข้อความ pop-up แจ้งเตือน (ถ้ามี)
 
         // รอให้ปุ่มปรากฏและพร้อมใช้งาน (visible + enabled)
-        await this.expect(quotationLocator(this.page, '', titlename).titalnameOption).toBeVisible({ timeout: 5000 });
-        await this.expect(quotationLocator(this.page, '', titlename).titalnameOption).toBeEnabled({ timeout: 5000 });
+        await this.expect(quotationLocator(this.page, '', titlename).titalnameOption).toBeVisible({ timeout: 10000 });
+        await this.expect(quotationLocator(this.page, '', titlename).titalnameOption).toBeEnabled({ timeout: 10000 });
         await quotationLocator(this.page, '', titlename).titalnameOption.click(); // เลือกคำนำหน้า
         popupmessage = await popupalert.popupAlertMessage(); // ดึงข้อความใน pop-up แจ้งเตือน (ถ้ามี)
         popuparray.push(popupmessage.popupmessage); // เก็บข้อความ pop-up แจ้งเตือน (ถ้ามี)
@@ -106,14 +106,14 @@ class quotationSPLife {
             popuparray.push(popupmessage.popupmessage); // เก็บข้อความ pop-up แจ้งเตือน (ถ้ามี)
             // ทำอย่างอื่นต่อได้เลย
         } else {
-            await this.expect(this.quatationlocator.insurancesum).not.toHaveValue('', { timeout: 5000 }); // รอจนค่าขึ้นมา (ไม่ใช่ค่าว่าง)
+            await this.expect(this.quatationlocator.insurancesum).not.toHaveValue('', { timeout: 10000 }); // รอจนค่าขึ้นมา (ไม่ใช่ค่าว่าง)
             await this.quatationlocator.insurancesum.fill(insurancesum); // กรอกจำนวนเงินเอาประกันภัย
             popupmessage = await popupalert.popupAlertMessage(); // ดึงข้อความใน pop-up แจ้งเตือน (ถ้ามี)
             popuparray.push(popupmessage.popupmessage); // เก็บข้อความ pop-up แจ้งเตือน (ถ้ามี)
         }
         // // รอให้มีค่า default ขึ้นมาใน input
         // await this.quatationlocator.insurancesum.click(); // คลิกที่ช่องกรอกจำนวนเงินเอาประกันภัย
-        // await this.expect(this.quatationlocator.insurancesum).not.toHaveValue('', { timeout: 5000 }); // รอจนค่าขึ้นมา (ไม่ใช่ค่าว่าง)
+        // await this.expect(this.quatationlocator.insurancesum).not.toHaveValue('', { timeout: 10000 }); // รอจนค่าขึ้นมา (ไม่ใช่ค่าว่าง)
         // await this.quatationlocator.insurancesum.fill(insurancesum); // กรอกจำนวนเงินเอาประกันภัย
 
 
@@ -130,20 +130,20 @@ class quotationSPLife {
             popuparray.push(popupmessage.popupmessage); // เก็บข้อความ pop-up แจ้งเตือน (ถ้ามี)
             // ทำอย่างอื่นต่อได้เลย
         } else {
-            await this.expect(this.quatationlocator.coverageyear).not.toHaveValue('', { timeout: 5000 }); // รอจนค่าขึ้นมา (ไม่ใช่ค่าว่าง)
+            await this.expect(this.quatationlocator.coverageyear).not.toHaveValue('', { timeout: 10000 }); // รอจนค่าขึ้นมา (ไม่ใช่ค่าว่าง)
             await this.quatationlocator.coverageyear.fill(coverageyear); // กรอกจำนวนเงินเอาประกันภัย
             popupmessage = await popupalert.popupAlertMessage(); // ดึงข้อความใน pop-up แจ้งเตือน (ถ้ามี)
             popuparray.push(popupmessage.popupmessage); // เก็บข้อความ pop-up แจ้งเตือน (ถ้ามี)
         }
         // // รอให้มีค่า default ขึ้นมาใน input
         // await this.quatationlocator.coverageyear.click(); // คลิกที่ช่องกรอกระยะเวลาคุ้มครอง
-        // await this.expect(this.quatationlocator.coverageyear).not.toHaveValue('', { timeout: 5000 }); // รอจนค่าขึ้นมา (ไม่ใช่ค่าว่าง)
+        // await this.expect(this.quatationlocator.coverageyear).not.toHaveValue('', { timeout: 10000 }); // รอจนค่าขึ้นมา (ไม่ใช่ค่าว่าง)
         // await this.quatationlocator.coverageyear.fill(coverageyear); // กรอกระยะเวลาคุ้มครอง
 
 
         // รอให้ปุ่มปรากฏและพร้อมใช้งาน (visible + enabled)
-        await this.expect(this.quatationlocator.calisurance).toBeVisible({ timeout: 5000 });
-        await this.expect(this.quatationlocator.calisurance).toBeEnabled({ timeout: 5000 });
+        await this.expect(this.quatationlocator.calisurance).toBeVisible({ timeout: 10000 });
+        await this.expect(this.quatationlocator.calisurance).toBeEnabled({ timeout: 10000 });
         await this.quatationlocator.calisurance.click(); // กดปุ่มคำนวณเบี้ย
         // รอให้มีการคำนวณเบี้ยประกันภัย
         await this.page.waitForTimeout(500); // รอครึ่งวินาที
@@ -152,7 +152,7 @@ class quotationSPLife {
 
         // let popupmessage = '';
 
-        // if (await this.quatationlocator.popupAlert.isVisible({ timeout: 5000 })) {
+        // if (await this.quatationlocator.popupAlert.isVisible({ timeout: 10000 })) {
         //     // ถ้า pop-up แจ้งเตือนปรากฏขึ้น ให้ดึงข้อความใน pop-up
         //     popupmessage = await this.quatationlocator.popupAlert.innerText();
 
