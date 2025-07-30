@@ -8,7 +8,7 @@ export class LogoutPage {
     }
 
     async logoutNBSWeb() {
-        await this.expect(this.logoutlocators.logoutNBSWebButton).toBeVisible();
+        await this.expect(this.logoutlocators.logoutNBSWebButton).toBeVisible({ timeout: 10000 });
         this.page.on('dialog', async (dialog) => {
             console.log(`Dialog message: ${dialog.message()}`)
             await dialog.accept(); // หรือ dialog.dismiss() ถ้าต้องการยกเลิก
@@ -17,10 +17,18 @@ export class LogoutPage {
     }
 
     async logoutNBSPortal() {
-        await this.expect(this.page.locator(this.logoutlocators.logoutNBSPortalButton)).toBeVisible();
+        await this.expect(this.page.locator(this.logoutlocators.logoutNBSPortalButton)).toBeVisible({ timeout: 10000 });
         await this.page.locator(this.logoutlocators.logoutNBSPortalButton).click();
         await this.expect(this.logoutlocators.logoutNBSPortalConfirm).toBeVisible({ timeout: 10000 });
         await this.logoutlocators.logoutNBSPortalConfirm.click();
+    }
+
+    async logoutSPLife() {
+        await this.expect(this.logoutlocators.arrowDownButton).toBeVisible({ timeout: 10000 });
+        await this.logoutlocators.arrowDownButton.click();
+        await this.expect(this.logoutlocators.logoutButton).toBeVisible({ timeout: 10000 });
+        await this.logoutlocators.logoutButton.click();
+        // await this.expect(this.page.locator('p', { hasText: "เข้าสู่ระบบใช้งาน SP Life" })).toBeVisible({ timeout: 10000 });
     }
 }
 
