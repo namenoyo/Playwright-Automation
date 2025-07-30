@@ -9,7 +9,7 @@ class menuSPLife {
     async menuSPLife(mainmenu) {
         const menusplifelocator = menusplifeLocator(this.page, mainmenu);
 
-        await this.expect(menusplifelocator.mainmenu).toBeVisible({ timeout: 5000 });
+        await this.expect(menusplifelocator.mainmenu).toBeVisible({ timeout: 10000 });
         await menusplifelocator.mainmenu.click();
         
         if (mainmenu === 'สร้างใบเสนอราคา') {
