@@ -45,14 +45,13 @@ class popupAlert {
 
             // ถ้ามี pop-up แจ้งเตือน ให้ปิด pop-up
             await this.quatationlocator.closePopupButton.click();
-        }
-        // } else if (await this.quatationlocator..isVisible({ timeout: 5000 })) {
-        //     // ถ้า pop-up แจ้งเตือนปรากฏขึ้น ให้ดึงข้อความใน pop-up
-        //     popupmessage = await this.quatationlocator..innerText();
+        } else if (await this.quatationlocator.popupError502.isVisible({ timeout: 5000 })) {
+            // ถ้า pop-up แจ้งเตือนปรากฏขึ้น ให้ดึงข้อความใน pop-up
+            popupmessage = await this.quatationlocator.popupError502.innerText();
 
-        //     // ถ้ามี pop-up แจ้งเตือน ให้ปิด pop-up
-        //     await this.quatationlocator..click();
-        // }
+            // ถ้ามี pop-up แจ้งเตือน ให้ปิด pop-up
+            await this.quatationlocator.closePopupError502Button.click();
+        }
 
         return { popupmessage };
     }

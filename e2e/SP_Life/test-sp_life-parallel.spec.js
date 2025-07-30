@@ -14,10 +14,10 @@ test.describe.only('SP Life Insurance Premium Calculation Tests', () => {
         // { start: 2137, end: 2137 }, // ทดสอบแถวเดียว
 
         { start: 7, end: 306 }, // ช่วงแรก
-        // { start: 307, end: 606 }, // ช่วงที่สอง
-        // { start: 607, end: 906 }, // ช่วงที่สาม
-        // { start: 907, end: 1106 }, // ช่วงที่สี่
-        // { start: 1107, end: 1306 }, // ช่วงที่ห้า
+        { start: 307, end: 606 }, // ช่วงที่สอง
+        { start: 607, end: 906 }, // ช่วงที่สาม
+        { start: 907, end: 1106 }, // ช่วงที่สี่
+        { start: 1107, end: 1306 }, // ช่วงที่ห้า
     ];
 
     // // ดึง worker index (0,1,2,...)
