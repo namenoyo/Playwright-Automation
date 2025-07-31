@@ -35,9 +35,9 @@ const quotationLocator = (page, insurancename, titlename) => ({
     // // ปุ่มปิด pop-up error 502
     // closePopupError502Button: page.locator('div[class="MuiPaper-root MuiDialog-paper jss6129 MuiDialog-paperScrollPaper MuiDialog-paperWidthSm MuiPaper-elevation24 MuiPaper-rounded"]').locator('span[class="MuiButton-label"]').nth(1),
     // pop-up error server
-    popupAlertServer: page.locator('div[aria-labelledby="confirmation-dialog-title"]').locator('div[class="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-true"]').locator('div[class="MuiGrid-root MuiGrid-item"]'), // pop-up แจ้งเตือน error server
+    popupAlertServer: page.locator('div[aria-labelledby="confirmation-dialog-title"]').locator('div[class="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-true"]').locator('div[class="MuiGrid-root MuiGrid-item"]').first(), // pop-up แจ้งเตือน error server
     // ปุ่มปิด pop-up error server
-    closePopupErrorServerButton: page.locator('div[aria-labelledby="confirmation-dialog-title"]').locator('div[class="MuiGrid-root MuiGrid-item"]').locator('button[tabindex="0"]'),
+    closePopupErrorServerButton: page.locator('div[aria-labelledby="confirmation-dialog-title"]').locator('div[class="MuiGrid-root MuiGrid-item"]').locator('button[tabindex="0"]').first(),
 
 })
 

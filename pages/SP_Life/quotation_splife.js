@@ -111,14 +111,26 @@ class quotationSPLife {
         }
         if (checkvalueinsurancesum === '') {
             await this.quatationlocator.insurancesum.click(); // คลิกที่ช่องกรอกจำนวนเงินเอาประกันภัย
-            await this.quatationlocator.insurancesum.fill(insurancesum); // กรอกจำนวนเงินเอาประกันภัย
+
+            // await this.quatationlocator.insurancesum.fill(insurancesum); // กรอกจำนวนเงินเอาประกันภัย
+            // เคลียร์ค่าใน input
+            await this.page.keyboard.press('Control+A');
+            await this.page.keyboard.press('Backspace');
+            await this.page.keyboard.type(insurancesum, {delay: 100});
+
             popupmessage = await popupalert.popupAlertMessage(); // ดึงข้อความใน pop-up แจ้งเตือน (ถ้ามี)
             popuparray.push(popupmessage.popupmessage); // เก็บข้อความ pop-up แจ้งเตือน (ถ้ามี)
             // ทำอย่างอื่นต่อได้เลย
         } else {
             await this.expect(this.quatationlocator.insurancesum).not.toHaveValue('', { timeout: 60000 }); // รอจนค่าขึ้นมา (ไม่ใช่ค่าว่าง)
             await this.quatationlocator.insurancesum.click(); // คลิกที่ช่องกรอกจำนวนเงินเอาประกันภัย
-            await this.quatationlocator.insurancesum.fill(insurancesum); // กรอกจำนวนเงินเอาประกันภัย
+
+            // await this.quatationlocator.insurancesum.fill(insurancesum); // กรอกจำนวนเงินเอาประกันภัย
+            // เคลียร์ค่าใน input
+            await this.page.keyboard.press('Control+A');
+            await this.page.keyboard.press('Backspace');
+            await this.page.keyboard.type(insurancesum, {delay: 100});
+
             popupmessage = await popupalert.popupAlertMessage(); // ดึงข้อความใน pop-up แจ้งเตือน (ถ้ามี)
             popuparray.push(popupmessage.popupmessage); // เก็บข้อความ pop-up แจ้งเตือน (ถ้ามี)
         }
@@ -137,14 +149,28 @@ class quotationSPLife {
         }
         if (checkvaluecoverageyear === '') {
             await this.quatationlocator.coverageyear.click(); // คลิกที่ช่องกรอกระยะเวลาคุ้มครอง
-            await this.quatationlocator.coverageyear.fill(coverageyear); // กรอกจำนวนเงินเอาประกันภัย
+
+            // await this.quatationlocator.coverageyear.fill(coverageyear); // กรอกจำนวนเงินเอาประกันภัย
+            // เคลียร์ค่าใน input
+            await this.page.keyboard.press('Control+A');
+            await this.page.keyboard.press('Backspace');
+            await this.page.keyboard.type(coverageyear, {delay: 100});
+
+
             popupmessage = await popupalert.popupAlertMessage(); // ดึงข้อความใน pop-up แจ้งเตือน (ถ้ามี)
             popuparray.push(popupmessage.popupmessage); // เก็บข้อความ pop-up แจ้งเตือน (ถ้ามี)
             // ทำอย่างอื่นต่อได้เลย
         } else {
             await this.expect(this.quatationlocator.coverageyear).not.toHaveValue('', { timeout: 60000 }); // รอจนค่าขึ้นมา (ไม่ใช่ค่าว่าง)
             await this.quatationlocator.coverageyear.click(); // คลิกที่ช่องกรอกระยะเวลาคุ้มครอง
-            await this.quatationlocator.coverageyear.fill(coverageyear); // กรอกจำนวนเงินเอาประกันภัย
+
+            // await this.quatationlocator.coverageyear.fill(coverageyear); // กรอกจำนวนเงินเอาประกันภัย
+            // เคลียร์ค่าใน input
+            await this.page.keyboard.press('Control+A');
+            await this.page.keyboard.press('Backspace');
+            await this.page.keyboard.type(coverageyear, {delay: 100});
+
+
             popupmessage = await popupalert.popupAlertMessage(); // ดึงข้อความใน pop-up แจ้งเตือน (ถ้ามี)
             popuparray.push(popupmessage.popupmessage); // เก็บข้อความ pop-up แจ้งเตือน (ถ้ามี)
         }
