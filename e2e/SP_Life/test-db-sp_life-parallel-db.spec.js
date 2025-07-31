@@ -16,6 +16,7 @@ test.describe.configure({ mode: 'parallel' }); // ให้เคสในไฟ
 let db;
 let array_result_query;
 
+// config query และ database
 test.beforeAll(async () => {
     const db_name = 'splife';
     const db_env = 'SIT';
@@ -44,9 +45,6 @@ test.afterAll(async () => {
 
 for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
     test(`worker ${chunkIndex + 1}`, async ({ page }, testInfo) => {
-        // กำหนดเวลา timeout สำหรับ test case นี้เป็น 2 ชั่วโมง (7200000 มิลลิวินาที)
-        test.setTimeout(7200000);
-
         const configured = testInfo.config.workers;
         const workers =
             typeof configured === 'number' ? configured : 1; // เผื่อกรณีตั้งแบบเปอร์เซ็นต์
@@ -59,6 +57,9 @@ for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
 
         const { start, end } = chunkRange(chunkIndex, workers, rows.length);
         const mySlice = rows.slice(start, end);
+
+        // กำหนดเวลา timeout สำหรับ test case นี้เป็นตามจำนวน data * 40 วินาที
+        test.setTimeout(mySlice.length * 40 * 1000);
 
         // console.log(start, end);
         // console.log(mySlice);
