@@ -16,6 +16,7 @@ test.describe.configure({ mode: 'parallel' }); // ให้เคสในไฟ
 let db;
 let array_result_query;
 
+// config query และ database
 test.beforeAll(async () => {
     const db_name = 'splife';
     const db_env = 'SIT';
@@ -31,7 +32,7 @@ test.beforeAll(async () => {
     const suminsure = 50000;
     const planid = 2;
 
-    const query = "select csp.plan_group || '-' || ROW_NUMBER() OVER (ORDER BY csppr.insure_sex ,csppr.insure_age, csppr.cover_period) AS row_unique, csp.plan_group , csp.plan_name, case csppr.insure_sex when 1 then 'ชาย' when 2 then 'หญิง' end as sex_name, csppr.insure_age, csppr.cover_period, csppr.total_premium_rate, csppr.life_premium_rate, csppr.rider_premium_rate, to_char( ((now() AT TIME ZONE 'Asia/Bangkok')::date - make_interval(years => insure_age))::date, 'DD/MM/' ) || (extract(year from ((now() AT TIME ZONE 'Asia/Bangkok')::date - make_interval(years => insure_age)))::int + 543)::text AS birthdate, case csppr.insure_sex when 1 then 'นาย' when 2 then 'นาง' end as title, 'เทส' as name, 'นามสกุล' as lastname, '1445533518848' as idcard, $1::int as sumInsure, TO_CHAR(ROUND(((csppr.total_premium_rate * $1::int)/1000)::numeric,0), 'FM999999999.00') as Expected from cf_sp_plan_premium_rate csppr join cf_sp_plan csp on csppr.cf_sp_plan_id = csp.id where cf_sp_plan_id = $2 and insure_age >= (select min_insure_age from cf_sp_plan_detail cspd where cf_sp_plan_id = $2 limit 1) and insure_age <= (select max(max_insure_age) from cf_sp_plan_detail cspd2 where cf_sp_plan_id = $2) and insure_age + cover_period <= (select max(cover_period+max_insure_age) from cf_sp_plan_detail cspd2 where cf_sp_plan_id = $2) order by csppr.insure_sex ,csppr.insure_age, csppr.cover_period";
+    const query = "select csp.plan_group || '-' || ROW_NUMBER() OVER (ORDER BY csppr.insure_sex ,csppr.insure_age, csppr.cover_period) AS row_unique, csp.plan_group , csp.plan_name, case csppr.insure_sex when 1 then 'ชาย' when 2 then 'หญิง' end as sex_name, csppr.insure_age, csppr.cover_period, csppr.total_premium_rate, csppr.life_premium_rate, csppr.rider_premium_rate, to_char( ((now() AT TIME ZONE 'Asia/Bangkok')::date - make_interval(years => insure_age))::date, 'DD/MM/' ) || (extract(year from ((now() AT TIME ZONE 'Asia/Bangkok')::date - make_interval(years => insure_age)))::int + 543)::text AS birthdate, case csppr.insure_sex when 1 then 'นาย' when 2 then 'นาง' end as title, 'เทส' as name, 'นามสกุล' as lastname, '1445533518848' as idcard, $1::int as sumInsure, TO_CHAR(ROUND(((csppr.total_premium_rate * $1::int)/1000)::numeric,0), 'FM9,999,999,990.00') as Expected from cf_sp_plan_premium_rate csppr join cf_sp_plan csp on csppr.cf_sp_plan_id = csp.id where cf_sp_plan_id = $2 and insure_age >= (select min_insure_age from cf_sp_plan_detail cspd where cf_sp_plan_id = $2 limit 1) and insure_age <= (select max(max_insure_age) from cf_sp_plan_detail cspd2 where cf_sp_plan_id = $2) and insure_age + cover_period <= (select max(cover_period+max_insure_age) from cf_sp_plan_detail cspd2 where cf_sp_plan_id = $2) order by csppr.insure_sex ,csppr.insure_age, csppr.cover_period";
     const params = [suminsure, planid];
 
     const result_query = await db.query(query, params);
@@ -44,9 +45,6 @@ test.afterAll(async () => {
 
 for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
     test(`worker ${chunkIndex + 1}`, async ({ page }, testInfo) => {
-        // กำหนดเวลา timeout สำหรับ test case นี้เป็น 2 ชั่วโมง (7200000 มิลลิวินาที)
-        test.setTimeout(7200000);
-
         const configured = testInfo.config.workers;
         const workers =
             typeof configured === 'number' ? configured : 1; // เผื่อกรณีตั้งแบบเปอร์เซ็นต์
@@ -59,6 +57,9 @@ for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
 
         const { start, end } = chunkRange(chunkIndex, workers, rows.length);
         const mySlice = rows.slice(start, end);
+
+        // กำหนดเวลา timeout สำหรับ test case นี้เป็นตามจำนวน data * 40 วินาที
+        test.setTimeout(mySlice.length * 40 * 1000);
 
         // console.log(start, end);
         // console.log(mySlice);
