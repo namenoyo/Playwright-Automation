@@ -1,3 +1,6 @@
+const path = require('path');
+const fs = require('fs');
+
 const normalizeText = (text) => {
     // เปลี่ยน code &nbsp เป็น ค่าว่าง
     const codespace = String(text).replace(/\u00A0/g, ' ');
@@ -47,16 +50,34 @@ class popupAlert {
 
             // ถ้ามี pop-up แจ้งเตือน ให้ปิด pop-up
             await this.quatationlocator.closePopupButton.click();
-        } else if (await this.quatationlocator.popupError502.isVisible({ timeout: 10000 })) {
+        } else if (await this.quatationlocator.popupAlertServer.isVisible({ timeout: 10000 })) {
             // ถ้า pop-up แจ้งเตือนปรากฏขึ้น ให้ดึงข้อความใน pop-up
-            popupmessage = await this.quatationlocator.popupError502.innerText();
+            popupmessage = await this.quatationlocator.popupAlertServer.innerText();
 
             // ถ้ามี pop-up แจ้งเตือน ให้ปิด pop-up
-            await this.quatationlocator.closePopupError502Button.click();
+            await this.quatationlocator.closePopupErrorServerButton.click();
         }
 
         return { popupmessage };
     }
 }
 
-module.exports = { popupAlert, normalizeText, changeobjecttoarray, pulldataobjectfromkeys, formatQuery, split_total_unit };
+const chunkRange = (index, totalChunks, totalItems) => {
+  const size = Math.ceil(totalItems / totalChunks);
+  const start = index * size;
+  const end = Math.min(start + size, totalItems);
+  return { start, end };
+}
+
+// อ่านจำนวน workers ที่ถูกเซฟไว้ตอนเริ่ม
+const getMaxWorkers = () => {
+  const filePath = path.resolve(__dirname, '../config/.worker_count');
+  try {
+    const content = fs.readFileSync(filePath, 'utf-8');
+    return parseInt(content, 10) || 1;
+  } catch (e) {
+    return 1;
+  }
+}
+
+module.exports = { popupAlert, normalizeText, changeobjecttoarray, pulldataobjectfromkeys, formatQuery, split_total_unit, chunkRange, getMaxWorkers };
