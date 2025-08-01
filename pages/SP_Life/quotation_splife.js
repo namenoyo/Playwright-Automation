@@ -26,6 +26,10 @@ class quotationSPLife {
 
         // รอให้หน้า "สร้างใบเสนอราคา" โหลด
         await this.page.waitForTimeout(500); // รอครึ่งวินาที
+
+        // // สำหรับทดสอบกรณี error
+        // await this.page.locator('span', { hasText: 'ย้อนกลับ' }).click();
+
         // ดึงข้อมูล locator ใส่ในตัวแปรเพอื่ให้เรียกใช้ได้ง่ายขึ้น
         await this.expect(quotationLocator(this.page, insurancename).insurancePlan).toBeVisible({ timeout: 60000 });
         await quotationLocator(this.page, insurancename).insurancePlan.click();

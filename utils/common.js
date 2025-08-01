@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const { test, expect, request } = require('@playwright/test');
 
 const normalizeText = (text) => {
     // เปลี่ยน code &nbsp เป็น ค่าว่าง
@@ -20,9 +21,9 @@ const pulldataobjectfromkeys = (dataobject, field) => {
 
 const formatQuery = (query) => {
     return query
-    .replace(/--.*$/gm, '')     // ลบ comment `-- ...` ทุกบรรทัด
-    .replace(/\s*\n\s*/g, ' ')  // แปลงบรรทัดใหม่เป็น space
-    .trim();
+        .replace(/--.*$/gm, '')     // ลบ comment `-- ...` ทุกบรรทัด
+        .replace(/\s*\n\s*/g, ' ')  // แปลงบรรทัดใหม่เป็น space
+        .trim();
 }
 
 export const split_total_unit = (total_unit) => {
@@ -63,21 +64,28 @@ class popupAlert {
 }
 
 const chunkRange = (index, totalChunks, totalItems) => {
-  const size = Math.ceil(totalItems / totalChunks);
-  const start = index * size;
-  const end = Math.min(start + size, totalItems);
-  return { start, end };
+    const size = Math.ceil(totalItems / totalChunks);
+    const start = index * size;
+    const end = Math.min(start + size, totalItems);
+    return { start, end };
 }
 
 // อ่านจำนวน workers ที่ถูกเซฟไว้ตอนเริ่ม
 const getMaxWorkers = () => {
-  const filePath = path.resolve(__dirname, '../config/.worker_count');
-  try {
-    const content = fs.readFileSync(filePath, 'utf-8');
-    return parseInt(content, 10) || 1;
-  } catch (e) {
-    return 1;
-  }
+    const filePath = path.resolve(__dirname, '../config/.worker_count');
+    try {
+        const content = fs.readFileSync(filePath, 'utf-8');
+        return parseInt(content, 10) || 1;
+    } catch (e) {
+        return 1;
+    }
 }
 
-module.exports = { popupAlert, normalizeText, changeobjecttoarray, pulldataobjectfromkeys, formatQuery, split_total_unit, chunkRange, getMaxWorkers };
+const sendresultn8nbot = async (testcase, plangroup, insuresum, counttotalcase, countpass, countfail, startdateformat, finishdateformat, workernumber, errorCount) => {
+    // สร้าง context สำหรับ API
+    const apiContext = await request.newContext();
+    // 👉 GET
+    const resGet = await apiContext.get(`http://localhost:5678/webhook/notifytest/chat?testcase=${testcase}&plangroup=${plangroup}&insuresum=${insuresum}&counttotalcase=${counttotalcase}&countpass=${countpass}&countfail=${countfail}&counterror=${errorCount}&startdate=${startdateformat}&finishdate=${finishdateformat}&workernumber=${workernumber}`);
+}
+
+module.exports = { popupAlert, normalizeText, changeobjecttoarray, pulldataobjectfromkeys, formatQuery, split_total_unit, chunkRange, getMaxWorkers, sendresultn8nbot };
