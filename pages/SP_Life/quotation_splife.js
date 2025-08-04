@@ -120,7 +120,7 @@ class quotationSPLife {
         return { popuparray };
     }
 
-    async calculatepremiumandpaymentmode(insurancesum, coverageyear, expectedinsurancesum, username, password) {
+    async calculatepremiumandpaymentmode(insurancesum, coverageyear, expectedinsurancesum, rowdata) {
 
         let popupmessage = '';
         let popuparray = [];
@@ -231,7 +231,7 @@ class quotationSPLife {
         //     await this.quatationlocator.closePopupButton.click();
         // }
 
-        const checkvalue = await checkvalueexpected.checkvalueOnscreen_GoogleSheet_calSPlife(this.quatationlocator.totalinsurancepremium, expectedinsurancesum);
+        const checkvalue = await checkvalueexpected.checkvalueOnscreen_GoogleSheet_calSPlife(this.quatationlocator.totalinsurancepremium, expectedinsurancesum, '', rowdata);
 
         // await menusplife.menuSPLife('สร้างใบเสนอราคา'); // กลับไปที่หน้า "สร้างใบเสนอราคา"
         // await menusplife.menuSPLife('หน้าหลัก'); // กลับไปที่หน้า "หน้าหลัก"
