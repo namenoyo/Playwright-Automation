@@ -81,11 +81,11 @@ const getMaxWorkers = () => {
     }
 }
 
-const sendresultn8nbot = async (testcase, plangroup, insuresum, counttotalcase, countpass, countfail, startdateformat, finishdateformat, workernumber, errorCount) => {
+const sendresultn8nbot = async (testcase, plangroup, insuresum, counttotalcase, countpass, countfail, startdateformat, finishdateformat, workernumber, errorCount, maxWorkers) => {
     // สร้าง context สำหรับ API
     const apiContext = await request.newContext();
     // 👉 GET
-    const resGet = await apiContext.get(`http://localhost:5678/webhook/notifytest/chat?testcase=${testcase}&plangroup=${plangroup}&insuresum=${insuresum}&counttotalcase=${counttotalcase}&countpass=${countpass}&countfail=${countfail}&counterror=${errorCount}&startdate=${startdateformat}&finishdate=${finishdateformat}&workernumber=${workernumber}`);
+    const resGet = await apiContext.get(`https://workflow.ochi.link/webhook/notifytest/chat?testcase=${testcase}&plangroup=${plangroup}&insuresum=${insuresum}&counttotalcase=${counttotalcase}&countpass=${countpass}&countfail=${countfail}&counterror=${errorCount}&startdate=${startdateformat}&finishdate=${finishdateformat}&workernumber=${workernumber}&maxworkers=${maxWorkers}`);
 }
 
 module.exports = { popupAlert, normalizeText, changeobjecttoarray, pulldataobjectfromkeys, formatQuery, split_total_unit, chunkRange, getMaxWorkers, sendresultn8nbot };

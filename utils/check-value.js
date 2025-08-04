@@ -77,7 +77,7 @@ export class checkvalueExpected {
         return { status_result, assertion_result }
     }
 
-    async checkvalueOnscreen_GoogleSheet_calSPlife(locators, expectedvalue, policyno) {
+    async checkvalueOnscreen_GoogleSheet_calSPlife(locators, expectedvalue, policyno, rowdata) {
         let status_result = ''
         let assertion_result = ''
 
@@ -109,6 +109,8 @@ export class checkvalueExpected {
             console.log(`❌ Mismatch: Expected = ${cleanexpectedvalue} : Actual = ${split_total}`)
             status_result = 'Failed'
             assertion_result = `❌ Mismatch: Expected = ${cleanexpectedvalue} : Actual = ${split_total}`
+            // await this.page.waitForTimeout(150); // รอ 150 ms
+            // await this.page.screenshot({ path: `screenshots/SPLife/row_unique-${rowdata}_failed.png`, fullPage: true });
         }
         return { status_result, assertion_result }
     }
