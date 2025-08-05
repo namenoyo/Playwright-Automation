@@ -6,7 +6,7 @@ class CustomReporter {
     // รับ path จาก environment variable (ตั้งจาก command)
     this.progressFile = process.env.PROGRESS_PATH 
       ? path.resolve(process.env.PROGRESS_PATH) 
-      : path.resolve(__dirname, 'progress.json');
+      : path.resolve(__dirname, 'progress', 'progress.json');
   }
 
   onBegin(config, suite) {
