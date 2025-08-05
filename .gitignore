@@ -35,3 +35,4 @@ coverage/
 # Ignore test data (optional, uncomment if needed)
 # data/n8n_data_google_sheet/data.json
 # data/data.json
+scripts/progress/progress.json 
