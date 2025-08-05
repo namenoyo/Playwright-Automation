@@ -30,7 +30,7 @@ test.beforeAll(async () => {
         port: configdb[db_name][db_env].DB_PORT,
     });
 
-    const suminsure = 50000;
+    const suminsure = 499999;
     const planid = 2;
 
     const query = "select case csp.plan_group when 'MRTA' then 'B51' when 'MLTA' then 'D61' end || csppr.insure_sex || csppr.insure_age || $1::int || csppr.cover_period  AS row_unique, csp.plan_group , csp.plan_name, case csppr.insure_sex when 1 then 'ชาย' when 2 then 'หญิง' end as sex_name, csppr.insure_age, csppr.cover_period, csppr.total_premium_rate, csppr.life_premium_rate, csppr.rider_premium_rate, to_char( ((now() AT TIME ZONE 'Asia/Bangkok')::date - make_interval(years => insure_age))::date, 'DD/MM/' ) || (extract(year from ((now() AT TIME ZONE 'Asia/Bangkok')::date - make_interval(years => insure_age)))::int + 543)::text AS birthdate, case csppr.insure_sex when 1 then 'นาย' when 2 then 'นาง' end as title, 'เทส' as name, 'นามสกุล' as lastname, '1445533518848' as idcard, $1::int as sumInsure, TO_CHAR(ROUND(((csppr.total_premium_rate * $1::int)/1000)::numeric,0), 'FM9,999,999,990.00') as Expected from cf_sp_plan_premium_rate csppr join cf_sp_plan csp on csppr.cf_sp_plan_id = csp.id where cf_sp_plan_id = $2 and insure_age >= (select min_insure_age from cf_sp_plan_detail cspd where cf_sp_plan_id = $2 limit 1) and insure_age <= (select max(max_insure_age) from cf_sp_plan_detail cspd2 where cf_sp_plan_id = $2) and insure_age + cover_period <= (select max(cover_period+max_insure_age) from cf_sp_plan_detail cspd2 where cf_sp_plan_id = $2) order by csppr.insure_sex ,csppr.insure_age, csppr.cover_period";
@@ -84,7 +84,7 @@ for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
         test.setTimeout(86400000);
 
         // console.log(start, end);
-        // console.log(mySlice[0]);
+        // console.log(mySlice);
 
         const startTime = Date.now();  // เริ่มจับเวลา
 
@@ -115,7 +115,7 @@ for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
             // for (let i = 0; i < mySlice.length; i++) {
             let retryCount = 0;
             const maxRetries = 3;
-            const timeout = 40000;
+            const timeout = 60000;
 
             const rowdata = row.row_unique; // ข้อมูลแถวปัจจุบัน
             const insurancegroup = row.plan_group; // กลุ่มแบบประกัน
@@ -184,7 +184,7 @@ for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
                             const insuredInformationresult = await quotationsplife.insuredInformation(idcard, titlename, name, surname, birthdate, formattedExpireDate, mobileno);
 
                             // คำนวณเบี้ยประกันภัยและวิธีการชำระเบี้ย
-                            const quotation_result = await quotationsplife.calculatepremiumandpaymentmode(String(insurancesum), String(coverageYear), expectedinsurancesum); // กรอกจำนวนเงินเอาประกันภัย และระยะเวลาคุ้มครอง
+                            const quotation_result = await quotationsplife.calculatepremiumandpaymentmode(String(insurancesum), String(coverageYear), expectedinsurancesum, rowdata); // กรอกจำนวนเงินเอาประกันภัย และระยะเวลาคุ้มครอง
 
                             // บันทึกผลการทดสอบ
                             status_result.push(quotation_result.checkvalue.status_result);
@@ -221,7 +221,7 @@ for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
                         })(),
 
                         new Promise((_, reject) =>
-                            setTimeout(() => reject(new Error('⏰ Loop timeout (40s)')), timeout)
+                            setTimeout(() => reject(new Error('⏰ Loop timeout (60s)')), timeout)
                         )
                     ]);
 
@@ -233,7 +233,8 @@ for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
 
                     if (retryCount >= maxRetries) {
                         console.error(`🛑 การทดสอบล้มเหลวเกินกำหนดใน row_unique ${rowdata}, ข้ามไปยังชุดถัดไป\n`);
-                        await page.screenshot({ path: `screenshots/SPLife/row_unique-${rowdata}.png`, fullPage: true });
+                        await page.waitForTimeout(150); // รอ 150 ms
+                        await page.screenshot({ path: `screenshots/SPLife/row_unique-${rowdata}_error.png`, fullPage: true });
 
                         // บันทึกผลการทดสอบ
                         status_result.push('Error');
@@ -265,7 +266,7 @@ for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
         const finishdateformat = `${finishparts.find(p => p.type === 'day')?.value}/${finishparts.find(p => p.type === 'month')?.value}/${finishparts.find(p => p.type === 'year')?.value} ${finishparts.find(p => p.type === 'hour')?.value}:${finishparts.find(p => p.type === 'minute')?.value}:${finishparts.find(p => p.type === 'second')?.value}`;
 
         // ส่งผลลัพธ์ไปยัง n8n
-        await sendresultn8nbot(testcase, mySlice[0].plan_group, mySlice[0].suminsure, mySlice.length, passCount, failCount, startdateformat, finishdateformat, `${chunkIndex + 1}`, errorCount);
+        await sendresultn8nbot(testcase, mySlice[0].plan_group, mySlice[0].suminsure, mySlice.length, passCount, failCount, startdateformat, finishdateformat, `${chunkIndex + 1}`, errorCount, MAX_POSSIBLE_WORKERS);
 
     })
 }
