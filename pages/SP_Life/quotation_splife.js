@@ -171,40 +171,42 @@ class quotationSPLife {
         // await this.expect(this.quatationlocator.insurancesum).not.toHaveValue('', { timeout: 60000 }); // รอจนค่าขึ้นมา (ไม่ใช่ค่าว่าง)
         // await this.quatationlocator.insurancesum.fill(insurancesum); // กรอกจำนวนเงินเอาประกันภัย
 
-
         let checkvaluecoverageyear = '';
-        try {
-            // พยายามรอให้ element มีค่า (ถ้ามี)
-            checkvaluecoverageyear = await this.quatationlocator.coverageyear.inputValue(); // ดึงค่าจำนวนเงินเอาประกันภัยจาก input
-        } catch (e) {
-            console.log('⏱️ ไม่มีค่าใน timeout ที่กำหนด');
-        }
-        if (checkvaluecoverageyear === '') {
-            await this.quatationlocator.coverageyear.click(); // คลิกที่ช่องกรอกระยะเวลาคุ้มครอง
 
-            // await this.quatationlocator.coverageyear.fill(coverageyear); // กรอกจำนวนเงินเอาประกันภัย
-            // เคลียร์ค่าใน input
-            await this.page.keyboard.press('Control+A');
-            await this.page.keyboard.press('Backspace');
-            await this.page.keyboard.type(coverageyear, { delay: 100 });
+        // loop ให้ค่าที่ input ระยะเวลาความคุ้มครอง ตรงกับ coverageyear
+        while (checkvaluecoverageyear !== coverageyear) {
+            try {
+                // พยายามรอให้ element มีค่า (ถ้ามี)
+                checkvaluecoverageyear = await this.quatationlocator.coverageyear.inputValue(); // ดึงค่าจำนวนระยะเวลาความคุ้มครองจาก input
+            } catch (e) {
+                console.log('⏱️ ไม่มีค่าใน timeout ที่กำหนด');
+            }
+            if (checkvaluecoverageyear === '') {
+                await this.quatationlocator.coverageyear.click(); // คลิกที่ช่องกรอกระยะเวลาคุ้มครอง
 
+                // await this.quatationlocator.coverageyear.fill(coverageyear); // กรอกจำนวนระยะเวลาความคุ้มครอง
+                // เคลียร์ค่าใน input
+                await this.page.keyboard.press('Control+A');
+                await this.page.keyboard.press('Backspace');
+                await this.page.keyboard.type(coverageyear, { delay: 100 });
 
-            popupmessage = await popupalert.popupAlertMessage(); // ดึงข้อความใน pop-up แจ้งเตือน (ถ้ามี)
-            popuparray.push(popupmessage.popupmessage); // เก็บข้อความ pop-up แจ้งเตือน (ถ้ามี)
-            // ทำอย่างอื่นต่อได้เลย
-        } else {
-            await this.expect(this.quatationlocator.coverageyear).not.toHaveValue('', { timeout: 60000 }); // รอจนค่าขึ้นมา (ไม่ใช่ค่าว่าง)
-            await this.quatationlocator.coverageyear.click(); // คลิกที่ช่องกรอกระยะเวลาคุ้มครอง
+                popupmessage = await popupalert.popupAlertMessage(); // ดึงข้อความใน pop-up แจ้งเตือน (ถ้ามี)
+                popuparray.push(popupmessage.popupmessage); // เก็บข้อความ pop-up แจ้งเตือน (ถ้ามี)
+                checkvaluecoverageyear = await this.quatationlocator.coverageyear.inputValue(); // ดึงค่าจำนวนระยะเวลาความคุ้มครองจาก input
+            } else {
+                await this.expect(this.quatationlocator.coverageyear).not.toHaveValue('', { timeout: 60000 }); // รอจนค่าขึ้นมา (ไม่ใช่ค่าว่าง)
+                await this.quatationlocator.coverageyear.click(); // คลิกที่ช่องกรอกระยะเวลาคุ้มครอง
 
-            // await this.quatationlocator.coverageyear.fill(coverageyear); // กรอกจำนวนเงินเอาประกันภัย
-            // เคลียร์ค่าใน input
-            await this.page.keyboard.press('Control+A');
-            await this.page.keyboard.press('Backspace');
-            await this.page.keyboard.type(coverageyear, { delay: 100 });
+                // await this.quatationlocator.coverageyear.fill(coverageyear); // กรอกจำนวนระยะเวลาความคุ้มครอง
+                // เคลียร์ค่าใน input
+                await this.page.keyboard.press('Control+A');
+                await this.page.keyboard.press('Backspace');
+                await this.page.keyboard.type(coverageyear, { delay: 100 });
 
-
-            popupmessage = await popupalert.popupAlertMessage(); // ดึงข้อความใน pop-up แจ้งเตือน (ถ้ามี)
-            popuparray.push(popupmessage.popupmessage); // เก็บข้อความ pop-up แจ้งเตือน (ถ้ามี)
+                popupmessage = await popupalert.popupAlertMessage(); // ดึงข้อความใน pop-up แจ้งเตือน (ถ้ามี)
+                popuparray.push(popupmessage.popupmessage); // เก็บข้อความ pop-up แจ้งเตือน (ถ้ามี)
+                checkvaluecoverageyear = await this.quatationlocator.coverageyear.inputValue(); // ดึงค่าจำนวนระยะเวลาความคุ้มครองจาก input
+            }
         }
         // // รอให้มีค่า default ขึ้นมาใน input
         // await this.quatationlocator.coverageyear.click(); // คลิกที่ช่องกรอกระยะเวลาคุ้มครอง
