@@ -84,7 +84,7 @@ for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
         test.setTimeout(86400000);
 
         // console.log(start, end);
-        // console.log(mySlice[0]);
+        // console.log(mySlice);
 
         const startTime = Date.now();  // เริ่มจับเวลา
 
