@@ -1,7 +1,6 @@
-import { normalizeText } from "./common";
-import { split_total_unit } from "./common";
+const { normalizeText, split_total_unit } = require('../utils/common');
 
-export class checkvalueExpected {
+class checkvalueExpected {
     constructor(page, expect) {
         this.page = page
         this.expect = expect

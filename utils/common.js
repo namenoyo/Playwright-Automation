@@ -26,7 +26,7 @@ const formatQuery = (query) => {
         .trim();
 }
 
-export const split_total_unit = (total_unit) => {
+const split_total_unit = (total_unit) => {
     const split_total = total_unit.replace(' บาท', '');
     return split_total;
 }
@@ -35,7 +35,6 @@ const { quotationLocator } = require('../locators/SP_Life/splife.locators');
 class popupAlert {
     constructor(page) {
         this.page = page;
-        this.quatationlocator = quotationLocator(page);
     }
 
     async popupAlertMessage() {
@@ -45,18 +44,18 @@ class popupAlert {
 
         await this.page.waitForTimeout(150); // รอ 150 ms
 
-        if (await this.quatationlocator.popupAlert.isVisible({ timeout: 10000 })) {
+        if (await quotationLocator(this.page).popupAlert.isVisible({ timeout: 10000 })) {
             // ถ้า pop-up แจ้งเตือนปรากฏขึ้น ให้ดึงข้อความใน pop-up
-            popupmessage = await this.quatationlocator.popupAlert.innerText();
+            popupmessage = await quotationLocator(this.page).popupAlert.innerText();
 
             // ถ้ามี pop-up แจ้งเตือน ให้ปิด pop-up
-            await this.quatationlocator.closePopupButton.click();
-        } else if (await this.quatationlocator.popupAlertServer.isVisible({ timeout: 10000 })) {
+            await quotationLocator(this.page).closePopupButton.click();
+        } else if (await quotationLocator(this.page).popupAlertServer.isVisible({ timeout: 10000 })) {
             // ถ้า pop-up แจ้งเตือนปรากฏขึ้น ให้ดึงข้อความใน pop-up
-            popupmessage = await this.quatationlocator.popupAlertServer.innerText();
+            popupmessage = await quotationLocator(this.page).popupAlertServer.innerText();
 
             // ถ้ามี pop-up แจ้งเตือน ให้ปิด pop-up
-            await this.quatationlocator.closePopupErrorServerButton.click();
+            await quotationLocator(this.page).closePopupErrorServerButton.click();
         }
 
         return { popupmessage };
