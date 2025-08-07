@@ -275,7 +275,7 @@ for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
         const finishdateformat = `${finishparts.find(p => p.type === 'day')?.value}/${finishparts.find(p => p.type === 'month')?.value}/${finishparts.find(p => p.type === 'year')?.value} ${finishparts.find(p => p.type === 'hour')?.value}:${finishparts.find(p => p.type === 'minute')?.value}:${finishparts.find(p => p.type === 'second')?.value}`;
 
         // ส่งผลลัพธ์ไปยัง n8n
-        await sendresultn8nbot(testcase, mySlice[0].plan_group, mySlice[0].suminsure, mySlice.length, passCount, failCount, startdateformat, finishdateformat, `${chunkIndex + 1}`, errorCount);
+        await sendresultn8nbot(testcase, mySlice[0].plan_group, mySlice[0].suminsure, mySlice.length, passCount, failCount, startdateformat, finishdateformat, `${chunkIndex + 1}`, errorCount, MAX_POSSIBLE_WORKERS);
 
     })
 }
