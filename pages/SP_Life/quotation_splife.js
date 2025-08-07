@@ -190,6 +190,9 @@ class quotationSPLife {
                 await this.page.keyboard.press('Backspace');
                 await this.page.keyboard.type(coverageyear, { delay: 100 });
 
+                // เพิ่มหน่วงเวลารอค่า input เก็บค่าล่าสุด
+                await this.page.waitForTimeout(500);
+
                 popupmessage = await popupalert.popupAlertMessage(); // ดึงข้อความใน pop-up แจ้งเตือน (ถ้ามี)
                 popuparray.push(popupmessage.popupmessage); // เก็บข้อความ pop-up แจ้งเตือน (ถ้ามี)
                 checkvaluecoverageyear = await this.quatationlocator.coverageyear.inputValue(); // ดึงค่าจำนวนระยะเวลาความคุ้มครองจาก input
@@ -202,6 +205,9 @@ class quotationSPLife {
                 await this.page.keyboard.press('Control+A');
                 await this.page.keyboard.press('Backspace');
                 await this.page.keyboard.type(coverageyear, { delay: 100 });
+
+                // เพิ่มหน่วงเวลารอค่า input เก็บค่าล่าสุด
+                await this.page.waitForTimeout(500);
 
                 popupmessage = await popupalert.popupAlertMessage(); // ดึงข้อความใน pop-up แจ้งเตือน (ถ้ามี)
                 popuparray.push(popupmessage.popupmessage); // เก็บข้อความ pop-up แจ้งเตือน (ถ้ามี)
