@@ -118,6 +118,49 @@ class GoogleSheet {
     return normalized;
   }
 
+  async fetchSheetData_key(auth, spreadsheetId, range) {
+    const sheets = google.sheets({ version: 'v4', auth });
+    const res = await sheets.spreadsheets.values.get({ spreadsheetId, range });
+
+    const values = res.data.values || [];
+
+    if (values.length === 0) return [];
+
+    // Extract header
+    const header = values[0];
+
+    // หาจำนวน column จาก range (เช่น A1:D10)
+    const columnCount = range.match(/([A-Z]+):([A-Z]+)/);
+    let maxCols = 0;
+    if (columnCount) {
+      const colStart = columnCount[1];
+      const colEnd = columnCount[2];
+      const colToNumber = col => {
+        let num = 0;
+        for (let i = 0; i < col.length; i++) {
+          num *= 26;
+          num += col.charCodeAt(i) - 64;
+        }
+        return num;
+      };
+      maxCols = colToNumber(colEnd) - colToNumber(colStart) + 1;
+    }
+
+    // เติมช่องว่างถ้า row ไม่ครบ column และ map เป็น object
+    const data = values.slice(1).map(row => {
+      while (row.length < maxCols) {
+        row.push('');
+      }
+      const obj = {};
+      header.forEach((key, index) => {
+        obj[key] = row[index] || '';
+      });
+      return obj;
+    });
+
+    return data;
+  }
+
   // บันทึกข้อมูลลง Google Sheet โดยรับ spreadsheetId และ range และ rows (ข้อมูลที่เป็น array 2D)
   async updateRows(auth, spreadsheetId, range, rows) {
     const sheets = google.sheets({ version: 'v4', auth });

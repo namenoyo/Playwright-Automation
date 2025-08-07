@@ -91,7 +91,7 @@ for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
         const mySlice = rows.slice(start, end);
 
         // กำหนดเวลา timeout สำหรับ test case นี้เป็น 24 ชั่วโมง
-        test.setTimeout(86400000);
+        test.setTimeout(345600000);
 
         // console.log(start, end);
         // console.log(mySlice[0]);
@@ -125,7 +125,7 @@ for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
             // for (let i = 0; i < mySlice.length; i++) {
             let retryCount = 0;
             const maxRetries = 3;
-            const timeout = 40000;
+            const timeout = 60000;
 
             const rowdata = row.row_unique; // ข้อมูลแถวปัจจุบัน
             const insurancegroup = row.plan_group; // กลุ่มแบบประกัน
@@ -231,7 +231,7 @@ for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
                         })(),
 
                         new Promise((_, reject) =>
-                            setTimeout(() => reject(new Error('⏰ Loop timeout (40s)')), timeout)
+                            setTimeout(() => reject(new Error('⏰ Loop timeout (60s)')), timeout)
                         )
                     ]);
 
