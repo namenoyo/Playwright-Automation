@@ -1,12 +1,38 @@
-# Playwright
-/test-results/
-/playwright-report/
+# Node
 node_modules/
-/blob-report/
-/playwright/.cache/
+npm-debug.log
+yarn-error.log
 
-# Ignore credentials and sensitive files
+# Playwright
+playwright-report/
+test-results/
+
+# VSCode
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+
+# Credentials/Secrets
 credentials/
-*.json
-!package.json
+*.local.json
 
+# Logs
+*.log
+
+# Coverage
+coverage/
+
+# Misc
+*.swp
+*.swo
+
+# Ignore test data (optional, uncomment if needed)
+# data/n8n_data_google_sheet/data.json
+# data/data.json
+scripts/progress/progress.json 
