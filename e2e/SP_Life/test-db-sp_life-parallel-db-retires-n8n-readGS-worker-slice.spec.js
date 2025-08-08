@@ -54,10 +54,11 @@ test.beforeAll(async () => {
 //     await db.close();
 // });
 
-for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
-    test(`worker ${chunkIndex + 1}`, async ({ page }, testInfo) => {
 
-        // แปลงเป็นเวลาประเทศไทย
+for (let i = 0; i < 3; i++) {
+    test.describe(`SP Life parallel worker slice ${i + 1}`, () => {
+        test(`worker slice ${i + 1}`, async ({ page }, testInfo) => {
+            // ...existing code...
         const options = {
             timeZone: 'Asia/Bangkok',
             day: '2-digit',
@@ -69,213 +70,161 @@ for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
             hour12: false
         };
         const startdate = new Date();
-        // ใช้ Intl.DateTimeFormat แล้วแปลงให้เป็นรูปแบบที่ต้องการ
         const startformatter = new Intl.DateTimeFormat('th-TH', options);
         const startparts = startformatter.formatToParts(startdate);
-        // แปลง parts ให้เป็น string แบบ dd/mm/yyyy hh:mm:ss
         const startdateformat = `${startparts.find(p => p.type === 'day')?.value}/${startparts.find(p => p.type === 'month')?.value}/${startparts.find(p => p.type === 'year')?.value} ${startparts.find(p => p.type === 'hour')?.value}:${startparts.find(p => p.type === 'minute')?.value}:${startparts.find(p => p.type === 'second')?.value}`;
-
         const testcase = 'เช็คเบี้ยประกัน ของ โครงการ SP Life';
-
-        const configured = testInfo.config.workers;
-        const workers =
-            typeof configured === 'number' ? configured : 1; // เผื่อกรณีตั้งแบบเปอร์เซ็นต์
-
-        // ถ้า chunkIndex เกินจำนวน workers จริง ให้ข้ามเคสนี้
-        test.skip(chunkIndex >= workers, `Only ${workers} workers are active`);
-
-        // ดึงข้อมูลจาก DB
-        const rows = array_result_query; // ได้ array กลับมาแล้ว
-
-        const { start, end } = chunkRange(chunkIndex, workers, rows.length);
+        const rows = array_result_query;
+        const { start, end } = chunkRange(i, 3, rows.length);
         const mySlice = rows.slice(start, end);
-
-        // กำหนดเวลา timeout สำหรับ test case นี้เป็น 24 ชั่วโมง
         test.setTimeout(86400000);
-
-        // console.log(start, end);
-        // console.log(mySlice[0]);
-
-        const startTime = Date.now();  // เริ่มจับเวลา
-
-        const googlesheet = new GoogleSheet();
+        const startTime = Date.now();
+    // ใช้ temp dir แยกแต่ละ worker
+        const os = require('os');
+        const path = require('path');
+        const fs = require('fs');
+        // ใช้ temp dir และ credential file แยกแต่ละ worker
+        const workerId = `${i + 1}_${process.pid}`;
+        const tempDir = path.join(os.tmpdir(), `splife_worker_${workerId}`);
+        if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+        // ใช้ GoogleSheet instance และ credential file แยกแต่ละ worker
+        const credentialFile = path.resolve(__dirname, `../../credentials/client_secret_worker_${workerId}.json`);
+        // ถ้าไม่มี credential file เฉพาะ worker ให้ copy มาจากไฟล์หลัก
+        const mainCredential = path.resolve(__dirname, '../../credentials/client_secret_478587092772-4bkr7ctr9gki3f8uq7p7r1lh9emorkh7.apps.googleusercontent.com.json');
+        if (!fs.existsSync(credentialFile)) {
+            fs.copyFileSync(mainCredential, credentialFile);
+        }
+        const googlesheet = new GoogleSheet({ tempDir, credentialFile });
         const loginpagesplife = new LoginPageSPLife(page);
         const mainsplife = new mainSPLife(page, expect);
         const quotationsplife = new quotationSPLife(page, expect);
         const logout = new LogoutPage(page, expect);
         const popupalert = new popupAlert(page);
-
-        // เริ่มต้น Auth
-        const auth = await googlesheet.initAuth();
-        // ส่ง spreadsheetId และ range มาจากไฟล์ test (สำหรับ Read และ Update)
+    // เพิ่ม delay เพื่อ queue Google API
+    await new Promise(res => setTimeout(res, i * 2000));
+    const auth = await googlesheet.initAuth();
         const spreadsheetId = '1fWFSP2pmzV1QBVxoYbyxzb4XDQbcWflB7gLdW94jARY';
-        // spreadsheetId สำหรับการอัพโหลดผลลัพธ์ (สำหรับ write)
         const spreadsheetId_write = '1sr4Rh_V67SK_eRJriqT5j4X03lzulifCfqE7Q5BV_wk';
         const range_write = `Log_Raw!A:E`;
-
-        // อ่านข้อมูลสำหรับการเข้าสู่ระบบ
         const datalogin = await googlesheet.fetchSheetData(auth, spreadsheetId, 'Prepare_TestData_Playwright!B1:B2');
-
-        // สร้าง array สำหรับเก็บผลลัพธ์
         let combined_result_array = [];
-
         let status_result = [];
-
-        for (const row of mySlice) {
-            // for (let i = 0; i < mySlice.length; i++) {
-            let retryCount = 0;
-            const maxRetries = 3;
-            const timeout = 40000;
-
-            const rowdata = row.row_unique; // ข้อมูลแถวปัจจุบัน
-            const insurancegroup = row.plan_group; // กลุ่มแบบประกัน
-            const insurancename = row.plan_name; // ชื่อแบบประกัน
-            const unisex = row.sex_name; // เพศ
-            const age = row.insure_age; // อายุ
-            const idcard = row.idcard; // เลขบัตรประชาชน
-            const titlename = row.title; // คำนำหน้า
-            const name = row.name; // ชื่อผู้เอาประกันภัย
-            const surname = row.lastname; // นามสกุลผู้เอาประกันภัย
-            const birthdate = row.birthdate; // วันเกิดผู้เอาประกันภัย
-            const insurancesum = row.suminsure; // จำนวนเงินทุนประกันภัย
-            const coverageYear = row.cover_period; // ระยะเวลาคุ้มครอง
-            const expectedinsurancesum = row.expected; // ค่าที่คาดหวังสำหรับจำนวนเงินเอาประกันภัย
-
+                // Resume logic: อ่าน row ล่าสุดที่สำเร็จจากไฟล์ resume
+                const resumeFile = path.join(tempDir, 'resume.txt');
+                let lastCompletedRow = null;
+                if (fs.existsSync(resumeFile)) {
+                    try {
+                        lastCompletedRow = fs.readFileSync(resumeFile, 'utf8').trim();
+                    } catch (e) { lastCompletedRow = null; }
+                }
+                let resumeFound = !lastCompletedRow;
+                for (const row of mySlice) {
+                        // ถ้ายังไม่ถึง row ล่าสุดที่สำเร็จ ให้ข้าม
+                        if (!resumeFound && lastCompletedRow && row.row_unique !== lastCompletedRow) {
+                            continue;
+                        }
+                        // เจอ row ล่าสุดที่สำเร็จแล้ว ให้เริ่มทำงานต่อ
+                        if (!resumeFound && lastCompletedRow && row.row_unique === lastCompletedRow) {
+                            resumeFound = true;
+                            continue; // ข้าม row ที่สำเร็จล่าสุด
+                        }
+                        // log uncaught error ในแต่ละ row
+                        let retryCount = 0;
+                        const maxRetries = 3;
+                        const timeout = 60000;
+            const rowdata = row.row_unique;
+            const insurancegroup = row.plan_group;
+            const insurancename = row.plan_name;
+            const unisex = row.sex_name;
+            const age = row.insure_age;
+            const idcard = row.idcard;
+            const titlename = row.title;
+            const name = row.name;
+            const surname = row.lastname;
+            const birthdate = row.birthdate;
+            const insurancesum = row.suminsure;
+            const coverageYear = row.cover_period;
+            const expectedinsurancesum = row.expected;
             const today = new Date();
-            // เพิ่ม 1 ปีจากวันนี้
             const expireDate = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate());
-            // แปลงเป็นวัน/เดือน/ปี (พ.ศ.)
             const day = String(expireDate.getDate()).padStart(2, '0');
-            const month = String(expireDate.getMonth() + 1).padStart(2, '0'); // เดือนเริ่มที่ 0
-            const year = expireDate.getFullYear() + 543; // แปลง ค.ศ. → พ.ศ.
+            const month = String(expireDate.getMonth() + 1).padStart(2, '0');
+            const year = expireDate.getFullYear() + 543;
             const formattedExpireDate = `${day}/${month}/${year}`;
-
-            const mobileno = '0987654321'; // เบอร์โทรศัพท์
-
+            const mobileno = '0987654321';
             function getBangkokTimestamp() {
                 const now = new Date();
                 const bangkokTime = now.toLocaleString("sv-SE", {
                     timeZone: "Asia/Bangkok",
                     hour12: false
                 });
-
                 return bangkokTime;
             }
-
             while (retryCount < maxRetries) {
                 try {
                     await Promise.race([
-
                         (async () => {
-                            // for (const row of mySlice) {
-                            // เริ่มการทดสอบ
                             console.log(`▶️  เริ่มการทดสอบ row_unique : ${row.row_unique}`);
-
-                            // Navigate to the website
                             await loginpagesplife.gotoSPLife();
-                            // กรอก username และ password
                             await loginpagesplife.login(datalogin[0][0], datalogin[1][0]);
-                            // Wait for the page to load completely
                             await page.waitForLoadState('networkidle');
-
-                            // รอให้ pop-up แจ้งเตือนปรากฏ
                             await popupalert.popupAlertMessage();
-
-                            // กดปุ่ม สร้างใบเสนอราคา
                             await mainsplife.clickcreateQuotation();
-
-                            // รอหน้า "สร้างใบเสนอราคา" โหลด
                             await quotationsplife.waitforquotationPageLoad();
-
-                            // เลือกแบบประกันตามข้อมูลในแถว
                             const quotationspliferesult = await quotationsplife.selectInsurancePlan(insurancename);
-
-                            // กรอกข้อมูลผู้เอาประกันภัย
                             const insuredInformationresult = await quotationsplife.insuredInformation(idcard, titlename, name, surname, birthdate, formattedExpireDate, mobileno);
-
-                            // คำนวณเบี้ยประกันภัยและวิธีการชำระเบี้ย
-                            const quotation_result = await quotationsplife.calculatepremiumandpaymentmode(String(insurancesum), String(coverageYear), expectedinsurancesum); // กรอกจำนวนเงินเอาประกันภัย และระยะเวลาคุ้มครอง
-
-                            // บันทึกผลการทดสอบ
+                            const quotation_result = await quotationsplife.calculatepremiumandpaymentmode(String(insurancesum), String(coverageYear), expectedinsurancesum);
                             status_result.push(quotation_result.checkvalue.status_result);
-
-                            // ใส่ | คั่นระหว่างข้อมูลย่อย
-                            let result_format_array_quotationspliferesult = quotationspliferesult.popuparray
-                                .filter(item => item) // กรองเฉพาะค่าที่ไม่เป็น falsy ('' / null / undefined / 0 / false)
-                                .join(' | ');
-
-                            let result_format_array_insuredInformationresult = insuredInformationresult.popuparray
-                                .filter(item => item) // กรองเฉพาะค่าที่ไม่เป็น falsy ('' / null / undefined / 0 / false)
-                                .join(' | ');
-
-                            let result_format_array_quotation_result = quotation_result.popuparray
-                                .filter(item => item) // กรองเฉพาะค่าที่ไม่เป็น falsy ('' / null / undefined / 0 / false)
-                                .join(' | ');
-
-                            // ใส่ | คั่นระหว่างข้อมูลหลัก
+                            let result_format_array_quotationspliferesult = quotationspliferesult.popuparray.filter(item => item).join(' | ');
+                            let result_format_array_insuredInformationresult = insuredInformationresult.popuparray.filter(item => item).join(' | ');
+                            let result_format_array_quotation_result = quotation_result.popuparray.filter(item => item).join(' | ');
                             const values = [result_format_array_quotationspliferesult, result_format_array_insuredInformationresult, result_format_array_quotation_result].filter(v => v && v.trim() !== '');
                             const combined_final_result_popup = values.join(' | ');
-
-                            // เอา assertion result และ status มาเก็บใน array
                             combined_result_array.push([rowdata, quotation_result.checkvalue.status_result, `${quotation_result.checkvalue.assertion_result} | ประเภท : ${insurancegroup} | ชื่อแบบประกัน : ${insurancename} | เพศ : ${unisex} | อายุ : ${age} | ทุน : ${insurancesum} | coverage : ${coverageYear} |`, getBangkokTimestamp(), `${combined_final_result_popup}`]);
-
-                            const endTime = Date.now();    // จบจับเวลา
-                            const duration = (endTime - startTime) / 1000; // วินาที
+                            const endTime = Date.now();
+                            const duration = (endTime - startTime) / 1000;
                             console.log(`Test case รันไปทั้งหมด ${duration} วินาที`);
-
-                            await logout.logoutSPLife(); // ออกจากระบบ
-
-                            // จบการทดสอบ
-                            console.log(`🏁  จบการทดสอบ row_unique : ${row.row_unique}\n`);
-                            // }
+                                                        await logout.logoutSPLife();
+                                                        // update resume file หลังสำเร็จ
+                                                        try {
+                                                            fs.writeFileSync(resumeFile, row.row_unique + '\n', { flag: 'w' });
+                                                        } catch (e) {}
+                                                        console.log(`🏁  จบการทดสอบ row_unique : ${row.row_unique}\n`);
                         })(),
-
-                        new Promise((_, reject) =>
-                            setTimeout(() => reject(new Error('⏰ Loop timeout (40s)')), timeout)
-                        )
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('⏰ Loop timeout (40s)')), timeout))
                     ]);
-
-                    break; // สำเร็จแล้ว → ออกจาก while retry
-
+                    break;
                 } catch (err) {
+                    // log uncaught error
+                    try {
+                        fs.appendFileSync(path.join(tempDir, 'worker_error.log'), `[${new Date().toISOString()}] row_unique: ${rowdata}, error: ${err.stack || err.message}\n`);
+                    } catch (e) {}
                     retryCount++;
                     console.warn(`❌ การทดสอบ row_unique ${rowdata} ล้มเหลวในครั้งที่ ${retryCount} : ${err.message}`);
-
                     if (retryCount >= maxRetries) {
                         console.error(`🛑 การทดสอบล้มเหลวเกินกำหนดใน row_unique ${rowdata}, ข้ามไปยังชุดถัดไป\n`);
                         await page.screenshot({ path: `screenshots/SPLife/row_unique-${rowdata}.png`, fullPage: true });
-
-                        // บันทึกผลการทดสอบ
                         status_result.push('Error');
-
-                        // เอา assertion result และ status มาเก็บใน array
                         combined_result_array.push([rowdata, 'Error Test', `⛔ Error : Expected = ${expectedinsurancesum} : Actual = 0.00 | ประเภท : ${insurancegroup} | ชื่อแบบประกัน : ${insurancename} | เพศ : ${unisex} | อายุ : ${age} | ทุน : ${insurancesum} | coverage : ${coverageYear} |`, getBangkokTimestamp(), `เกิดข้อผิดพลาดในการทดสอบ row_unique ${rowdata} : ${err.message}`]);
-
                     } else {
                         console.log(`🔄 กำลังเริ่มทดสอบ row_unique ${rowdata} รอบที่ ${retryCount + 1}`);
                     }
                 }
             }
         }
-
-        // อัพโหลดผลลัพธ์ไปยัง Google Sheet เป็นการ append ที่ range ที่กำหนด แบบต่อท้าย โดยจะไม่ลบข้อมูลเก่าใน Google Sheet
         await googlesheet.appendRows(auth, spreadsheetId_write, range_write, combined_result_array);
-
-        // สรุปผลการทดสอบ
+        // log process exit/memory
+        try {
+            fs.appendFileSync(path.join(tempDir, 'worker_exit.log'), `[${new Date().toISOString()}] Worker ${i + 1} finished, memory: ${Math.round(process.memoryUsage().rss/1024/1024)}MB\n`);
+        } catch (e) {}
         const passCount = status_result.filter(item => item === 'Passed').length;
         const failCount = status_result.filter(item => item === 'Failed').length;
         const errorCount = status_result.filter(item => item === 'Error').length;
-
         const finishdate = new Date();
-        // ใช้ Intl.DateTimeFormat แล้วแปลงให้เป็นรูปแบบที่ต้องการ
         const finishformatter = new Intl.DateTimeFormat('th-TH', options);
         const finishparts = finishformatter.formatToParts(finishdate);
-
-        // แปลง parts ให้เป็น string แบบ dd/mm/yyyy hh:mm:ss
         const finishdateformat = `${finishparts.find(p => p.type === 'day')?.value}/${finishparts.find(p => p.type === 'month')?.value}/${finishparts.find(p => p.type === 'year')?.value} ${finishparts.find(p => p.type === 'hour')?.value}:${finishparts.find(p => p.type === 'minute')?.value}:${finishparts.find(p => p.type === 'second')?.value}`;
-
-        // ส่งผลลัพธ์ไปยัง n8n
-        await sendresultn8nbot(testcase, mySlice[0].plan_group, mySlice[0].suminsure, mySlice.length, passCount, failCount, startdateformat, finishdateformat, `${chunkIndex + 1}`, errorCount);
-
-    })
+        await sendresultn8nbot(testcase, mySlice[0]?.plan_group, mySlice[0]?.suminsure, mySlice.length, passCount, failCount, startdateformat, finishdateformat, `${i + 1}`, errorCount);
+        });
+    });
 }
