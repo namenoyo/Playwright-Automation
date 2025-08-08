@@ -183,6 +183,76 @@ class GoogleSheet {
     return res.data;
   }
 
+  // อัปเดตข้อมูลในแถวที่มีอยู่แล้ว ตาม row ที่ข้อมูลทำ
+  async updateDynamicRows(auth, spreadsheetId, sheetName, rangeheader, data) {
+    const sheets = google.sheets({ version: 'v4', auth });
+
+    // STEP 1: ดึงข้อมูลตั้งแต่ header (แถว 5) ลงไป
+    const allDataRes = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${sheetName}!${rangeheader}` // เริ่มดึงตั้งแต่แถว 5
+    });
+
+    const rows = allDataRes.data.values;
+    const headers = rows[0]; // แถวแรกที่ดึงมา = header จริง
+
+    const rowColIndex = headers.indexOf("Row");
+    if (rowColIndex === -1) {
+      throw new Error("ไม่พบคอลัมน์ชื่อ 'Row'");
+    }
+
+    function getColLetter(index) {
+      let col = '';
+      while (index >= 0) {
+        col = String.fromCharCode((index % 26) + 65) + col;
+        index = Math.floor(index / 26) - 1;
+      }
+      return col;
+    }
+
+    const updates = [];
+
+    // STEP 2: หาและอัปเดต
+    for (const updateItem of data) {
+      // หาว่า Row นี้อยู่บรรทัดไหน (ใน data ที่ดึง)
+      const matchRow = rows.findIndex(r => r[rowColIndex] == updateItem.Row);
+
+      if (matchRow === -1) continue;
+
+      // matchRow เป็น index ใน array `rows` ซึ่งเริ่มจาก header ที่ rowIndex=0
+      // ดังนั้นใน sheet จริง แถว = matchRow + 5 (เพราะ header อยู่แถว 5)
+      const sheetRowIndex = matchRow + 5;
+
+      for (const key in updateItem) {
+        if (key === 'Row') continue;
+
+        const colIndex = headers.indexOf(key);
+        if (colIndex === -1) continue;
+
+        const colLetter = getColLetter(colIndex);
+        const cellRange = `${sheetName}!${colLetter}${sheetRowIndex}`;
+
+        updates.push({
+          range: cellRange,
+          values: [[updateItem[key]]]
+        });
+      }
+    }
+
+    if (updates.length === 0) return { message: 'No updates' };
+
+    // STEP 3: Batch update
+    const res = await sheets.spreadsheets.values.batchUpdate({
+      spreadsheetId,
+      requestBody: {
+        valueInputOption: 'RAW',
+        data: updates
+      }
+    });
+
+    return res.data;
+  }
+
   // เพิ่มแถวใหม่ที่ range ที่กำหนด โดยไม่ลบข้อมูลเก่า ใช้สำหรับ append ข้อมูลใหม่ต่อท้ายข้อมูลเก่า
   async appendRows(auth, spreadsheetId, range, rows) {
     const sheets = google.sheets({ version: 'v4', auth });

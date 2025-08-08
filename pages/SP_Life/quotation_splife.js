@@ -13,6 +13,16 @@ class quotationSPLife {
         await this.expect(this.page.locator('h4[class="MuiTypography-root quotation-title MuiTypography-h4"]', { hasText: 'สร้างใบเสนอราคา' })).toBeVisible({ timeout: 60000 });
     }
 
+    async insurancebrokerinformation(insuranceBroker) {
+        await this.expect(quotationLocator(this.page).insurancebroker).toBeVisible({ timeout: 60000 }); // รอให้ปุ่มรายชื่อนายหน้าประกันชีวิตปรากฏ
+        await quotationLocator(this.page).insurancebroker.click(); // คลิกที่ปุ่มรายชื่อนายหน้าประกันชีวิต
+        await this.page.keyboard.press('Control+A');
+        await this.page.keyboard.press('Backspace');
+        await this.page.keyboard.type(insuranceBroker, { delay: 100 });
+        await this.expect(quotationLocator(this.page, '', '', insuranceBroker).insurancebrokerOption).toBeVisible({ timeout: 60000 }); // รอให้ตัวเลือกนายหน้าปรากฏ
+        await quotationLocator(this.page, '', '', insuranceBroker).insurancebrokerOption.click(); // คลิกที่ตัวเลือกนายหน้า
+    }
+
     async selectInsurancePlan(insurancename) {
         const popupalert = new popupAlert(this.page);
 
