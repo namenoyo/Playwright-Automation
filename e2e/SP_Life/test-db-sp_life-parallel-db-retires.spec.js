@@ -46,7 +46,7 @@ test.afterAll(async () => {
 });
 
 for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
-    test(`worker ${chunkIndex + 1}`, async ({ page }, testInfo) => {
+    test.only(`worker ${chunkIndex + 1}`, async ({ page }, testInfo) => {
 
         // แปลงเป็นเวลาประเทศไทย
         const options = {
@@ -271,18 +271,19 @@ for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
 
     })
 
-    test.only(`สร้างใบคำขอ SP Life - worker ${chunkIndex + 1}`, async ({ page }, testInfo) => {
+    test(`สร้างใบคำขอ SP Life - worker ${chunkIndex + 1}`, async ({ page }, testInfo) => {
 
         const googlesheet = new GoogleSheet();
         // เริ่มต้น Auth
         const auth = await googlesheet.initAuth();
         // ส่ง spreadsheetId และ range มาจากไฟล์ test (สำหรับ Read และ Update)
         const spreadsheetId = '1sr4Rh_V67SK_eRJriqT5j4X03lzulifCfqE7Q5BV_wk';
-        const range_read = 'Prepare_TestData_Playwright_Create!A5:N6';
+        const range_read = 'Prepare_TestData_Playwright_Create!A5:T15'; // Read range
 
         // spreadsheetId สำหรับการอัพโหลดผลลัพธ์ (สำหรับ write)
         const spreadsheetId_write = '1sr4Rh_V67SK_eRJriqT5j4X03lzulifCfqE7Q5BV_wk';
-        const range_write = `Log_Raw!A:E`;
+        const sheetnamewrite = `Prepare_TestData_Playwright_Create`;
+        const range_write = `A5:V`;
 
         // แปลงเป็นเวลาประเทศไทย
         const options = {
@@ -338,12 +339,16 @@ for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
         // สร้าง array สำหรับเก็บผลลัพธ์
         let data_create = [];
 
+        // สถานะผลลัพธ์
+        let status_result = [];
+
         for (const row of mySlice) {
             let retryCount = 0;
             const maxRetries = 3;
             const timeout = 60000;
 
             const rowdata = row.Row; // ข้อมูลแถวปัจจุบัน
+            const insurancebroker = row.insurancebroker; // นายหน้าประกัน
             const insurancegroup = row.plan_group; // กลุ่มแบบประกัน
             const insurancename = row.plan_name; // ชื่อแบบประกัน
             const unisex = row.insure_sex_name; // เพศ
@@ -357,6 +362,12 @@ for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
             const coverageYear = row.cover_period; // ระยะเวลาคุ้มครอง
             const paypremium = row.pay_premium; // วิธีการชำระเบี้ย
             const statuspeople = row.status_people; // สถานะผู้เอาประกันภัย
+            const nationality = row.nationality; // สัญชาติ
+            const province = row.province; // จังหวัด
+            const district = row.district; // อำเภอ
+            const subdistrict = row.subdistrict; // ตำบล
+            const refnocheck = row.Ref_No; // หมายเลขอ้างอิง
+            const refcreatedate = `${startparts.find(p => p.type === 'day')?.value}/${startparts.find(p => p.type === 'month')?.value}/${startparts.find(p => p.type === 'year')?.value}`; // วันที่สร้างหมายเลขอ้างอิง
 
             const today = new Date();
             // เพิ่ม 1 ปีจากวันนี้
@@ -383,79 +394,92 @@ for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
                 try {
                     await Promise.race([
                         (async () => {
-                            // เริ่มการทดสอบ
-                            console.log(`▶️  เริ่มทำ ใบคำขอ row : ${row.Row}`);
+                            if (refnocheck === '') {
+                                // เริ่มการทดสอบ
+                                console.log(`▶️  เริ่มทำ ใบคำขอ row : ${row.Row}`);
 
-                            // Navigate to the website
-                            await loginpagesplife.gotoSPLife();
-                            // กรอก username และ password
-                            await loginpagesplife.login(datalogin[0][0], datalogin[1][0]);
-                            // Wait for the page to load completely
-                            await page.waitForLoadState('networkidle');
+                                // Navigate to the website
+                                await loginpagesplife.gotoSPLife();
+                                // กรอก username และ password
+                                await loginpagesplife.login(datalogin[0][0], datalogin[1][0]);
+                                // Wait for the page to load completely
+                                await page.waitForLoadState('networkidle');
 
-                            // รอให้ pop-up แจ้งเตือนปรากฏ
-                            await popupalert.popupAlertMessage();
+                                // รอให้ pop-up แจ้งเตือนปรากฏ
+                                await popupalert.popupAlertMessage();
 
-                            // กดปุ่ม สร้างใบเสนอราคา
-                            await mainsplife.clickcreateQuotation();
+                                // กดปุ่ม สร้างใบเสนอราคา
+                                await mainsplife.clickcreateQuotation();
 
-                            // รอหน้า "สร้างใบเสนอราคา" โหลด
-                            await quotationsplife.waitforquotationPageLoad();
+                                // รอหน้า "สร้างใบเสนอราคา" โหลด
+                                await quotationsplife.waitforquotationPageLoad();
 
-                            // เลือกแบบประกันตามข้อมูลในแถว
-                            const quotationspliferesult = await quotationsplife.selectInsurancePlan(insurancename);
-                            // ใส่ | คั่นระหว่างข้อมูลย่อย
-                            let result_format_array_quotationspliferesult = quotationspliferesult.popuparray
-                                .filter(item => item) // กรองเฉพาะค่าที่ไม่เป็น falsy ('' / null / undefined / 0 / false)
-                                .join(' | ');
+                                // กรอกข้อมูลนายหน้าประกันภัย
+                                await quotationsplife.insurancebrokerinformation(insurancebroker);
 
-                            // กรอกข้อมูลผู้เอาประกันภัย
-                            const insuredInformationresult = await quotationsplife.insuredInformation(idcard, titlename, name, surname, birthdate, formattedExpireDate, mobileno);
-                            let result_format_array_insuredInformationresult = insuredInformationresult.popuparray
-                                .filter(item => item) // กรองเฉพาะค่าที่ไม่เป็น falsy ('' / null / undefined / 0 / false)
-                                .join(' | ');
+                                // เลือกแบบประกันตามข้อมูลในแถว
+                                const quotationspliferesult = await quotationsplife.selectInsurancePlan(insurancename);
+                                // ใส่ | คั่นระหว่างข้อมูลย่อย
+                                let result_format_array_quotationspliferesult = quotationspliferesult.popuparray
+                                    .filter(item => item) // กรองเฉพาะค่าที่ไม่เป็น falsy ('' / null / undefined / 0 / false)
+                                    .join(' | ');
 
-                            // คำนวณเบี้ยประกันภัยและวิธีการชำระเบี้ย
-                            const premiumpaymentmoderesult = await quotationsplife.premiumandpaymentmode(String(insurancesum), String(coverageYear)); // กรอกจำนวนเงินเอาประกันภัย และระยะเวลาคุ้มครอง
-                            let result_format_array_premium_payment_mode_result = premiumpaymentmoderesult.popuparray
-                                .filter(item => item) // กรองเฉพาะค่าที่ไม่เป็น falsy ('' / null / undefined / 0 / false)
-                                .join(' | ');
+                                // กรอกข้อมูลผู้เอาประกันภัย
+                                const insuredInformationresult = await quotationsplife.insuredInformation(idcard, titlename, name, surname, birthdate, formattedExpireDate, mobileno);
+                                let result_format_array_insuredInformationresult = insuredInformationresult.popuparray
+                                    .filter(item => item) // กรองเฉพาะค่าที่ไม่เป็น falsy ('' / null / undefined / 0 / false)
+                                    .join(' | ');
 
-                            // วิธีการชำระเบี้ย
-                            const paypremiumresult = await quotationsplife.paypremium(paypremium);
-                            let result_format_array_pay_premium_result = paypremiumresult.popuparray
-                                .filter(item => item) // กรองเฉพาะค่าที่ไม่เป็น falsy ('' / null / undefined / 0 / false)
-                                .join(' | ');
+                                // คำนวณเบี้ยประกันภัยและวิธีการชำระเบี้ย
+                                const premiumpaymentmoderesult = await quotationsplife.premiumandpaymentmode(String(insurancesum), String(coverageYear)); // กรอกจำนวนเงินเอาประกันภัย และระยะเวลาคุ้มครอง
+                                let result_format_array_premium_payment_mode_result = premiumpaymentmoderesult.popuparray
+                                    .filter(item => item) // กรองเฉพาะค่าที่ไม่เป็น falsy ('' / null / undefined / 0 / false)
+                                    .join(' | ');
 
-                            // ยืนยันการสร้างใบเสนอราคา
-                            await quotationsplife.confirmsavequotation();
+                                // วิธีการชำระเบี้ย
+                                const paypremiumresult = await quotationsplife.paypremium(paypremium);
+                                let result_format_array_pay_premium_result = paypremiumresult.popuparray
+                                    .filter(item => item) // กรองเฉพาะค่าที่ไม่เป็น falsy ('' / null / undefined / 0 / false)
+                                    .join(' | ');
 
-                            // กรอกข้อมูลหน้าในคำขอ
-                            await applicationform.insuredinformation(statuspeople);
-                            // กรอกข้อมูลที่อยู่
-                            await applicationform.homeaddress();
-                            // กรอกข้อมูลที่อยู่ปัจจุบัน
-                            await applicationform.currentaddress();
+                                // ยืนยันการสร้างใบเสนอราคา
+                                await quotationsplife.confirmsavequotation();
 
-                            await page.locator('#currentUseAddressTypeCode').click();
-                            await page.locator('#currentUseAddressTypeCode').click();
+                                // กรอกข้อมูลหน้าในคำขอ
+                                await applicationform.insuredinformation(statuspeople, nationality, province, district, subdistrict);
+                                // กรอกข้อมูลที่อยู่
+                                await applicationform.homeaddress(nationality, province, district, subdistrict);
+                                // กรอกข้อมูลที่อยู่ปัจจุบัน
+                                await applicationform.currentaddress();
 
-                            // ยืนยันการสร้างคำขอ
-                            await applicationform.confirmsaveapplicationform();
-                            // รอให้ pop-up หมายเลขอ้างอิงใบคำขอปรากฏ
-                            const refno = await applicationform.getrefnoapplicationform();
+                                await page.locator('#currentUseAddressTypeCode').click();
+                                await page.locator('#currentUseAddressTypeCode').click();
 
-                            console.log(`หมายเลขอ้างอิงใบคำขอ: ${refno}`);
+                                // ยืนยันการสร้างคำขอ
+                                await applicationform.confirmsaveapplicationform();
+                                // รอให้ pop-up หมายเลขอ้างอิงใบคำขอปรากฏ
+                                const refno = await applicationform.getrefnoapplicationform();
 
-                            // ใส่ | คั่นระหว่างข้อมูลหลัก
-                            const values = [result_format_array_quotationspliferesult, result_format_array_insuredInformationresult, result_format_array_premium_payment_mode_result, result_format_array_pay_premium_result].filter(v => v && v.trim() !== '');
-                            const combined_final_result_popup = values.join(' | ');
+                                console.log(`หมายเลขอ้างอิงใบคำขอ: ${refno}`);
 
-                            const endTime = Date.now();    // จบจับเวลา
-                            const duration = (endTime - startTime) / 1000; // วินาที
-                            console.log(`Test case รันไปทั้งหมด ${duration} วินาที`);
+                                // ใส่ | คั่นระหว่างข้อมูลหลัก
+                                const values = [result_format_array_quotationspliferesult, result_format_array_insuredInformationresult, result_format_array_premium_payment_mode_result, result_format_array_pay_premium_result].filter(v => v && v.trim() !== '');
+                                const combined_final_result_popup = values.join(' | ');
 
-                            // await logout.logoutSPLife(); // ออกจากระบบ
+                                data_create.push({ Row: rowdata, Ref_No: refno, Ref_Create: refcreatedate, Popup_Message: combined_final_result_popup });
+
+                                // บันทึกผลการทดสอบ
+                                status_result.push('Passed');
+
+                                const endTime = Date.now();    // จบจับเวลา
+                                const duration = (endTime - startTime) / 1000; // วินาที
+                                console.log(`Test case รันไปทั้งหมด ${duration} วินาที`);
+
+                                await logout.logoutSPLife(); // ออกจากระบบ
+                            } else {
+                                // เริ่มการทดสอบ
+                                console.log(`▶️  มีเลขใบคำขอ row : ${row.Row} เรียบร้อยแล้ว`);
+                            }
 
                         })(),
                         new Promise((_, reject) =>
@@ -474,8 +498,8 @@ for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
                         console.error(`🛑 การทดสอบล้มเหลวเกินกำหนดใน row ${rowdata}, ข้ามไปยังชุดถัดไป\n`);
                         await page.screenshot({ path: `screenshots/SPLife/row-${rowdata}.png`, fullPage: true });
 
-                        // // บันทึกผลการทดสอบ
-                        // status_result.push('Error');
+                        // บันทึกผลการทดสอบ
+                        status_result.push('Error');
 
                         // // เอา assertion result และ status มาเก็บใน array
                         // combined_result_array.push([rowdata, 'Error Test', `⛔ Error : Expected = ${expectedinsurancesum} : Actual = 0.00 | ประเภท : ${insurancegroup} | ชื่อแบบประกัน : ${insurancename} | เพศ : ${unisex} | อายุ : ${age} | ทุน : ${insurancesum} | coverage : ${coverageYear} |`, getBangkokTimestamp(), `เกิดข้อผิดพลาดในการทดสอบ row_unique ${rowdata} : ${err.message}`]);
@@ -488,7 +512,12 @@ for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
             }
         }
 
+        // อัพโหลดผลลัพธ์ไปยัง Google Sheet เป็นการ append ที่ range ที่กำหนด แบบต่อท้าย โดยจะไม่ลบข้อมูลเก่าใน Google Sheet
+        await googlesheet.updateDynamicRows(auth, spreadsheetId_write, sheetnamewrite, range_write, data_create);
 
+        // สรุปผลการทดสอบ
+        const passCount = status_result.filter(item => item === 'Passed').length;
+        const errorCount = status_result.filter(item => item === 'Error').length;
 
     })
 }

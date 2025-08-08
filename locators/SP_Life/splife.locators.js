@@ -6,7 +6,13 @@ const mainmenuLocator = (page) => ({
     quotationButton: page.locator('div[class="MuiBox-root css-19yx029"] > button', { hasText: 'สร้างใบเสนอราคา' }),
 })
 
-const quotationLocator = (page, insurancename = '', titlename = '') => ({
+const quotationLocator = (page, insurancename = '', titlename = '', insurancebroker = '') => ({
+    // 1. ข้อมูลนายหน้าประกันชีวิต
+    insurancebroker: page.getByRole('region').filter({ hasText: 'รายชื่อนายหน้าประกันชีวิตสาขารหัสพนักงานเลขที่ใบอนุญาตใบอนุญาตหมดอายุวันที่' }).getByLabel('Open'),
+    insurancebrokerOption: page.getByRole('option', { name: insurancebroker, exact: true }), // ตัวเลือกนายหน้า
+    insurancebrokerClear: page.getByRole('button', { name: 'Clear' }), // ปุ่มเคลียร์นายหน้า
+    insurancebranch: page.getByRole('region').filter({ hasText: 'รายชื่อนายหน้าประกันชีวิตกรุณาเลือกรายชื่อนายหน้าประกันชีวิตสาขารหัสพนักงานเลขที่' }).getByRole('textbox').nth(1), // ช่องกรอกสาขานายหน้า
+
     // 2. เลือกแบบประกัน
     insurancePlan: page.locator('div[class="MuiCardContent-root"]').locator('h6', { hasText: insurancename }),
 
@@ -42,6 +48,8 @@ const quotationLocator = (page, insurancename = '', titlename = '') => ({
     popupAlert: page.locator('div[class="MuiDialogContent-root"] > h6'), // pop-up แจ้งเตือน
     // ปุ่มปิด pop-up
     closePopupButton: page.locator('div[class="MuiPaper-root MuiDialog-paper MuiDialog-paperScrollPaper MuiDialog-paperWidthXs MuiPaper-elevation24 MuiPaper-rounded"]').locator('span[class="MuiIconButton-label"]'),
+    // ปุ่มปิด pop-up แจ้งเตือน
+    closepopupButton: page.getByRole('button', { name: 'close' }),
     // // pop-up error 502
     // popupError502: page.locator('div[class="MuiPaper-root MuiDialog-paper jss6129 MuiDialog-paperScrollPaper MuiDialog-paperWidthSm MuiPaper-elevation24 MuiPaper-rounded"]').locator('div[class="MuiDialogContent-root jss6134"]').locator('div[class="MuiGrid-root MuiGrid-item"]').nth(1), // pop-up แจ้งเตือน error 502
     // // ปุ่มปิด pop-up error 502
@@ -53,7 +61,7 @@ const quotationLocator = (page, insurancename = '', titlename = '') => ({
 
 })
 
-const applicationformLocator = (page) => ({
+const applicationformLocator = (page, nationality = '', province = '', district = '', subdistrict = '') => ({
     // 2. ข้อมูลผู้เอาประกันภัย และผู้รับผลประโยชน์
     // รายละเอียดผู้เอาประกันภัย
     // สถานะภาพ
@@ -63,18 +71,18 @@ const applicationformLocator = (page) => ({
     statuspeople_widowed: page.locator('label[for="widowed"]'), // หม้าย
     // สัญชาติ
     nationality: page.getByRole('button', { name: 'Open' }).first(), // ปุ่มเลือกสัญชาติ
-    nationalityOption: page.getByRole('option', { name: 'ไทย', exact: true }), // ตัวเลือกคำนำหน้า
+    nationalityOption: page.getByRole('option', { name: nationality, exact: true }), // ตัวเลือกคำนำหน้า
 
     // ข้อมูลที่อยู่ตามทะเบียนบ้าน
     addressno: page.locator('#registerHouseNo'), // เลขที่
     zipcode: page.locator('#registerZipCode'), // รหัสไปรษณีย์
     province: page.getByRole('button', { name: 'Open' }).nth(1), // ปุ่มเลือกจังหวัด
-    provinceOption: page.getByRole('option', { name: 'นครศรีธรรมราช', exact: true }), // ตัวเลือกจังหวัด
+    provinceOption: page.getByRole('option', { name: province, exact: true }), // ตัวเลือกจังหวัด
     district: page.getByRole('button', { name: 'Open' }).nth(2), // ปุ่มเลือกอำเภอ
-    districtOption: page.getByRole('option', { name: 'เมืองนครศรีธรรมราช', exact: true }), // ตัวเลือกอำเภอ
+    districtOption: page.getByRole('option', { name: district, exact: true }), // ตัวเลือกอำเภอ
     subdistrict: page.getByRole('button', { name: 'Open' }).nth(3), // ปุ่มเลือกตำบล
-    subdistrictOption: page.getByRole('option', { name: 'นาเคียน', exact: true }), // ตัวเลือกตำบล
-    
+    subdistrictOption: page.getByRole('option', { name: subdistrict, exact: true }), // ตัวเลือกตำบล
+
     // ที่อยู่ปัจจุบัน/ที่อยู่ที่สะดวกให้ติดต่อ
     currentaddressnow: page.locator('label[for="contactFlagCurrent"]'), // ที่อยู่ปัจจุบัน
 

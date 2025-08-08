@@ -11,10 +11,13 @@ class applicationformSPLife {
         await this.expect(this.page.locator('h4[class="MuiTypography-root application-title MuiTypography-h4"]', { hasText: 'สร้างใบคำขอเอาประกันภัย' })).toBeVisible({ timeout: 60000 });
     }
 
-    async insuredinformation (statuspeople) {
-        const applicationformlocator = applicationformLocator(this.page);
+    async insuredinformation (statuspeople, nationality, province, district, subdistrict) {
+        const applicationformlocator = applicationformLocator(this.page, nationality, province, district, subdistrict);
 
         await this.waitforquotationPageLoad();
+
+        // รอให้หน้า "สร้างใบคำขอเอาประกันภัย" โหลดเสร็จ
+        await this.page.waitForTimeout(500); // รอครึ่งวินาที
 
         // 2. ข้อมูลผู้เอาประกันภัย และผู้รับผลประโยชน์
         if (statuspeople === 'โสด') {
@@ -40,8 +43,8 @@ class applicationformSPLife {
 
     }
 
-    async homeaddress () {
-        const applicationformlocator = applicationformLocator(this.page);
+    async homeaddress (nationality, province, district, subdistrict) {
+        const applicationformlocator = applicationformLocator(this.page, nationality, province, district, subdistrict);
 
         await applicationformlocator.addressno.click(); // คลิกที่ช่องเลขที่
         await this.page.keyboard.type('123', { delay: 100 }); // กรอกเลขที่
@@ -87,14 +90,15 @@ class applicationformSPLife {
         await quotationLocator(this.page).savepopupmessageconfirmsavequotation.click(); // กดปุ่มยืนยันใน pop-up
         await this.expect(applicationformlocator.popupmessagesuccessapplicationform).toBeVisible({ timeout: 60000 }); // รอให้ pop-up แจ้งเตือนสร้างใบเสนอราคาเสร็จสิ้นปรากฏ
         await this.expect(applicationformlocator.popupmessagesuccessapplicationform).toBeVisible({ timeout: 60000 }); // รอให้ปุ่มปิด pop-up แจ้งเตือนสร้างใบเสนอราคาเสร็จสิ้นพร้อมใช้งาน
-        // await quotationLocator(this.page).savepopupmessageconfirmsaveapplicationform.click(); // กดปุ่มปิด pop-up แจ้งเตือนสร้างใบเสนอราคาเสร็จสิ้น
     }
 
     async getrefnoapplicationform () {
         const applicationformlocator = applicationformLocator(this.page);
 
         await applicationformlocator.popuprefno.waitFor({ state: 'visible', timeout: 60000 }); // รอให้ pop-up หมายเลขอ้างอิงใบคำขอปรากฏ
-        const refno = await applicationformlocator.popuprefno.textContent(); // ดึงข้อความจาก pop-up หมายเลขอ้างอิงใบคำขอ
+        const rawrefno = await applicationformlocator.popuprefno.textContent(); // ดึงข้อความจาก pop-up หมายเลขอ้างอิงใบคำขอ
+        const refno = (rawrefno ?? '').replace(/\D/g, '');
+        await applicationformlocator.savepopupmessageconfirmsaveapplicationform.click(); // กดปุ่มปิด pop-up แจ้งเตือนสร้างใบเสนอราคาเสร็จสิ้น
         return refno ? refno.trim() : ''; // คืนค่าหมายเลขอ้างอิงใบคำขอ ถ้าไม่ว่าง
     }
 }
