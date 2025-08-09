@@ -8,8 +8,8 @@ class GoogleSheet {
   constructor() {
     this.SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
     this.TOKEN_PATH = path.resolve(__dirname, '../credentials/token.json');
-    // this.CREDENTIALS_PATH = path.resolve(__dirname, '../credentials/client_secret_484402800987-2hlrd7m1rbh4lbrq1bupbjr898b4mrn1.apps.googleusercontent.com.json');
-    this.CREDENTIALS_PATH = path.resolve(__dirname, '../credentials/client_secret_478587092772-4bkr7ctr9gki3f8uq7p7r1lh9emorkh7.apps.googleusercontent.com.json');
+    this.CREDENTIALS_PATH = path.resolve(__dirname, '../credentials/client_secret_484402800987-2hlrd7m1rbh4lbrq1bupbjr898b4mrn1.apps.googleusercontent.com.json');
+    // this.CREDENTIALS_PATH = path.resolve(__dirname, '../credentials/client_secret_478587092772-4bkr7ctr9gki3f8uq7p7r1lh9emorkh7.apps.googleusercontent.com.json');
   }
 
   // โหลดไฟล์ credentials.json
@@ -118,6 +118,49 @@ class GoogleSheet {
     return normalized;
   }
 
+  async fetchSheetData_key(auth, spreadsheetId, range) {
+    const sheets = google.sheets({ version: 'v4', auth });
+    const res = await sheets.spreadsheets.values.get({ spreadsheetId, range });
+
+    const values = res.data.values || [];
+
+    if (values.length === 0) return [];
+
+    // Extract header
+    const header = values[0];
+
+    // หาจำนวน column จาก range (เช่น A1:D10)
+    const columnCount = range.match(/([A-Z]+):([A-Z]+)/);
+    let maxCols = 0;
+    if (columnCount) {
+      const colStart = columnCount[1];
+      const colEnd = columnCount[2];
+      const colToNumber = col => {
+        let num = 0;
+        for (let i = 0; i < col.length; i++) {
+          num *= 26;
+          num += col.charCodeAt(i) - 64;
+        }
+        return num;
+      };
+      maxCols = colToNumber(colEnd) - colToNumber(colStart) + 1;
+    }
+
+    // เติมช่องว่างถ้า row ไม่ครบ column และ map เป็น object
+    const data = values.slice(1).map(row => {
+      while (row.length < maxCols) {
+        row.push('');
+      }
+      const obj = {};
+      header.forEach((key, index) => {
+        obj[key] = row[index] || '';
+      });
+      return obj;
+    });
+
+    return data;
+  }
+
   // บันทึกข้อมูลลง Google Sheet โดยรับ spreadsheetId และ range และ rows (ข้อมูลที่เป็น array 2D)
   async updateRows(auth, spreadsheetId, range, rows) {
     const sheets = google.sheets({ version: 'v4', auth });
@@ -137,6 +180,76 @@ class GoogleSheet {
       valueInputOption: 'RAW',
       requestBody: { values: rows }  // rows ต้องเป็น 2D array เช่น [['A1', 'B1'], ['A2', 'B2']]
     });
+    return res.data;
+  }
+
+  // อัปเดตข้อมูลในแถวที่มีอยู่แล้ว ตาม row ที่ข้อมูลทำ
+  async updateDynamicRows(auth, spreadsheetId, sheetName, rangeheader, data) {
+    const sheets = google.sheets({ version: 'v4', auth });
+
+    // STEP 1: ดึงข้อมูลตั้งแต่ header (แถว 5) ลงไป
+    const allDataRes = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${sheetName}!${rangeheader}` // เริ่มดึงตั้งแต่แถว 5
+    });
+
+    const rows = allDataRes.data.values;
+    const headers = rows[0]; // แถวแรกที่ดึงมา = header จริง
+
+    const rowColIndex = headers.indexOf("Row");
+    if (rowColIndex === -1) {
+      throw new Error("ไม่พบคอลัมน์ชื่อ 'Row'");
+    }
+
+    function getColLetter(index) {
+      let col = '';
+      while (index >= 0) {
+        col = String.fromCharCode((index % 26) + 65) + col;
+        index = Math.floor(index / 26) - 1;
+      }
+      return col;
+    }
+
+    const updates = [];
+
+    // STEP 2: หาและอัปเดต
+    for (const updateItem of data) {
+      // หาว่า Row นี้อยู่บรรทัดไหน (ใน data ที่ดึง)
+      const matchRow = rows.findIndex(r => r[rowColIndex] == updateItem.Row);
+
+      if (matchRow === -1) continue;
+
+      // matchRow เป็น index ใน array `rows` ซึ่งเริ่มจาก header ที่ rowIndex=0
+      // ดังนั้นใน sheet จริง แถว = matchRow + 5 (เพราะ header อยู่แถว 5)
+      const sheetRowIndex = matchRow + 5;
+
+      for (const key in updateItem) {
+        if (key === 'Row') continue;
+
+        const colIndex = headers.indexOf(key);
+        if (colIndex === -1) continue;
+
+        const colLetter = getColLetter(colIndex);
+        const cellRange = `${sheetName}!${colLetter}${sheetRowIndex}`;
+
+        updates.push({
+          range: cellRange,
+          values: [[updateItem[key]]]
+        });
+      }
+    }
+
+    if (updates.length === 0) return { message: 'No updates' };
+
+    // STEP 3: Batch update
+    const res = await sheets.spreadsheets.values.batchUpdate({
+      spreadsheetId,
+      requestBody: {
+        valueInputOption: 'RAW',
+        data: updates
+      }
+    });
+
     return res.data;
   }
 
