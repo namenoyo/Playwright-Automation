@@ -36,6 +36,7 @@ export default defineConfig({
     trace: 'on-first-retry',
 
   video: 'off', // ปิดการอัดวิดีโอ
+
     // video: 'retain-on-failure', // หรือ 'on' ถ้าอยากเก็บทุกเคส
 
     // screenshot: 'only-on-failure',
