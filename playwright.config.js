@@ -20,7 +20,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   // retries: process.env.CI ? 2 : 0,
-  retries: 0,
+  retries: 2,
   /* Opt out of parallel tests on CI. */
   workers: undefined,
   // workers: process.env.CI ? 1 : undefined,
@@ -34,8 +34,11 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
-    // video: 'on', // หรือ 'on' ถ้าอยากเก็บทุกเคส
-    video: 'retain-on-failure', // หรือ 'on' ถ้าอยากเก็บทุกเคส
+
+  video: 'off', // ปิดการอัดวิดีโอ
+
+    // video: 'retain-on-failure', // หรือ 'on' ถ้าอยากเก็บทุกเคส
+
     // screenshot: 'only-on-failure',
   },
 
