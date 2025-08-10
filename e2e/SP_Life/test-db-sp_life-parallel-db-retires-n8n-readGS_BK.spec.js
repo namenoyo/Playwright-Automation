@@ -91,7 +91,7 @@ for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
         const mySlice = rows.slice(start, end);
 
         // กำหนดเวลา timeout สำหรับ test case นี้เป็น 24 ชั่วโมง
-        test.setTimeout(345600000);
+        test.setTimeout(86400000);
 
         // console.log(start, end);
         // console.log(mySlice[0]);
@@ -231,7 +231,7 @@ for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
                         })(),
 
                         new Promise((_, reject) =>
-                            setTimeout(() => reject(new Error('⏰ Loop timeout (60s)')), timeout)
+                            setTimeout(() => reject(new Error('⏰ Loop timeout (40s)')), timeout)
                         )
                     ]);
 
@@ -275,7 +275,7 @@ for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
         const finishdateformat = `${finishparts.find(p => p.type === 'day')?.value}/${finishparts.find(p => p.type === 'month')?.value}/${finishparts.find(p => p.type === 'year')?.value} ${finishparts.find(p => p.type === 'hour')?.value}:${finishparts.find(p => p.type === 'minute')?.value}:${finishparts.find(p => p.type === 'second')?.value}`;
 
         // ส่งผลลัพธ์ไปยัง n8n
-        await sendresultn8nbot(testcase, mySlice[0].plan_group, mySlice[0].suminsure, mySlice.length, passCount, failCount, startdateformat, finishdateformat, `${chunkIndex + 1}`, errorCount, MAX_POSSIBLE_WORKERS);
+        await sendresultn8nbot(testcase, mySlice[0].plan_group, mySlice[0].suminsure, mySlice.length, passCount, failCount, startdateformat, finishdateformat, `${chunkIndex + 1}`, errorCount);
 
     })
 }
