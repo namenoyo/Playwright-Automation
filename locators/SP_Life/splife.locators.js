@@ -2,8 +2,13 @@ const menusplifeLocator = (page, mainmenu) => ({
     mainmenu: page.locator('span[class="MuiButton-label"]', { hasText: mainmenu }) // ✅ แก้ spacing ด้วย
 });
 
+// const mainmenuLocator = (page) => ({
+//     quotationButton: page.locator('div[class="MuiBox-root css-19yx029"] > button', { hasText: 'สร้างใบเสนอราคา' }),
+// })
+
 const mainmenuLocator = (page) => ({
-    quotationButton: page.locator('div[class="MuiBox-root css-19yx029"] > button', { hasText: 'สร้างใบเสนอราคา' }),
+    quotationButton: page.locator('#tab\\/home div.MuiBox-root.css-i3pbo div.MuiBox-root.css-11twhg7 div.MuiBox-root.css-j7qwjs > button',
+  { hasText: 'สร้างใบเสนอราคา' }),
 })
 
 const quotationLocator = (page, insurancename = '', titlename = '', insurancebroker = '') => ({
