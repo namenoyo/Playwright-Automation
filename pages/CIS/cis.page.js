@@ -1,7 +1,7 @@
 // CISPage class for Playwright
 const { expect } = require('@playwright/test');
-const { waitForLoadingDialogGone, waitForLoadingDialogVisible } = require('../utils/loading.helper');
-const locators = require('../locators/cis.locator');
+const { waitForLoadingDialogGone, waitForLoadingDialogVisible } = require('../../utils/loading.helper');
+const locators = require('../../locators/CIS/cis.locator');
 
 class CISPage {
   /**

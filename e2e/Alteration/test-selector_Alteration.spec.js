@@ -1,16 +1,16 @@
 import { test, expect } from '@playwright/test';
 // @ts-ignore
-const { LoginPage } = require('../pages/login.page.js');
+const { LoginPage } = require('../../pages/login.page.js');
 // @ts-ignore
-const { CISPage } = require('../pages/cis.page.js');
+const { CISPage } = require('../../pages/CIS/cis.page.js');
 // @ts-ignore
-const { validUser } = require('../data/login.data.js');
+const { validUser } = require('../../data/login.data.js');
 // @ts-ignore
-const { policyNumbers } = require('../data/cis.data.js');
+const { policyNumbers } = require('../../data/CIS/cis.data.js');
 // @ts-ignore
-const { sendTestResultToGoogleSheetGSAppScript } = require('../utils/google-sheet-gsappscript.helper.js');
-const { logSelectorsSoftAssert } = require('../Reuseable/log_selector.js');
-const CIS_Search = require('../locators/CIS_Search.locator.js');
+const { sendTestResultToGoogleSheetGSAppScript } = require('../../utils/google-sheet-gsappscript.helper.js');
+const { logSelectorsSoftAssert } = require('../../Reuseable/log_selector.js');
+const CIS_Search = require('../../locators/CIS/CIS_Search.locator.js');
 const ENV = process.env.ENV || 'sit';
 const SHEET_NAME = 'Selector_check';
 
@@ -117,7 +117,7 @@ for (const { policyNo } of policyNumbers) {
       await page.waitForSelector('#section-policy-view p', { state: 'visible', timeout: 10000 });
 
       // ตรวจสอบ locator จาก Alteration_1.locator.js
-      const AlterationLocators = require('../locators/Alteration_1.locator.js');
+      const AlterationLocators = require('../../locators/Alteration/Alteration_1.locator.js');
       const allAlterationSelectors = Object.entries(AlterationLocators).map(([key, selector]) => {
         if (typeof selector === 'function') {
           return { label: key, locator: selector };
