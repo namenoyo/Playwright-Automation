@@ -11,7 +11,7 @@ import { uploadGoogleSheet } from '../../utils/uploadresult-google-sheet'
 import { loginData } from '../../data/login_t.data'
 import { inquiryformArraykey_label } from '../../data/Alteration/inquiryform.data'
 import { detailinquiryformLocator } from '../../locators/Alteration/alteration.locators'
-// import { inquiryformArraykey_label } from '../data/Alteration/inquiryform_from_Data_Mapping.data'
+// import { inquiryformArraykey_label } from '../../data/Alteration/inquiryform_from_Data_Mapping.data'
 
 test.describe('loop data', () => {
 

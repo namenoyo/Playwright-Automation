@@ -1,5 +1,6 @@
 import { checkvalueExpected } from "./check-value";
-const db = require('../database/database');
+const { Database } = require('../database/database');
+const { configdb } = require('../database/database_env');
 import { changeobjecttoarray } from "./common";
 import { pulldataobjectfromkeys } from "./common";
 
@@ -93,6 +94,14 @@ export class mapsdataArray {
 
         const checkvalueexpected = new checkvalueExpected(this.page, this.expect);
 
+        const dbConfig = configdb.letterreturn.SIT; // เปลี่ยนตามสภาพแวดล้อมที่ต้องการ
+        const db = new Database({
+            user: dbConfig.DB_USER,
+            password: dbConfig.DB_PASSWORD,
+            host: dbConfig.DB_HOST,
+            database: dbConfig.DB_NAME
+        });
+
         let status_result_array = []
         let assertion_result_array = []
 
@@ -178,6 +187,14 @@ export class mapsdataArray {
     async mapsdataarrayfile_checkdata_database_keys(locatorarray, expectedarray) {
 
         const checkvalueexpected = new checkvalueExpected(this.page, this.expect);
+
+        const dbConfig = configdb.letterreturn.SIT; // เปลี่ยนตามสภาพแวดล้อมที่ต้องการ
+        const db = new Database({
+            user: dbConfig.DB_USER,
+            password: dbConfig.DB_PASSWORD,
+            host: dbConfig.DB_HOST,
+            database: dbConfig.DB_NAME
+        });
 
         let status_result_array = []
         let assertion_result_array = []

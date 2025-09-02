@@ -3,7 +3,8 @@ const menusplifeLocator = (page, mainmenu) => ({
 });
 
 const mainmenuLocator = (page) => ({
-    quotationButton: page.locator('div[class="MuiBox-root css-19yx029"] > button', { hasText: 'สร้างใบเสนอราคา' }),
+    // quotationButton: page.locator('div[class="MuiBox-root css-19yx029"] > button', { hasText: 'สร้างใบเสนอราคา' }),
+    quotationButton: page.locator('div').filter({ hasText: /^spacerสร้างใบเสนอราคา$/ }).getByRole('button')
 })
 
 const quotationLocator = (page, insurancename = '', titlename = '', insurancebroker = '') => ({

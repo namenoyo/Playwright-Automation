@@ -268,6 +268,34 @@ class GoogleSheet {
     return res.data;
   }
 
+  async getSheetDataTestCase(spreadsheetId, sheetName, auth) {
+    const sheets = google.sheets({ version: "v4", auth });
+    const res = await sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range: sheetName,
+    });
+
+    const rows = res.data.values;
+    if (!rows || rows.length === 0) return [];
+
+    // header อยู่ที่แถว A3 (index 2)
+    const headerRow = rows[2];
+    const dataRows = rows.slice(3);
+
+    // แปลง array -> object
+    const objects = dataRows.map(row => {
+        const obj = {};
+        headerRow.forEach((key, i) => {
+            obj[key] = row[i] || ""; // ถ้าไม่มีค่าให้เป็น empty string
+        });
+        return obj;
+    });
+
+    return objects;
+
+  }
+
+
 }
 
 module.exports = { GoogleSheet };

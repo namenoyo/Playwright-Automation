@@ -4,6 +4,7 @@ const { LogoutPage } = require('../../pages/logout.page');
 const { mainSPLife } = require('../../pages/SP_Life/main_splife');
 const { quotationSPLife } = require('../../pages/SP_Life/quotation_splife');
 const { quotationLocator } = require('../../locators/SP_Life/splife.locators');
+const { GoogleSheet } = require('../../utils/google-sheet-OAuth.helper');
 
 test.describe('เมนู สร้างใบเสนอราคา (Validation)', () => {
 
@@ -45,31 +46,31 @@ test.describe('เมนู สร้างใบเสนอราคา (Valid
         await quotationPage.paypremium(paypremium);
     })
 
-    test('TC-หน้าจอสร้างใบเสนอราคา-4', async ({ page }) => {
-        try {
-            // กดปุ่ม dropdown agent
-            await quotationLocator(page).insurancebroker.click();
-            // กดปุ่ม x เพื่อเคลียร์ค่า agent
-            await quotationLocator(page).insurancebrokerClear.click();
-            // กด ช่องสาขา
-            await quotationLocator(page).insurancebranch.click();
-            // เช็คแสดงข้อความ ไม่ได้ใส่ agent ช่อง agent
-            await expect(page.locator('div[class="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-12 MuiGrid-grid-sm-6"]').getByText('กรุณาเลือกรายชื่อนายหน้าประกันชีวิต')).toHaveText('กรุณาเลือกรายชื่อนายหน้าประกันชีวิต');
+    // test('TC-หน้าจอสร้างใบเสนอราคา-4', async ({ page }) => {
+    //     try {
+    //         // กดปุ่ม dropdown agent
+    //         await quotationLocator(page).insurancebroker.click();
+    //         // กดปุ่ม x เพื่อเคลียร์ค่า agent
+    //         await quotationLocator(page).insurancebrokerClear.click();
+    //         // กด ช่องสาขา
+    //         await quotationLocator(page).insurancebranch.click();
+    //         // เช็คแสดงข้อความ ไม่ได้ใส่ agent ช่อง agent
+    //         await expect(page.locator('div[class="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-12 MuiGrid-grid-sm-6"]').getByText('กรุณาเลือกรายชื่อนายหน้าประกันชีวิต')).toHaveText('กรุณาเลือกรายชื่อนายหน้าประกันชีวิต');
 
-            // คลิ๊กปุ่ม บันทึกข้อมูล
-            await quotationLocator(page).confirmsavequotation.isVisible({ timeout: 60000 });
-            await quotationLocator(page).confirmsavequotation.click();
-            // คลิ๊กปุ่ม บันทึกข้อมูล
-            await quotationLocator(page).savepopupmessageconfirmsavequotation.isVisible({ timeout: 60000 });
-            await quotationLocator(page).savepopupmessageconfirmsavequotation.click();
+    //         // คลิ๊กปุ่ม บันทึกข้อมูล
+    //         await quotationLocator(page).confirmsavequotation.isVisible({ timeout: 60000 });
+    //         await quotationLocator(page).confirmsavequotation.click();
+    //         // // คลิ๊กปุ่ม ยืนยัน
+    //         // await quotationLocator(page).savepopupmessageconfirmsavequotation.isVisible({ timeout: 60000 });
+    //         // await quotationLocator(page).savepopupmessageconfirmsavequotation.click();
 
-            // เช็คแจ้งเตือน ไม่ได้ใส่ agent ช่อง agent
-            await expect(quotationLocator(page).popupAlert).toHaveText('กรุณาระบุ ข้อมูลนายหน้าประกันชีวิต เป็นอย่างน้อย');
-        } catch (err) {
-            console.log('Error in TC-หน้าจอสร้างใบเสนอราคา-4:', err.message);
-            throw err;
-        }
-    })
+    //         // เช็คแจ้งเตือน ไม่ได้ใส่ agent ช่อง agent
+    //         await expect(quotationLocator(page).popupAlert).toHaveText('กรุณาระบุ ข้อมูลนายหน้าประกันชีวิต เป็นอย่างน้อย');
+    //     } catch (err) {
+    //         console.log('Error in TC-หน้าจอสร้างใบเสนอราคา-4:', err.message);
+    //         throw err;
+    //     }
+    // })
 
     test('TC-หน้าจอสร้างใบเสนอราคา-32', async ({ page }) => {
         try {
@@ -128,7 +129,7 @@ test.describe('เมนู สร้างใบเสนอราคา (Valid
         }
     })
 
-    test.only('TC-หน้าจอสร้างใบเสนอราคา-36', async ({ page }) => {
+    test('TC-หน้าจอสร้างใบเสนอราคา-36', async ({ page }) => {
         try {
             // คลิ๊ก ช่องจำนวนเงินเอาประกันภัย
             await quotationLocator(page).coverageyear.click();
@@ -143,6 +144,51 @@ test.describe('เมนู สร้างใบเสนอราคา (Valid
             await expect(quotationLocator(page).popupAlert).toHaveText('ระยะเวลาคุ้มครองไม่อยู่ในช่วงที่กำหนด');
         } catch (err) {
             console.log('Error in TC-หน้าจอสร้างใบเสนอราคา-36:', err.message);
+            throw err;
+        }
+    })
+
+    test.only('TC-หน้าจอสร้างใบเสนอราคา-5', async ({ page }, testInfo) => {
+        try {
+
+            const googlesheet = new GoogleSheet();
+            // เริ่มต้น Auth
+            const auth = await googlesheet.initAuth();
+            // ส่ง spreadsheetId และ range มาจากไฟล์ test (สำหรับ Read และ Update)
+            const spreadsheetId = '1fWFSP2pmzV1QBVxoYbyxzb4XDQbcWflB7gLdW94jARY';
+            const sheetname = `Test Checklist`;
+
+            const allRows = await googlesheet.getSheetDataTestCase(spreadsheetId, sheetname, auth);
+
+            // กรองแถวที่ Test Checklist ID ตรงกับ testInfo.title
+            const matchedRows = allRows.filter(row => row["Test Checklist ID"] === testInfo.title);
+
+            console.log("แถวตรงกับ testInfo.title (เป็น object):", matchedRows);
+
+            console.log(` ${matchedRows[0]["Test Checklist ID"]} | ${matchedRows[0]["Test Step"]} `);
+
+            // // กดปุ่ม dropdown agent
+            // await quotationLocator(page).insurancebroker.click();
+            // // กดปุ่ม x เพื่อเคลียร์ค่า agent
+            // await quotationLocator(page).insurancebrokerClear.click();
+            // // กด ช่องสาขา
+            // await quotationLocator(page).insurancebranch.click();
+            // // เช็คแสดงข้อความ ไม่ได้ใส่ agent ช่อง agent
+            // await expect(page.locator('div[class="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-12 MuiGrid-grid-sm-6"]').getByText('กรุณาเลือกรายชื่อนายหน้าประกันชีวิต')).toHaveText('กรุณาเลือกรายชื่อนายหน้าประกันชีวิต');
+
+            // // คลิ๊กปุ่ม บันทึกข้อมูล
+            // await quotationLocator(page).confirmsavequotation.isVisible({ timeout: 60000 });
+            // await quotationLocator(page).confirmsavequotation.click();
+            // // // คลิ๊กปุ่ม ยืนยัน
+            // // await quotationLocator(page).savepopupmessageconfirmsavequotation.isVisible({ timeout: 60000 });
+            // // await quotationLocator(page).savepopupmessageconfirmsavequotation.click();
+
+            // // เช็คแจ้งเตือน ไม่ได้ใส่ agent ช่อง agent
+            // await expect(quotationLocator(page).popupAlert).toHaveText('กรุณาระบุ ข้อมูลนายหน้าประกันชีวิต เป็นอย่างน้อย');
+
+
+        } catch (err) {
+            console.log('Error in TC-หน้าจอสร้างใบเสนอราคา-4:', err.message);
             throw err;
         }
     })
