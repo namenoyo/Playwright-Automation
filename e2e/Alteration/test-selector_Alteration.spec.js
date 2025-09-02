@@ -14,6 +14,10 @@ const CIS_Search = require('../../locators/CIS/CIS_Search.locator.js');
 const ENV = process.env.ENV || 'sit';
 const SHEET_NAME = 'Selector_check';
 
+
+// สำหรับตรวจสอบเฉพาะ Selector เท่านั้น ว่าใช้งานได้ปกติหรือไม่ 
+// และวางผลใน Google Sheet Tab upload-to-sheet_Playwright ไฟล์ https://docs.google.com/spreadsheets/d/1kqtNcJh9Co5eS2jlaaLzYjYFVLiS3OMIJanJTN4-6Tg/edit?gid=1685498397#gid=1685498397
+
 // เตรียม selectors ทั้งหมด
 const allSelectors = Object.entries(CIS_Search).map(([key, selector]) => {
   if (typeof selector === 'function') {
@@ -70,7 +74,19 @@ for (const { policyNo } of policyNumbers) {
       // ระบุวันที่ name="inquiryDateFrom" เป็น 01/07/2568
       const dateFromInput = await page.locator('input[name="inquiryDateFrom"]');
       await dateFromInput.waitFor({ state: 'visible' });
-      await dateFromInput.fill('01/07/2568');
+      await dateFromInput.clear();
+      await dateFromInput.type('01072568', { delay: 200 }); /// delay 100 ms ต่อ key
+    
+      
+      // await dateFromInput.isVisible();
+   
+      // ระบุวันที่ name="inquiryDateTo" เป็น 31/07/2568
+      const dateToInput = await page.locator('input[id="inquiryDateTo"]');
+      await dateToInput.waitFor({ state: 'visible' });
+      await dateToInput.clear();
+      await dateToInput.type('31072568', { delay: 200 });
+      // await dateToInput.isVisible();
+
 
       // คลิก input และพิมพ์เลข policyNo
       const policyInput = await page.locator('div:nth-child(9) > .MuiFormControl-root > .MuiInputBase-root > .MuiInputBase-input')
@@ -116,6 +132,8 @@ for (const { policyNo } of policyNumbers) {
       // รอจนกว่า element หลักของ alteration panel จะปรากฏ (DOM พร้อมใช้งานจริง)
       await page.waitForSelector('#section-policy-view p', { state: 'visible', timeout: 10000 });
 
+      const doc_detailButton = await page.locator('div.MuiCollapse-wrapper').last().locator('tbody.MuiTableBody-root button').nth(0);
+      const doc_detailButton1 = await page.locator('div.MuiCollapse-wrapper').last().locator('tbody.MuiTableBody-root button').nth(1);
       // ตรวจสอบ locator จาก Alteration_1.locator.js
       const AlterationLocators = require('../../locators/Alteration/Alteration_1.locator.js');
       const allAlterationSelectors = Object.entries(AlterationLocators).map(([key, selector]) => {

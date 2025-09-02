@@ -57,7 +57,7 @@ async function assertWithStatus(locatorOrString, expectedText, label) {
   return match;
 }
 
-
+// สำหรับตรวจสอบหน้าจอ สอบถาม โดยเป็นการตรวจ selector Input Criteria บนหน้าจอเบื้องต้น ไม่จำเป็นต้องทำก็ได้
 test.describe('Test_UI_DOM', () => {
 
     const inquiryformarraykey_label = inquiryformArraykey_label;
