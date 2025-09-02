@@ -13,6 +13,8 @@ import { inquiryformArraykey_label } from '../../data/Alteration/inquiryform.dat
 import { detailinquiryformLocator } from '../../locators/Alteration/alteration.locators'
 // import { inquiryformArraykey_label } from '../../data/Alteration/inquiryform_from_Data_Mapping.data'
 
+
+
 test.describe('loop data', () => {
 
     const inquiryformarraykey_label = inquiryformArraykey_label;
