@@ -1,15 +1,15 @@
 import { test, expect } from '@playwright/test'
-import { LoginPage } from '../pages/login_t.page.js';
-import { gotoMenu } from '../pages/menu.page.js';
-import { searchCustomerCIS, detailCustomerCIS } from "../pages/customer_cis.page.js";
-import { loginData } from '../data/login_t.data.js';
-import { customerCISData, customerCISDataArraykey } from '../data/customer_cis.data.js'
+import { LoginPage } from '../../pages/login_t.page.js';
+import { gotoMenu } from '../../pages/menu.page.js';
+import { searchCustomerCIS, detailCustomerCIS } from "../../pages/CIS/customer_cis.page.js";
+import { loginData } from '../../data/login_t.data.js';
+import { customerCISData, customerCISDataArraykey } from '../data/CIS/customer_cis.data.js'
 import { customerCISDataArraykey_label } from '../data/cis_array_full.data.js'
-import { detailcustomerCISLocatorsArraykey } from "../locators/CIS_Search_Master.locator.js";
-import { LogoutPage } from '../pages/logout.page.js';
-import { sendTestResultToGoogleSheetGSAppScript, sendBatchTestResultToGoogleSheetGSAppScript } from '../utils/google-sheet-gsappscript.helper.js';
-import { mapsdataArray } from '../utils/maps-data.js';
-import { uploadGoogleSheet } from '../utils/uploadresult-google-sheet.js';
+import { detailcustomerCISLocatorsArraykey } from "../../locators/CIS/CIS_Search_Master.locator.js";
+import { LogoutPage } from '../../pages/logout.page.js';
+import { sendTestResultToGoogleSheetGSAppScript, sendBatchTestResultToGoogleSheetGSAppScript } from '../../utils/google-sheet-gsappscript.helper.js';
+import { mapsdataArray } from '../../utils/maps-data.js';
+import { uploadGoogleSheet } from '../../utils/uploadresult-google-sheet.js';
 
 test.describe('Loop at data - ไม่มีหัว', () => {
 

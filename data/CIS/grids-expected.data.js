@@ -1,5 +1,5 @@
 // รวม expected data และ locator ของแต่ละ grid
-const cisLocators = require('../locators/cis.locator');
+const cisLocators = require('../../locators/CIS/cis.locator');
 
 module.exports = [
     {

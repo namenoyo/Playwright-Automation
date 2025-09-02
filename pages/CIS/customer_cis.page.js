@@ -1,12 +1,13 @@
-import { searchcustomerCISLocators } from "../locators/customer_cis.locators";
-import { checkvalueExpected } from "../utils/check-value";
+
+import { searchCustomerCISLocators } from "../../locators/customer_cis.locators";
+import { checkvalueExpected } from "../../utils/check-value";
 
 export class searchCustomerCIS {
     constructor(page, expect) {
         this.page = page;
         this.expect = expect;
         this.customerId = null;
-        this.searchcustomercislocators = searchcustomerCISLocators(page);
+        this.searchcustomercislocators = searchCustomerCISLocators(page);
     }
 
     async searchCustomer(policy) {
