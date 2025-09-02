@@ -20,7 +20,7 @@ export class searchAlterationAll {
         await this.page.waitForTimeout(500)
         // กรอกเลขกรมธรรม์
         await this.searchinquiryformlocator.policyInput.click();
-        await this.page.keyboard.type(policyno, { delay: 200 });
+        await this.page.keyboard.type(policyno, { delay: 300 });
         await this.page.waitForTimeout(500)
         // กดปุ่มค้นหา
         await this.searchinquiryformlocator.buttonSearch.click();

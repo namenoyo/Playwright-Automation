@@ -1,4 +1,4 @@
-export const configdb = {
+const configdb = {
     letterreturn: {
         SIT: {
             DB_USER: 'letterreturn',
@@ -32,3 +32,5 @@ export const configdb = {
         }
     }
 }
+
+module.exports = { configdb };
