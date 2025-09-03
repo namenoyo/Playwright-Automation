@@ -1,7 +1,7 @@
 
 const { test, expect } = require('@playwright/test');
 const fs = require('fs');
-const cisData = require('../data/cis.data');
+const cisData = require('../data/CIS/cis.data');
 const { sendTestResultToGoogleSheetGSAppScript } = require('../utils/google-sheet-gsappscript.helper');
 const { GoogleSheet } = require('../utils/google-sheet-OAuth.helper');
 const { formatQuery } = require('../utils/common');
