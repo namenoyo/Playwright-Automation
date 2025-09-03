@@ -2,15 +2,15 @@ import { test, expect } from '@playwright/test';
 // @ts-ignore
 const { LoginPage } = require('../pages/login.page.js');
 // @ts-ignore
-const { CISPage } = require('../pages/cis.page.js');
+const { CISPage } = require('../pages/CIS/cis.page.js');
 // @ts-ignore
 const { validUser } = require('../data/login.data.js');
 // @ts-ignore
-const { policyNo } = require('../data/cis.data.js');
+const { policyNo } = require('../data/CIS/cis.data.js');
 // @ts-ignore
 const { sendTestResultToGoogleSheetGSAppScript } = require('../utils/google-sheet-gsappscript.helper.js');
 const { logSelectorsSoftAssert } = require('../Reuseable/log_selector.js');
-const CIS_Search = require('../locators/CIS_Search.locator.js');
+const CIS_Search = require('../locators/CIS/CIS_Search.locator.js');
 const ENV = process.env.ENV || 'sit';
 const SHEET_NAME = 'Selector_check';
 

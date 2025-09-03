@@ -2,18 +2,18 @@ import { test, expect } from '@playwright/test';
 // @ts-ignore
 const { LoginPage } = require('../pages/login.page');
 // @ts-ignore
-const { CISPage } = require('../pages/cis.page');
+const { CISPage } = require('../pages/CIS/cis.page');
 // @ts-ignore
 const { validUser } = require('../data/login.data');
 // @ts-ignore
-const { policyNo } = require('../data/cis.data');
+const { policyNo } = require('../data/CIS/cis.data');
 // @ts-ignore
 const { sendTestResultToGoogleSheetGSAppScript } = require('../utils/google-sheet-gsappscript.helper');
 // @ts-ignore
 const { logSelectorsSoftAssert } = require('../Reuseable/log');
 // @ts-ignore
 const { checkValueOnScreen } = require('../utils/check-value.helper');
-const cisLocators = require('../locators/cis.locator');
+const cisLocators = require('../locators/CIS/cis.locator');
 const { queryPg } = require('../utils/db.helper');
 const { getDbConfig, getExpectedTable, getExpectedTableNormalized } = require('../utils/db.helper');
 

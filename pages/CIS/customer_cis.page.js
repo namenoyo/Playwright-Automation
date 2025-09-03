@@ -1,5 +1,5 @@
 
-import { searchCustomerCISLocators } from "../../locators/customer_cis.locators";
+import { searchcustomerCISLocators } from "../../locators/CIS/customer_cis.locators";
 import { checkvalueExpected } from "../../utils/check-value";
 
 export class searchCustomerCIS {
@@ -7,7 +7,7 @@ export class searchCustomerCIS {
         this.page = page;
         this.expect = expect;
         this.customerId = null;
-        this.searchcustomercislocators = searchCustomerCISLocators(page);
+        this.searchcustomercislocators = searchcustomerCISLocators(page);
     }
 
     async searchCustomer(policy) {

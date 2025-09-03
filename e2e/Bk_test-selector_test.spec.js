@@ -2,11 +2,11 @@ import { test, expect } from '@playwright/test';
 // @ts-ignore
 const { LoginPage } = require('../pages/login.page');
 // @ts-ignore
-const { CISPage } = require('../pages/cis.page');
+const { CISPage } = require('../pages/CIS/cis.page');
 // @ts-ignore
 const { validUser } = require('../data/login.data');
 // @ts-ignore
-const { policyNo } = require('../data/cis.data');
+const { policyNo } = require('../data/CIS/cis.data');
 // @ts-ignore
 const { sendTestResultToGoogleSheetGSAppScript } = require('../utils/google-sheet-gsappscript.helper');
 // @ts-ignore
@@ -14,7 +14,7 @@ const { logSelectorsSoftAssert } = require('../Reuseable/log_selector');
 // @ts-ignore
 const { checkValueOnScreen } = require('../utils/check-value.helper');
 
-const CIS_Search = require('../locators/CIS_Search.locator.js');
+const CIS_Search = require('../locators/CIS/CIS_Search.locator.js');
 const ENV = process.env.ENV || 'sit';
 
 // สร้าง selectorsToCheck อัตโนมัติจาก CIS_Search.locator.js
