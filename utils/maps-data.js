@@ -3,7 +3,7 @@ const { Database } = require('../database/database');
 const { configdb } = require('../database/database_env');
 import { changeobjecttoarray } from "./common";
 import { pulldataobjectfromkeys } from "./common";
-import { Expected_inquiryformArraykey_label } from "../data/Alteration/inquirtform_expected_doc.data";
+import { Expected_inquiryformArraykey_label } from "../data/Alteration/inquiryform_expected_doc.data";
 
 export class mapsdataArray {
     constructor(page, expect) {
