@@ -90,7 +90,7 @@ for (let i = 0; i < 3; i++) {
         // ใช้ GoogleSheet instance และ credential file แยกแต่ละ worker
         const credentialFile = path.resolve(__dirname, `../../credentials/client_secret_worker_${workerId}.json`);
         // ถ้าไม่มี credential file เฉพาะ worker ให้ copy มาจากไฟล์หลัก
-        const mainCredential = path.resolve(__dirname, '../../credentials/client_secret_478587092772-4bkr7ctr9gki3f8uq7p7r1lh9emorkh7.apps.googleusercontent.com.json');
+        const mainCredential = path.resolve(__dirname, '../../credentials/client_secret_484402800987-2hlrd7m1rbh4lbrq1bupbjr898b4mrn1.apps.googleusercontent.com.json');
         if (!fs.existsSync(credentialFile)) {
             fs.copyFileSync(mainCredential, credentialFile);
         }
@@ -224,7 +224,7 @@ for (let i = 0; i < 3; i++) {
         const finishformatter = new Intl.DateTimeFormat('th-TH', options);
         const finishparts = finishformatter.formatToParts(finishdate);
         const finishdateformat = `${finishparts.find(p => p.type === 'day')?.value}/${finishparts.find(p => p.type === 'month')?.value}/${finishparts.find(p => p.type === 'year')?.value} ${finishparts.find(p => p.type === 'hour')?.value}:${finishparts.find(p => p.type === 'minute')?.value}:${finishparts.find(p => p.type === 'second')?.value}`;
-        await sendresultn8nbot(testcase, mySlice[0]?.plan_group, mySlice[0]?.suminsure, mySlice.length, passCount, failCount, startdateformat, finishdateformat, `${i + 1}`, errorCount);
+        await sendresultn8nbot(testcase, mySlice[0]?.plan_group, mySlice[0]?.suminsure, mySlice.length, passCount, failCount, startdateformat, finishdateformat, `${i + 1}`, errorCount, MAX_POSSIBLE_WORKERS);
         });
     });
 }

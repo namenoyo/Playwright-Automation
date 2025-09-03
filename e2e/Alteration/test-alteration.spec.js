@@ -5,13 +5,13 @@ import { LogoutPage } from '../../pages/logout.page'
 import { gotoMenu } from '../../pages/menu.page'
 import { menuAlteration } from '../../pages/Alteration/menu_alteration'
 import { searchAlterationAll } from '../../pages/Alteration/search_alteration'
-import { mapsdataArray } from '../../utils/maps-data'
+import { mapsdataArray, mapsdataObject } from '../../utils/maps-data'
 import { uploadGoogleSheet } from '../../utils/uploadresult-google-sheet'
 
 import { loginData } from '../../data/login_t.data'
-import { inquiryformArraykey_label } from '../../data/Alteration/inquiryform.data'
+// import { inquiryformArraykey_label } from '../../data/Alteration/inquiryform.data'
 import { detailinquiryformLocator } from '../../locators/Alteration/alteration.locators'
-// import { inquiryformArraykey_label } from '../data/Alteration/inquiryform_from_Data_Mapping.data'
+import { inquiryformArraykey_label } from '../../data/Alteration/inquiryform_from_Data_Mapping.data'
 
 
 
@@ -23,7 +23,7 @@ test.describe('loop data', () => {
 
         let policyno = inquiryformarray.policy_no;
 
-        test(`test alteration check data เลขกรมธรรม์ : ${policyno}`, async ({ page }, testinfo) => {
+        test.only(`test alteration check data เลขกรมธรรม์ : ${policyno}`, async ({ page }, testinfo) => {
 
             // ตั้งค่า timeout สำหรับการทดสอบ
             test.setTimeout(120000); // 120 วินาที
@@ -34,6 +34,7 @@ test.describe('loop data', () => {
             const menualteration = new menuAlteration(page, expect);
             const searchalterationall = new searchAlterationAll(page, expect);
             const mapsdataarray = new mapsdataArray(page, expect);
+            const mapsdataobject = new mapsdataObject(page, expect);
             const uploadgooglesheet = new uploadGoogleSheet(page, expect);
 
             const logindata = loginData;
@@ -54,14 +55,20 @@ test.describe('loop data', () => {
             // กดดู รายละเอียด ใบสอบถาม
             await searchalterationall.clickdetailInquiryForm(policyno);
 
-            // เช็คข้อมูลบนหน้าจอกับ expected
-            const result_function_maps = await mapsdataarray.mapsdataarrayfile_checkdata(detailinquiryformlocator, inquiryformarray);
+            // เช็คข้อมูลบนหน้าจอกับ expected - Static Data
+            const result_function_maps = await mapsdataobject.mapsdataarrayfile_checkdata_alteration(detailinquiryformlocator, inquiryformarray);
 
-            // logout NBS Portal
-            await logoutpage.logoutNBSPortal();
+            // เช็คข้อมูลบนหน้าจอกับ expected รายละเอียดเอกสาร ... (จากการ mapping ข้อมูล)
+            const result_function_maps_detail_document = await mapsdataobject.mapsdataarrayfile_checkdata_alteration_detaildocument(detailinquiryformlocator, inquiryformarray);
+
+            // // logout NBS Portal
+            // await logoutpage.logoutNBSPortal();
 
             // นำข้อมูลขึ้น google sheet
             await uploadgooglesheet.uploadresulttestdatatoGoogleSheet(result_function_maps.status_result_array, result_function_maps.assertion_result_array, testinfo);
+
+            // นำข้อมูลขึ้น google sheet (รายละเอียดเอกสาร)
+            await uploadgooglesheet.uploadresulttestdatatoGoogleSheet(result_function_maps_detail_document.status_result_array, result_function_maps_detail_document.assertion_result_array, testinfo);
         })
 
         test(`test alteration check data in database เลขกรมธรรม์ : ${policyno}`, async ({ page }, testinfo) => {
@@ -95,7 +102,7 @@ test.describe('loop data', () => {
             // กดดู รายละเอียด ใบสอบถาม
             await searchalterationall.clickdetailInquiryForm(policyno);
 
-            // เช็คข้อมูลบนหน้าจอกับ expected
+            // เช็คข้อมูลบนหน้าจอกับ expected - Static Data
             const result_function_maps = await mapsdataarray.mapsdataarrayfile_checkdata_database(detailinquiryformlocator, inquiryformarray);
 
             // logout NBS Portal
@@ -105,7 +112,7 @@ test.describe('loop data', () => {
             await uploadgooglesheet.uploadresulttestdatatoGoogleSheet(result_function_maps.status_result_array, result_function_maps.assertion_result_array, testinfo);
         })
 
-        test.only(`test alteration check data in database keys เลขกรมธรรม์ : ${policyno}`, async ({ page }, testinfo) => {
+        test(`test alteration check data in database keys เลขกรมธรรม์ : ${policyno}`, async ({ page }, testinfo) => {
 
             // ตั้งค่า timeout สำหรับการทดสอบ
             test.setTimeout(120000); // 120 วินาที
@@ -136,7 +143,7 @@ test.describe('loop data', () => {
             // กดดู รายละเอียด ใบสอบถาม
             await searchalterationall.clickdetailInquiryForm(policyno);
 
-            // เช็คข้อมูลบนหน้าจอกับ expected
+            // เช็คข้อมูลบนหน้าจอกับ expected - Static Data
             const result_function_maps = await mapsdataarray.mapsdataarrayfile_checkdata_database_keys(detailinquiryformlocator, inquiryformarray);
 
             // logout NBS Portal
