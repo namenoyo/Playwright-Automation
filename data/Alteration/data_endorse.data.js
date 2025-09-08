@@ -4,5 +4,6 @@
 // ]
 
 export const data_matrix_endorse = [
-  { policy_no: '1652002', channel_code: 'BRN', policy_type: 'I', policy_status: '0', contact_code: 'AGT', policy_line: 'ALL', username: '0116', password: '123' }
+  { policy_no: '1652002', channel_code: 'BRN', policy_type: 'I', policy_status: '0', contact_code: 'AGT', policy_line: 'ALL', username: '0116', password: '123' },
+  // { policy_no: '1652002', channel_code: 'OPR', policy_type: 'I', policy_line: 'ALL', policy_status: '0', contact_code: 'BRM',  username: 'boss', password: '123' }
 ];

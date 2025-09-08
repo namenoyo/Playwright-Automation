@@ -87,4 +87,9 @@ const sendresultn8nbot = async (testcase, plangroup, insuresum, counttotalcase, 
     const resGet = await apiContext.get(`https://workflow.ochi.link/webhook/notifytest/chat?testcase=${testcase}&plangroup=${plangroup}&insuresum=${insuresum}&counttotalcase=${counttotalcase}&countpass=${countpass}&countfail=${countfail}&counterror=${errorCount}&startdate=${startdateformat}&finishdate=${finishdateformat}&workernumber=${workernumber}&maxworkers=${maxWorkers}`);
 }
 
-module.exports = { popupAlert, normalizeText, changeobjecttoarray, pulldataobjectfromkeys, formatQuery, split_total_unit, chunkRange, getMaxWorkers, sendresultn8nbot };
+// ฟังก์ชันสำหรับ escape ตัวอักษรพิเศษใน regex
+const escapeRegex = (text) => {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+module.exports = { popupAlert, normalizeText, changeobjecttoarray, pulldataobjectfromkeys, formatQuery, split_total_unit, chunkRange, getMaxWorkers, sendresultn8nbot, escapeRegex };
