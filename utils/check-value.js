@@ -113,6 +113,28 @@ class checkvalueExpected {
         }
         return { status_result, assertion_result }
     }
+
+    async checkbox_enable_disable_Onscreen(locators, expectedvalue) {
+        let status_result = ''
+        let assertion_result = ''
+
+        // ตรวจสอบสถานะจริง
+        const isEnabled = await locators.isEnabled();
+
+        // แปลง boolean เป็น string 'enable' / 'disable'
+        const actualStatus = isEnabled ? 'enable' : 'disable';
+
+        if(expectedvalue === actualStatus) {
+            console.log(`✅ Match: Expected = ${expectedvalue} : Actual = ${actualStatus}`)
+            status_result = 'Passed'
+            assertion_result = `✅ Match: Expected = ${expectedvalue} : Actual = ${actualStatus}`
+        } else {
+            console.log(`❌ Mismatch: Expected = ${expectedvalue} : Actual = ${actualStatus}`)
+            status_result = 'Failed'
+            assertion_result = `❌ Mismatch: Expected = ${expectedvalue} : Actual = ${actualStatus}`
+        }
+        return { status_result, assertion_result }
+    }
 }
 
 module.exports = { checkvalueExpected }
