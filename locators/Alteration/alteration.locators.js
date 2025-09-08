@@ -1,4 +1,5 @@
 import { datadict_endorse_checkbox } from "../../data/Alteration/inquiryform_datadict_endorse_checkbox.data"
+const { escapeRegex } = require('../../utils/common');
 
 export const menualterationLocator = (page, mainmenu, submenu) => ({
     mainmenu: page.locator(`text = ${mainmenu}`),
@@ -77,5 +78,5 @@ export const detailinquiryformLocator = (page) => ({
 
 export const inquiryendorseformLocator = (page) => ({
     endorse_checkbox_locator: (endorsecode) => page.locator('div.MuiGrid-root.MuiGrid-item', { hasText: 'ประเภทสลักหลัง' }).locator(`label#${endorsecode}`).locator(`input#${endorsecode}`),
-    endorse_name_locator: (endorsecode) => page.locator('div.MuiGrid-root.MuiGrid-item', { hasText: 'ประเภทสลักหลัง' }).locator(`label#${endorsecode}`).locator('span').nth(3)
+    endorse_name_locator: (endorsecode, endorsename) => page.locator('div.MuiGrid-root.MuiGrid-item', { hasText: 'ประเภทสลักหลัง' }).locator(`label#${endorsecode}`).locator('span', { hasText: new RegExp(escapeRegex(endorsename)) })
 })

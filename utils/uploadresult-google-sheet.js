@@ -36,7 +36,7 @@ export class uploadGoogleSheet {
             if (split_assertion_log == '') {
                 // เก็บผลลัพธ์ที่ google sheet
                 googledatabatch.push([
-                    'Test Suite',
+                    'Test Automate',
                     info.title,
                     assertion_result_format,
                     status_result_array_check[number_loop],
@@ -69,7 +69,7 @@ export class uploadGoogleSheet {
 
     const googleDataBatch = [
         [
-            'Test Suite',
+            'Test Automate',
             info.title,
             assertionResult,
             statusResult,
