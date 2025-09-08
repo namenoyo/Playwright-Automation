@@ -462,4 +462,45 @@ export class mapsdataObject {
         }
         return { status_result_array, assertion_result_array }
     }
+
+    async endorsecheckdata_alteration(endorsename, endorsecheckbox) {
+
+        const checkvalueexpected = new checkvalueExpected(this.page, this.expect);
+
+        let status_result_array = []
+        let assertion_result_array = []
+
+        let result = ''
+        let result_checkbox = ''
+
+        // loop ตาม จำนวนข้อมูล endorse
+        for (let i = 0; i < endorsecheckbox[0].endorse_checkbox_locator[0].code.length; i++) {
+
+            // แสดงข้อมูล label ที่เช็ค
+            console.log(`สลักหลัง: ${endorsename[0].endorse_name_locator[0].label[i]}`)
+            // นำข้อมูล label ที่เช็ค เข้า array
+            assertion_result_array.push(`สลักหลัง: ${endorsename[0].endorse_name_locator[0].label[i]}`);
+
+            // เช็คข้อมูลบนหน้าจอ กับ Expected แบบ 1:1
+            result = await checkvalueexpected.checkvalueOnscreen(endorsename[0].endorse_name_locator[0].locator[i], endorsename[0].endorse_name_locator[0].data[i]);
+            // นำค่า status ที่ return เข้า array
+            status_result_array.push(result.status_result)
+            // นำค่า assertion ที่ return เข้า array
+            assertion_result_array.push(result.assertion_result)
+
+            // เช็คข้อมูล checkbox บนหน้าจอ กับ Expected แบบ 1:1
+            result_checkbox = await checkvalueexpected.checkbox_enable_disable_Onscreen(endorsecheckbox[0].endorse_checkbox_locator[0].locator[i], endorsecheckbox[0].endorse_checkbox_locator[0].data[i]);
+            // นำค่า status ที่ return เข้า array
+            status_result_array.push(result_checkbox.status_result)
+            // นำค่า assertion ที่ return เข้า array
+            assertion_result_array.push(result_checkbox.assertion_result)
+
+            console.log('')
+            // นำค่าว่างเข้า array
+            status_result_array.push('')
+            assertion_result_array.push('')
+        }
+
+        return { status_result_array, assertion_result_array }
+    }
 }

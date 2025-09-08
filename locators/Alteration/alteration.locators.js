@@ -1,3 +1,5 @@
+import { datadict_endorse_checkbox } from "../../data/Alteration/inquiryform_datadict_endorse_checkbox.data"
+
 export const menualterationLocator = (page, mainmenu, submenu) => ({
     mainmenu: page.locator(`text = ${mainmenu}`),
     submenu: page.locator(`text = ${submenu}`),
@@ -71,4 +73,9 @@ export const detailinquiryformLocator = (page) => ({
     //เข้าสู่หน้าจอระบบ Alteration > หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel เอกสารประกอบการรับเรื่อง
     SELECTOR_Alteration_MENU_SUB_7_In_Page_1_Detail_Panel_Data: page.locator('div.MuiCollapse-wrapper').last().locator('tbody.MuiTableBody-root > tr'),
     SELECTOR_Alteration_MENU_SUB_7_In_Page_2_Detail_Panel_Data: page.getByRole('dialog').locator('P'),
+})
+
+export const inquiryendorseformLocator = (page) => ({
+    endorse_checkbox_locator: (endorsecode) => page.locator('div.MuiGrid-root.MuiGrid-item', { hasText: 'ประเภทสลักหลัง' }).locator(`label#${endorsecode}`).locator(`input#${endorsecode}`),
+    endorse_name_locator: (endorsecode) => page.locator('div.MuiGrid-root.MuiGrid-item', { hasText: 'ประเภทสลักหลัง' }).locator(`label#${endorsecode}`).locator('span').nth(3)
 })
