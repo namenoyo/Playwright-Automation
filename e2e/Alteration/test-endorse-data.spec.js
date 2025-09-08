@@ -1,10 +1,12 @@
 const { test, expect } = require('@playwright/test');
 const { datadict_endorse_checkbox } = require('../../data/Alteration/inquiryform_datadict_endorse_checkbox.data');
+const { datadict_endorse_checkbox_sub_status } = require('../../data/Alteration/inquiryform_datadict_endorse_checkbox_2_Sub_Status.data.js');
 const { raw_data_alteration } = require('../../data/Alteration/raw_data_alteration.data');
 const { data_matrix_endorse } = require('../../data/Alteration/data_endorse.data');
 const { inquiryendorseformLocator } = require('../../locators/Alteration/alteration.locators.js');
 const { mapsdataObject } = require('../../utils/maps-data.js');
 const { uploadGoogleSheet } = require('../../utils/uploadresult-google-sheet.js');
+const { contact_code_dictionary } = require('../../data/Alteration/contact_code_dict.data.js');
 
 // CIS
 import { LoginPage } from '../../pages/login_t.page.js';
@@ -105,70 +107,85 @@ test.describe('Alteration - endorse check', () => {
             await newPage.waitForTimeout(5000); // รอ 5 วินาทีเพื่อให้ tab เปิด
             await expect(newPage.locator('text=สอบถามสลักหลัง')).toBeVisible();
 
-        
-            const inquiryendorseformlocator = inquiryendorseformLocator(newPage);
+            // ดึงค่าจาก contact_code_dictionary
+            const data_dict_contact_code = contact_code_dictionary[data_endorse.contact_code];
+            // คลิ๊กที่ช่อง ประเภทติดต่อ (ผู้ติดต่อ) *
+            await newPage.getByRole('textbox', { name: 'ประเภทติดต่อ (ผู้ติดต่อ) *' }).click();
+            // เลือกค่าจาก contact_code_dictionary
+            await newPage.getByText(data_dict_contact_code, { exact: true }).click();
 
-            // ส่วนของการทำข้อมูล
-            // นำข้อมูลจาก data_matrix_endorse ไปใช้ในการดึงข้อมูลจาก datadict raw_data_alteration
-            const result = raw_data_alteration[data_endorse.channel_code][data_endorse.policy_type][data_endorse.policy_line][data_endorse.policy_status][data_endorse.contact_code];
-
-            // ประกาศตัวแปรเก็บข้อมูล endorse ทั้งหมด
-            let data_endorse_name = [{ endorse_name_locator: [] }];
-            let data_endorse_checkbox = [{ endorse_checkbox_locator: [] }];
-
-            // loop ข้อมูลใน result เพื่อดึงข้อมูล endorse_code และ endorse_name และ endorse_code จาก data dict
-            for (const endorse_data of result) {
-                // ก่อนใช้งาน .data ต้องแน่ใจว่ามี object ใน index 0 data_endorse_name
-                if (data_endorse_name[0]?.endorse_name_locator?.length === 0) {
-                    // เก็บข้อมูล endorse_name ลงในตัวแปร data_endorse_name
-                    data_endorse_name[0].endorse_name_locator.push(
-                        {
-                            locator: [inquiryendorseformlocator.endorse_name_locator(endorse_data.endorse_code)],
-                            code: [endorse_data.endorse_code],
-                            label: [endorse_data.endorse_name],
-                            data: [endorse_data.endorse_name],
-                        }
-                    );
-                } else {
-                    // เก็บข้อมูล locator ลงในตัวแปร data_endorse_code
-                    data_endorse_name[0].endorse_name_locator[0].locator.push(inquiryendorseformlocator.endorse_name_locator(endorse_data.endorse_code));
-                    // เก็บข้อมูล endorse_name ลงในตัวแปร data_endorse_code
-                    data_endorse_name[0].endorse_name_locator[0].code.push(endorse_data.endorse_code);
-                    // เก็บข้อมูล endorse_name ลงในตัวแปร data_endorse_name
-                    data_endorse_name[0].endorse_name_locator[0].label.push(endorse_data.endorse_name);
-                    // เก็บข้อมูล endorse_name ลงในตัวแปร data_endorse_name
-                    data_endorse_name[0].endorse_name_locator[0].data.push(endorse_data.endorse_name);
-                }
-
-                // ก่อนใช้งาน .data ต้องแน่ใจว่ามี object ใน index 0 data_endorse_checkbox
-                if (data_endorse_checkbox[0]?.endorse_checkbox_locator?.length === 0) {
-                    // เก็บข้อมูล endorse_name ลงในตัวแปร data_endorse_name
-                    data_endorse_checkbox[0].endorse_checkbox_locator.push(
-                        {
-                            locator: [inquiryendorseformlocator.endorse_checkbox_locator(endorse_data.endorse_code)],
-                            code: [endorse_data.endorse_code],
-                            label: [endorse_data.endorse_name],
-                            data: [endorse_data.endorse_checkbox],
-                            type: 'checkbox',
-                        }
-                    );
-                } else {
-                    // เก็บข้อมูล locator ลงในตัวแปร data_endorse_code
-                    data_endorse_checkbox[0].endorse_checkbox_locator[0].locator.push(inquiryendorseformlocator.endorse_checkbox_locator(endorse_data.endorse_code));
-                    // เก็บข้อมูล endorse_name ลงในตัวแปร data_endorse_code
-                    data_endorse_checkbox[0].endorse_checkbox_locator[0].code.push(endorse_data.endorse_code);
-                    // เก็บข้อมูล endorse_name ลงในตัวแปร data_endorse_name
-                    data_endorse_checkbox[0].endorse_checkbox_locator[0].label.push(endorse_data.endorse_name);
-                    // เก็บข้อมูล endorse_name ลงในตัวแปร endorse_checkbox
-                    data_endorse_checkbox[0].endorse_checkbox_locator[0].data.push(endorse_data.endorse_checkbox);
-                }
+            // เงื่อนไขพิเศษ กรณี contact_code = AGT (ตัวแทนยื่นคำขอแทนผู้เอาประกันภัย)
+            if (data_endorse.contact_code === 'AGT') {
+                // คลิ๊กที่ช่อง ประเภทติดต่อ (ผู้ติดต่อ) *
+                await newPage.getByRole('textbox', { name: 'สาขาต้นสังกัด *' }).click();
+                // ดึงค่าจาก username มาใช้เป็นสาขาต้นสังกัด
+                await newPage.locator('label', { hasText: data_endorse.username }).click();
             }
 
-            // ตรวจสอบการแสดง endorse name และ endorse checkbox
-            const result_endorsecheckdata_alteration = await mapsdataobject.endorsecheckdata_alteration(data_endorse_name, data_endorse_checkbox);
+            // // สร้าง instance ของ inquiryendorseformLocator
+            // const inquiryendorseformlocator = inquiryendorseformLocator(newPage);
 
-            // นำข้อมูลขึ้น google sheet (รายละเอียดเอกสาร)
-            await uploadgooglesheet.uploadResultTestDataToGoogleSheet_all(result_endorsecheckdata_alteration.status_result_array, result_endorsecheckdata_alteration.assertion_result_array, testinfo);
+            // // ส่วนของการทำข้อมูล
+            // // นำข้อมูลจาก data_matrix_endorse ไปใช้ในการดึงข้อมูลจาก datadict raw_data_alteration
+            // const result = raw_data_alteration[data_endorse.channel_code][data_endorse.policy_type][data_endorse.policy_line][data_endorse.policy_status][data_endorse.contact_code];
+
+            // // ประกาศตัวแปรเก็บข้อมูล endorse ทั้งหมด
+            // let data_endorse_name = [{ endorse_name_locator: [] }];
+            // let data_endorse_checkbox = [{ endorse_checkbox_locator: [] }];
+
+            // // loop ข้อมูลใน result เพื่อดึงข้อมูล endorse_code และ endorse_name และ endorse_code จาก data dict
+            // for (const endorse_data of result) {
+            //     // ก่อนใช้งาน .data ต้องแน่ใจว่ามี object ใน index 0 data_endorse_name
+            //     if (data_endorse_name[0]?.endorse_name_locator?.length === 0) {
+            //         // เก็บข้อมูล endorse_name ลงในตัวแปร data_endorse_name
+            //         data_endorse_name[0].endorse_name_locator.push(
+            //             {
+            //                 locator: [inquiryendorseformlocator.endorse_name_locator(endorse_data.endorse_code)],
+            //                 code: [endorse_data.endorse_code],
+            //                 label: [endorse_data.endorse_name],
+            //                 data: [endorse_data.endorse_name],
+            //             }
+            //         );
+            //     } else {
+            //         // เก็บข้อมูล locator ลงในตัวแปร data_endorse_code
+            //         data_endorse_name[0].endorse_name_locator[0].locator.push(inquiryendorseformlocator.endorse_name_locator(endorse_data.endorse_code));
+            //         // เก็บข้อมูล endorse_name ลงในตัวแปร data_endorse_code
+            //         data_endorse_name[0].endorse_name_locator[0].code.push(endorse_data.endorse_code);
+            //         // เก็บข้อมูล endorse_name ลงในตัวแปร data_endorse_name
+            //         data_endorse_name[0].endorse_name_locator[0].label.push(endorse_data.endorse_name);
+            //         // เก็บข้อมูล endorse_name ลงในตัวแปร data_endorse_name
+            //         data_endorse_name[0].endorse_name_locator[0].data.push(endorse_data.endorse_name);
+            //     }
+
+            //     // ก่อนใช้งาน .data ต้องแน่ใจว่ามี object ใน index 0 data_endorse_checkbox
+            //     if (data_endorse_checkbox[0]?.endorse_checkbox_locator?.length === 0) {
+            //         // เก็บข้อมูล endorse_name ลงในตัวแปร data_endorse_name
+            //         data_endorse_checkbox[0].endorse_checkbox_locator.push(
+            //             {
+            //                 locator: [inquiryendorseformlocator.endorse_checkbox_locator(endorse_data.endorse_code)],
+            //                 code: [endorse_data.endorse_code],
+            //                 label: [endorse_data.endorse_name],
+            //                 data: [endorse_data.endorse_checkbox],
+            //                 type: 'checkbox',
+            //             }
+            //         );
+            //     } else {
+            //         // เก็บข้อมูล locator ลงในตัวแปร data_endorse_code
+            //         data_endorse_checkbox[0].endorse_checkbox_locator[0].locator.push(inquiryendorseformlocator.endorse_checkbox_locator(endorse_data.endorse_code));
+            //         // เก็บข้อมูล endorse_name ลงในตัวแปร data_endorse_code
+            //         data_endorse_checkbox[0].endorse_checkbox_locator[0].code.push(endorse_data.endorse_code);
+            //         // เก็บข้อมูล endorse_name ลงในตัวแปร data_endorse_name
+            //         data_endorse_checkbox[0].endorse_checkbox_locator[0].label.push(endorse_data.endorse_name);
+            //         // เก็บข้อมูล endorse_name ลงในตัวแปร endorse_checkbox
+            //         data_endorse_checkbox[0].endorse_checkbox_locator[0].data.push(endorse_data.endorse_checkbox);
+            //     }
+            // }
+
+            // // ตรวจสอบการแสดง endorse name และ endorse checkbox
+            // const result_endorsecheckdata_alteration = await mapsdataobject.endorsecheckdata_alteration(data_endorse_name, data_endorse_checkbox);
+
+            // // นำข้อมูลขึ้น google sheet (รายละเอียดเอกสาร)
+            // await uploadgooglesheet.uploadResultTestDataToGoogleSheet_all(result_endorsecheckdata_alteration.status_result_array, result_endorsecheckdata_alteration.assertion_result_array, testinfo);
         });
     }
 
