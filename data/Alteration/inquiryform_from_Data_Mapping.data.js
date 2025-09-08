@@ -22,7 +22,7 @@ export const inquiryformArraykey_label = [
     SELECTOR_Alteration_MENU_SUB_1_In_Page_38_Detail_Panel_Data: [{label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel ข้อมูลผู้เอาประกันภัย > วันครบสัญญา', data: [['10/03/2586']]}],
     SELECTOR_Alteration_MENU_SUB_1_In_Page_40_Detail_Panel_Data: [{label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel ข้อมูลผู้เอาประกันภัย > วันครบชำระเบี้ย', data: [['10/03/2581']]}],
     SELECTOR_Alteration_MENU_SUB_2_In_Page_2_Detail_Panel_Data: [{label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel รายละเอียดการชำระล่าสุด > วันที่ชำระ', data: [['17/01/2568']]}],
-    SELECTOR_Alteration_MENU_SUB_2_In_Page_4_Detail_Panel_Data: [{label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel รายละเอียดการชำระล่าสุด > เลขที่ใบเสร็จ', data: [['02/11']]}],
+    // SELECTOR_Alteration_MENU_SUB_2_In_Page_4_Detail_Panel_Data: [{label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel รายละเอียดการชำระล่าสุด > เลขที่ใบเสร็จ', data: [['02/11']]}],
     SELECTOR_Alteration_MENU_SUB_2_In_Page_6_Detail_Panel_Data: [{label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel รายละเอียดการชำระล่าสุด > ปีที/งวดที่', data: [['10000004994267']]}],
     SELECTOR_Alteration_MENU_SUB_2_In_Page_8_Detail_Panel_Data: [{label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel รายละเอียดการชำระล่าสุด > วันที่ชำระตั้งแต่', data: [['10/01/2568']]}],
     SELECTOR_Alteration_MENU_SUB_2_In_Page_10_Detail_Panel_Data: [{label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel รายละเอียดการชำระล่าสุด > วันที่ชำระถึง', data: [['09/02/2568']]}],
