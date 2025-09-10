@@ -6,6 +6,7 @@ export class uploadGoogleSheet {
             this.expect = expect
     }
 
+    // ส่งข้อมูลผลลัพธ์การทดสอบขึ้น Google Sheet แบบแยกแต่ละ label
     async uploadresulttestdatatoGoogleSheet(status, assertion, info) {
         let assertion_result_format = ''
         let status_result_format = ''
@@ -35,7 +36,7 @@ export class uploadGoogleSheet {
             if (split_assertion_log == '') {
                 // เก็บผลลัพธ์ที่ google sheet
                 googledatabatch.push([
-                    'Test Suite',
+                    'Test Automate',
                     info.title,
                     assertion_result_format,
                     status_result_array_check[number_loop],
@@ -58,4 +59,34 @@ export class uploadGoogleSheet {
         }
         console.log('สิ้นสุด การส่งข้อมูลไปที่ google sheet\n')
     }
+
+    // ส่งข้อมูลผลลัพธ์การทดสอบขึ้น Google Sheet แบบรวมทั้งหมดใน 1 row
+    async uploadResultTestDataToGoogleSheet_all(status, assertion, info) {
+    // สร้างค่าผลลัพธ์สำหรับ Google Sheet
+    const statusResult = status.includes('Failed') ? 'Failed' : 'Passed';
+
+    const assertionResult = assertion.join('\n'); // รวมทุกค่า assertion เป็น string เดียว
+
+    const googleDataBatch = [
+        [
+            'Test Automate',
+            info.title,
+            assertionResult,
+            statusResult,
+            'Toppy',
+            'Test duration',
+            'Test Error'
+        ]
+    ];
+
+    console.log('ข้อมูลที่จะส่งไป Google Sheet:');
+    console.log(googleDataBatch);
+
+    if (googleDataBatch.length > 0) {
+        await sendBatchTestResultToGoogleSheetGSAppScript(googleDataBatch);
+    }
+
+    console.log('ส่งข้อมูลไป Google Sheet เรียบร้อย');
+}
+
 }

@@ -1,7 +1,7 @@
 export const raw_data_alteration = {
     "BRN": {
         "I": {
-            "All": {
+            "ALL": {
                 "0": {
                     "AGT": [
                         {
@@ -33,7 +33,7 @@ export const raw_data_alteration = {
     },
     "ORN": {
         "I": {
-            "All": {
+            "ALL": {
                 "0": {
                     "AGT": [
                         {

@@ -5977,5 +5977,4 @@ export const data_matrix_endorse = [
  { policy_no: 'ข0074054', channel_code: 'SVC', policy_type: 'G', policy_status: '2', contact_code: 'POS', policy_line: 'ALL', username: '0999', password: '123' },
  { policy_no: 'ข0177434', channel_code: 'SVC', policy_type: 'G', policy_status: '6', contact_code: 'POS', policy_line: 'ALL', username: '0999', password: '123' },
  { policy_no: 'ข0054633', channel_code: 'SVC', policy_type: 'G', policy_status: '8', contact_code: 'POS', policy_line: 'ALL', username: '0999', password: '123' },
-
 ];
