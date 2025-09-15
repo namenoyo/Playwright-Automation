@@ -8,6 +8,8 @@ export class LoginPage {
 
     async gotoNBS() {
         await this.page.goto('https://sitnbs.thaisamut.co.th/nbsweb/secure/home.html');
+        // Wait for the page to load
+        await this.page.waitForLoadState('networkidle');
     }
 
     async login(username, password) {

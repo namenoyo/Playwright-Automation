@@ -8,8 +8,8 @@ class GoogleSheet {
   constructor() {
     this.SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
     this.TOKEN_PATH = path.resolve(__dirname, '../credentials/token.json');
-    this.CREDENTIALS_PATH = path.resolve(__dirname, '../credentials/client_secret_478587092772-4bkr7ctr9gki3f8uq7p7r1lh9emorkh7.apps.googleusercontent.com.json');
     // this.CREDENTIALS_PATH = path.resolve(__dirname, '../credentials/client_secret_478587092772-4bkr7ctr9gki3f8uq7p7r1lh9emorkh7.apps.googleusercontent.com.json');
+    this.CREDENTIALS_PATH = path.resolve(__dirname, '../credentials/client_secret_484402800987-2hlrd7m1rbh4lbrq1bupbjr898b4mrn1.apps.googleusercontent.com.json');
   }
 
   // โหลดไฟล์ credentials.json

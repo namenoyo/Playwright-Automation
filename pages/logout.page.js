@@ -1,7 +1,7 @@
-import { logoutLocators } from "../locators/logout.locators";
+import { logoutLocators, logoutnbsportal_newpage } from "../locators/logout.locators";
 
 export class LogoutPage {
-    constructor (page, expect) {
+    constructor(page, expect) {
         this.page = page,
         this.expect = expect
         this.logoutlocators = logoutLocators(page);
@@ -21,6 +21,17 @@ export class LogoutPage {
         await this.page.locator(this.logoutlocators.logoutNBSPortalButton).click();
         await this.expect(this.logoutlocators.logoutNBSPortalConfirm).toBeVisible({ timeout: 60000 });
         await this.logoutlocators.logoutNBSPortalConfirm.click();
+    }
+
+    async logoutNBSPortal_newPage(newPage) {
+        const confirmButton = logoutnbsportal_newpage.logoutNBSPortalConfirm(newPage);
+        const logoutButton = logoutnbsportal_newpage.logoutNBSPortalButton(newPage);
+
+        await this.expect(logoutButton).toBeVisible({ timeout: 60000 });
+        await logoutButton.click();
+
+        await this.expect(confirmButton).toBeVisible({ timeout: 60000 });
+        await confirmButton.click();
     }
 
     async logoutSPLife() {

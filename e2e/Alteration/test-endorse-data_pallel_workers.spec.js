@@ -1,13 +1,16 @@
 const { test, expect } = require('@playwright/test');
-const { datadict_endorse_checkbox } = require('../../data/Alteration/inquiryform_datadict_endorse_checkbox.data');
+const { popupAlert, getMaxWorkers } = require('../../utils/common.js');
+const { chunkRange } = require('../../utils/common.js');
+
+const { datadict_endorse_checkbox } = require('../../data/Alteration/inquiryform_datadict_endorse_checkbox.data.js');
 const { datadict_endorse_checkbox_sub_status } = require('../../data/Alteration/inquiryform_datadict_endorse_checkbox_2_Sub_Status.data.js');
-const { raw_data_alteration } = require('../../data/Alteration/raw_data_alteration.data');
-const { data_matrix_endorse } = require('../../data/Alteration/data_endorse.data');
+const { raw_data_alteration } = require('../../data/Alteration/raw_data_alteration.data.js');
+const { data_matrix_endorse } = require('../../data/Alteration/data_endorse.data.js');
 const { inquiryendorseformLocator } = require('../../locators/Alteration/alteration.locators.js');
 const { mapsdataObject } = require('../../utils/maps-data.js');
 const { uploadGoogleSheet } = require('../../utils/uploadresult-google-sheet.js');
 const { contact_code_dictionary } = require('../../data/Alteration/contact_code_dict.data.js');
-const { GoogleSheet } = require('../../utils/google-sheet-OAuth.helper');
+const { GoogleSheet } = require('../../utils/google-sheet-OAuth.helper.js');
 
 // CIS
 import { LoginPage } from '../../pages/login_t.page.js';
@@ -15,12 +18,35 @@ import { gotoMenu } from '../../pages/menu.page.js';
 import { searchCustomerCIS } from "../../pages/CIS/customer_cis.page.js";
 import { LogoutPage } from '../../pages/logout.page.js';
 
-test.describe('Alteration - endorse check', () => {
+const MAX_POSSIBLE_WORKERS = getMaxWorkers();
 
-    // loop ตามข้อมูล data_matrix_endorse เป็นหลัก
-    for (const data_endorse of data_matrix_endorse) {
+test.describe.configure({ mode: 'parallel' }); // ให้เคสในไฟล์นี้รันขนานได้
 
-        test(`Scenario: กรมธรรม์ ${data_endorse.policy_no} | ${data_endorse.channel_code}_${data_endorse.policy_type}_${data_endorse.policy_line}_${data_endorse.policy_status}_${data_endorse.contact_code}`, async ({ page }, testinfo) => {
+let array_result_query;
+
+test.beforeAll(async () => {
+    array_result_query = data_matrix_endorse;
+});
+
+for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
+    test(`worker ${chunkIndex + 1}`, async ({ page }, testInfo) => {
+        const configured = testInfo.config.workers;
+        const workers =
+            typeof configured === 'number' ? configured : 1; // เผื่อกรณีตั้งแบบเปอร์เซ็นต์
+
+        // ถ้า chunkIndex เกินจำนวน workers จริง ให้ข้ามเคสนี้
+        test.skip(chunkIndex >= workers, `Only ${workers} workers are active`);
+
+        // ดึงข้อมูลจาก DB
+        const rows = array_result_query; // ได้ array กลับมาแล้ว
+
+        const { start, end } = chunkRange(chunkIndex, workers, rows.length);
+        const mySlice = rows.slice(start, end);
+
+        // loop ตามข้อมูล data_matrix_endorse เป็นหลัก
+        for (const data_endorse of mySlice) {
+
+            let testcase = `Scenario: กรมธรรม์ ${data_endorse.policy_no} | ${data_endorse.channel_code}_${data_endorse.policy_type}_${data_endorse.policy_line}_${data_endorse.policy_status}_${data_endorse.contact_code}`
             // ตั้งค่า timeout สำหรับการทดสอบ
             test.setTimeout(120000); // 120 วินาที
 
@@ -253,7 +279,7 @@ test.describe('Alteration - endorse check', () => {
                 [
                     starttimestamp,
                     'Test Automate',
-                    testinfo.title,
+                    `${testInfo.title} | ${testcase}`,
                     assertionResult,
                     statusResult,
                     endtimestamp,
@@ -270,7 +296,7 @@ test.describe('Alteration - endorse check', () => {
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        });
-    }
-
-});
+            // });
+        }
+    })
+};
