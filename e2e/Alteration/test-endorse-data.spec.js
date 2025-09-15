@@ -20,9 +20,11 @@ test.describe('Alteration - endorse check', () => {
     // loop ตามข้อมูล data_matrix_endorse เป็นหลัก
     for (const data_endorse of data_matrix_endorse) {
 
-        test(`Scenario: กรมธรรม์ ${data_endorse.policy_no} | ${data_endorse.channel_code}_${data_endorse.policy_type}_${data_endorse.policy_line}_${data_endorse.policy_status}_${data_endorse.contact_code}`, async ({ page }, testinfo) => {
+        test(`Scenario: กรมธรรม์ ${data_endorse.policy_no}`, async ({ page }, testinfo) => {
             // ตั้งค่า timeout สำหรับการทดสอบ
             test.setTimeout(120000); // 120 วินาที
+
+            let unique_test = `${data_endorse.channel_code}_${data_endorse.policy_type}_${data_endorse.policy_line}_${data_endorse.policy_status}_${data_endorse.contact_code}`;
 
             // กำหนดวันที่ปัจจุบัน
             const today = new Date();
@@ -133,29 +135,29 @@ test.describe('Alteration - endorse check', () => {
             // เลือกค่าจาก contact_code_dictionary
             await newPage.getByText(data_dict_contact_code, { exact: true }).click();
 
-            // กรณีเลือก ประเภทติดต่อ (ผู้ติดต่อ) * ที่มีเงื่อนไขพิเศษ
-            if (data_endorse.contact_code === 'AGT') { // เงื่อนไขพิเศษ กรณี contact_code = AGT (ตัวแทนยื่นคำขอแทนผู้เอาประกันภัย)
-                // คลิ๊กที่ช่อง ประเภทติดต่อ (ผู้ติดต่อ) *
-                await newPage.getByRole('textbox', { name: 'สาขาต้นสังกัด *' }).click();
-                // ดึงค่าจาก username มาใช้เป็นสาขาต้นสังกัด
-                await newPage.locator('label', { hasText: data_endorse.username }).click();
-                // กรอกช่อง ตัวแทนบริษัท *
+            // // กรณีเลือก ประเภทติดต่อ (ผู้ติดต่อ) * ที่มีเงื่อนไขพิเศษ
+            // if (data_endorse.contact_code === 'AGT') { // เงื่อนไขพิเศษ กรณี contact_code = AGT (ตัวแทนยื่นคำขอแทนผู้เอาประกันภัย)
+            //     // คลิ๊กที่ช่อง ประเภทติดต่อ (ผู้ติดต่อ) *
+            //     await newPage.getByRole('textbox', { name: 'สาขาต้นสังกัด *' }).click();
+            //     // ดึงค่าจาก username มาใช้เป็นสาขาต้นสังกัด
+            //     await newPage.locator('label', { hasText: data_endorse.username }).click();
+            //     // กรอกช่อง ตัวแทนบริษัท *
 
-                // เลือก ตัวแทนบริษัท
+            //     // เลือก ตัวแทนบริษัท
 
-            } else if (data_dict_contact_code === 'BRP') { // เงื่อนไขพิเศษ กรณี contact_code = BRP (เจ้าหน้าที่สาขา)
-                // คลิ๊กที่ช่อง เจ้าหน้าที่สาขา * และกรอกข้อมูล
-                await newPage.getByRole('textbox', { name: 'เจ้าหน้าที่สาขา' }).click().type('กรุณาระบุเจ้าหน้าที่สาขา');
-            } else if (data_dict_contact_code === 'BNF') { // เงื่อนไขพิเศษ กรณี contact_code = BNF (ผู้รับประโยชน์)
-                // คลิ๊กที่ช่อง ชื่อ - นามสกุล *
-                await newPage.getByRole('textbox', { name: 'ชื่อ - นามสกุล *' }).click();
-                // กรอก ชื่อ - นามสกุล *
-                await newPage.getByRole('textbox', { name: 'ชื่อ - นามสกุล *' }).type('กรุณาระบุชื่อ - นามสกุล');
-                // คลิ๊กที่ช่อง ความสัมพันธ์ *
-                await newPage.getByRole('textbox', { name: 'ความสัมพันธ์ *' }).click();
-                // เลือก ความสัมพันธ์ *
-                await newPage.getByText('บุตร', { exact: true }).click();
-            }
+            // } else if (data_dict_contact_code === 'BRP') { // เงื่อนไขพิเศษ กรณี contact_code = BRP (เจ้าหน้าที่สาขา)
+            //     // คลิ๊กที่ช่อง เจ้าหน้าที่สาขา * และกรอกข้อมูล
+            //     await newPage.getByRole('textbox', { name: 'เจ้าหน้าที่สาขา' }).click().type('กรุณาระบุเจ้าหน้าที่สาขา');
+            // } else if (data_dict_contact_code === 'BNF') { // เงื่อนไขพิเศษ กรณี contact_code = BNF (ผู้รับประโยชน์)
+            //     // คลิ๊กที่ช่อง ชื่อ - นามสกุล *
+            //     await newPage.getByRole('textbox', { name: 'ชื่อ - นามสกุล *' }).click();
+            //     // กรอก ชื่อ - นามสกุล *
+            //     await newPage.getByRole('textbox', { name: 'ชื่อ - นามสกุล *' }).type('กรุณาระบุชื่อ - นามสกุล');
+            //     // คลิ๊กที่ช่อง ความสัมพันธ์ *
+            //     await newPage.getByRole('textbox', { name: 'ความสัมพันธ์ *' }).click();
+            //     // เลือก ความสัมพันธ์ *
+            //     await newPage.getByText('บุตร', { exact: true }).click();
+            // }
 
             // สร้าง instance ของ inquiryendorseformLocator
             const inquiryendorseformlocator = inquiryendorseformLocator(newPage);
@@ -254,6 +256,7 @@ test.describe('Alteration - endorse check', () => {
                     starttimestamp,
                     'Test Automate',
                     testinfo.title,
+                    unique_test,
                     assertionResult,
                     statusResult,
                     endtimestamp,
