@@ -2,7 +2,7 @@
 // อ้างอิงชีท Google Sheet : https://docs.google.com/spreadsheets/d/1HTN4nBwcEt2Uff4Al2vaa49db-kbc_LTe0G_99lB3FY/edit?gid=1952019565#gid=1952019565
 
 export const data_matrix_endorse = [
- { policy_no: 'I6734324', channel_code: 'BRN', policy_type: 'I', policy_status: '0', contact_code: 'AGT', policy_line: 'ALL', username: '0116', password: '123' },
+ { policy_no: 'I6734324', channel_code: 'BRN', policy_type: 'I', policy_status: '0', contact_code: 'AGT', policy_line: 'ALL', username: '6600', password: '123' },
  { policy_no: 'I6870763', channel_code: 'BRN', policy_type: 'I', policy_status: 'ALL', contact_code: 'AGT', policy_line: 'ALL', username: '6600', password: '123' },
  { policy_no: 'A5750922', channel_code: 'BRN', policy_type: 'I', policy_status: 'ALL', contact_code: 'AGT', policy_line: 'ALL', username: '6600', password: '123' },
  { policy_no: 'A5843298', channel_code: 'BRN', policy_type: 'I', policy_status: 'ALL', contact_code: 'AGT', policy_line: 'ALL', username: '6600', password: '123' },
