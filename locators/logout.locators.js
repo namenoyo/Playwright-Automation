@@ -6,3 +6,9 @@ export const logoutLocators = (page) => ({
     arrowDownButton: page.locator('button[class="MuiButtonBase-root MuiIconButton-root"] > span[class="MuiIconButton-label"] > i'), // ปุ่มลูกศรลงสำหรับตัวเลือก
     logoutButton: page.locator('span', { hasText: 'ออกจากระบบ' }), // ปุ่มออกจากระบบ
 })
+
+// logoutLocators.ts
+export const logoutnbsportal_newpage = {
+    logoutNBSPortalConfirm: (page) => page.locator('div[aria-labelledby="confirmation-dialog-title"]').getByText('ตกลง'),
+    logoutNBSPortalButton: (page) => page.locator('i[title="ออกจากระบบ"]')
+};

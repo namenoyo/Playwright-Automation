@@ -28,21 +28,61 @@ export class searchCustomerCIS {
         const jsonResponse = await response.json();
         this.customerId = jsonResponse.data.data[0].customerId
 
-        // รอให้ผลลัพธ์การค้นหาปรากฏ
-        await this.expect(this.searchcustomercislocators.checkdatagridPolicy(policy)).toBeVisible({ timeout: 120000 });
+        // // รอให้ผลลัพธ์การค้นหาปรากฏ
+        // await this.expect(this.searchcustomercislocators.checkdatagridPolicy(policy)).toBeVisible({ timeout: 120000 });
+
+        // กรณีที่มีผลลัพธ์การค้นหาเป็น 2 แถว (กรณีข้อมูลซ้ำ) ให้เลือกแถวแรก มี ผู้ปกครอง และ ผู้เยาว์
+        const datagrid = this.searchcustomercislocators.checkdatagridPolicy(policy);
+        const count_value_search = await datagrid.count();
+
+        if (count_value_search === 2) {
+            await this.expect(datagrid.nth(0)).toBeVisible({ timeout: 120000 });
+        } else {
+            await this.expect(datagrid).toBeVisible({ timeout: 120000 });
+        }
     }
 
     async clickdetailCustomer() {
         // เก็บค่า response customerId ไว้ในตัวแปร value_customerId
         const value_customerId = this.customerId
-        // รอให้มีการทำงาน api จนเสร็จได้ response code = 200
-        await Promise.all([
-            this.page.waitForResponse(response =>
-                response.url().includes(`findNewClaimHistory.html?params.customerId=${value_customerId}`) && response.status() === 200
-            ),
-            // กดปุ่ม รายละเอียด ข้อมูลลูกค้า
-            await this.searchcustomercislocators.customerdetailButton.click()
-        ]);
+
+        // กรณีที่มี ปุ่ม รายละเอียด เป็น 2 แถว (กรณีข้อมูลซ้ำ) ให้เลือกแถวแรก มี ผู้ปกครอง และ ผู้เยาว์
+        const datagrid = this.searchcustomercislocators.customerdetailButton;
+        const count_value_search = await datagrid.count();
+
+        if (count_value_search === 2) {
+            await datagrid.nth(0).click();
+        } else {
+            await datagrid.click();
+        }
+
+        // // กดปุ่ม รายละเอียด ข้อมูลลูกค้า
+        // await this.searchcustomercislocators.customerdetailButton.click();
+
+        // ถ้ามี popup ขึ้นมา ให้กดปุ่ม ยืนยัน
+        const dialog = this.page.locator('div[role="dialog"]', {
+            hasText: 'ท่านต้องการยืนยันดูข้อมูลลูกค้าสถานะไม่มีผลบังคับหรือไม่'
+        });
+
+        // รอให้ dialog ปรากฏขึ้น (ถ้ามี)
+        if (await dialog.isVisible()) {
+            await dialog.getByRole('button', { name: 'ยืนยัน' }).click();
+        }
+
+        // ค่อยรอ API หลังจาก dialog ปิดแล้ว
+        await this.page.waitForResponse(response =>
+            response.url().includes(`findNewClaimHistory.html?params.customerId=${value_customerId}`) &&
+            response.status() === 200
+        );
+
+        // // รอให้มีการทำงาน api จนเสร็จได้ response code = 200
+        // await Promise.all([
+        //     this.page.waitForResponse(response =>
+        //         response.url().includes(`findNewClaimHistory.html?params.customerId=${value_customerId}`) && response.status() === 200
+        //     ),
+        //     // กดปุ่ม รายละเอียด ข้อมูลลูกค้า
+        //     await this.searchcustomercislocators.customerdetailButton.click()
+        // ]);
     }
 }
 
