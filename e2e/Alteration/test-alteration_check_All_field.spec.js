@@ -156,5 +156,5 @@ test.describe('Test_UI_DOM', () => {
     }   
 });
 
-// const main_parent = page.getByRole('dialog').locator('P').nth(0);
-    
+// const gridItems = page.locator('.MuiGrid-root .MuiGrid-container .MuiGrid-direction-xs-column .MuiGrid-wrap-xs-nowrap .MuiGrid-align-content-xs-flex-start .MuiFormControl-root');
+// const gridItems =   page => page.locator('div.MuiGrid-root.item.MuiGrid-container:has(div[class*="itemLabel"] > p:text-is("ชื่อ-นามสกุล")) >> div[class*="itemValue"] >> div >> p'),

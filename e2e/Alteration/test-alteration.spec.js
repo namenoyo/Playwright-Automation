@@ -54,7 +54,10 @@ test.describe('loop data', () => {
             await searchalterationall.searchInquiryForm(policyno);
             // กดดู รายละเอียด ใบสอบถาม
             await searchalterationall.clickdetailInquiryForm(policyno);
-
+            
+            // รอ section-policy-view ปรากฏ
+            await page.locator('#section-policy-view > div > div.MuiButtonBase-root.MuiExpansionPanelSummary-root.jss91.Mui-expanded > div.MuiExpansionPanelSummary-content.Mui-expanded > div > div.MuiGrid-root.ExpansionPanelSummaryTitle.MuiGrid-item').waitFor({ timeout: 10000 });
+            
             // เช็คข้อมูลบนหน้าจอกับ expected - Static Data
             const result_function_maps = await mapsdataobject.mapsdataarrayfile_checkdata_alteration(detailinquiryformlocator, inquiryformarray);
 
