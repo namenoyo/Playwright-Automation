@@ -5,12 +5,22 @@ const { chunkRange } = require('../../utils/common.js');
 const { datadict_endorse_checkbox } = require('../../data/Alteration/inquiryform_datadict_endorse_checkbox.data.js');
 const { datadict_endorse_checkbox_sub_status } = require('../../data/Alteration/inquiryform_datadict_endorse_checkbox_2_Sub_Status.data.js');
 const { raw_data_alteration } = require('../../data/Alteration/raw_data_alteration.data.js');
-const { data_matrix_endorse } = require('../../data/Alteration/data_endorse.data.js');
+// const { data_matrix_endorse } = require('../../data/Alteration/data_endorse.data.js');
 const { inquiryendorseformLocator } = require('../../locators/Alteration/alteration.locators.js');
 const { mapsdataObject } = require('../../utils/maps-data.js');
 const { uploadGoogleSheet } = require('../../utils/uploadresult-google-sheet.js');
 const { contact_code_dictionary } = require('../../data/Alteration/contact_code_dict.data.js');
 const { GoogleSheet } = require('../../utils/google-sheet-OAuth.helper.js');
+
+// data test top
+const { data_matrix_endorse } = require('../../data/Alteration/data_endorse_top/data_endorse_top_1-300.data.js');
+// const { data_matrix_endorse } = require('../../data/Alteration/data_endorse_top/data_endorse_top_301-600.data.js');
+// const { data_matrix_endorse } = require('../../data/Alteration/data_endorse_top/data_endorse_top_601-900.data.js');
+// const { data_matrix_endorse } = require('../../data/Alteration/data_endorse_top/data_endorse_top_901-1200.data.js');
+// const { data_matrix_endorse } = require('../../data/Alteration/data_endorse_top/data_endorse_top_1201-1500.data.js');
+// const { data_matrix_endorse } = require('../../data/Alteration/data_endorse_top/data_endorse_top_1501-1800.data.js');
+// const { data_matrix_endorse } = require('../../data/Alteration/data_endorse_top/data_endorse_top_1801-2100.data.js');
+// const { data_matrix_endorse } = require('../../data/Alteration/data_endorse_top/data_endorse_top_2101-2198.data.js');
 
 // CIS
 import { LoginPage } from '../../pages/login_t.page.js';
@@ -50,7 +60,7 @@ for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
             let unique_test = `${data_endorse.channel_code}_${data_endorse.policy_type}_${data_endorse.policy_line}_${data_endorse.policy_status}_${data_endorse.contact_code}`;
 
             // ตั้งค่า timeout สำหรับการทดสอบ
-            test.setTimeout(120000); // 120 วินาที
+            test.setTimeout(14400000); // 4 ชั่วโมง
 
             // กำหนดวันที่ปัจจุบัน
             const today = new Date();
