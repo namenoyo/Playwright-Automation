@@ -30,7 +30,11 @@ import { LogoutPage } from '../../pages/logout.page.js';
 
 test.describe.configure({ mode: 'parallel' }); // ให้เคสในไฟล์นี้รันขนานได้
 
-for (const data_endorse of data_matrix_endorse) {
+const startIdx = 0; // กำหนดจุดเริ่มต้น
+const endIdx = 200; // กำหนดจุดสิ้นสุด ทำทั้งหมดกี่ตัว อย่างเช่น 3 จะได้ 0,1,2 (ไม่เอา 3)
+const testData = data_matrix_endorse.slice(startIdx, endIdx); // ตัดข้อมูลตามช่วงที่กำหนด
+
+for (const data_endorse of testData) {
 
     test(`Scenario | ${data_endorse.channel_code}_${data_endorse.policy_type}_${data_endorse.policy_line}_${data_endorse.policy_status}_${data_endorse.contact_code}`, async ({ page }, testInfo) => {
         let policyno = `${data_endorse.policy_no}`
