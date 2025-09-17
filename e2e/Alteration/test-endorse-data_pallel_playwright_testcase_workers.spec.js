@@ -30,8 +30,22 @@ import { LogoutPage } from '../../pages/logout.page.js';
 
 test.describe.configure({ mode: 'parallel' }); // ให้เคสในไฟล์นี้รันขนานได้
 
-const startIdx = 0; // กำหนดจุดเริ่มต้น
-const endIdx = 200; // กำหนดจุดสิ้นสุด ทำทั้งหมดกี่ตัว อย่างเช่น 3 จะได้ 0,1,2 (ไม่เอา 3)
+
+// startIdx คือ index เริ่มต้น (รวม index นี้)
+// endIdx คือ index สุดท้าย (แต่ "ไม่รวม" index นี้)
+
+// ตัวอย่าง:
+// ถ้า startIdx = 0, endIdx = 3 → ได้ข้อมูล index 0, 1, 2 (3 ตัวแรก)
+// ถ้า startIdx = 3, endIdx = 6 → ได้ข้อมูล index 3, 4, 5 (3 ตัวถัดไป)
+// ถ้า startIdx = 4, endIdx = 5 → ได้ข้อมูล index 4 (แค่ตัวเดียว)
+
+// สรุป:
+// startIdx = จุดเริ่มต้น (รวม)
+// endIdx = จุดสิ้นสุด (ไม่รวม)
+// จำนวนข้อมูลที่ได้ = endIdx - startIdx
+
+const startIdx = 0;
+const endIdx = 200;
 const testData = data_matrix_endorse.slice(startIdx, endIdx); // ตัดข้อมูลตามช่วงที่กำหนด
 
 for (const data_endorse of testData) {
