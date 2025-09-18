@@ -58,7 +58,7 @@ for (let chunkIndex = 0; chunkIndex < MAX_POSSIBLE_WORKERS; chunkIndex++) {
         // loop ตามข้อมูล data_matrix_endorse เป็นหลัก
         for (const data_endorse of mySlice) {
 
-            test(`Scenario: กรมธรรม์ ${data_endorse.policy_no}`, async ({ page }, testInfo) => {
+            test(`Scenario: กรมธรรม์ ${data_endorse.policy_no} | ${data_endorse.channel_code}_${data_endorse.policy_type}_${data_endorse.policy_line}_${data_endorse.policy_status}_${data_endorse.contact_code}`, async ({ page }, testInfo) => {
                 // let testcase = `Scenario: กรมธรรม์ ${data_endorse.policy_no}`
                 let unique_test = `${data_endorse.channel_code}_${data_endorse.policy_type}_${data_endorse.policy_line}_${data_endorse.policy_status}_${data_endorse.contact_code}`;
 
