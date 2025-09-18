@@ -301,6 +301,11 @@ class GoogleSheet {
 module.exports = { GoogleSheet };
 
 // ถ้ารันไฟล์นี้ตรง ๆ
+// วิธีเรียกใช้: node utils/google-sheet-OAuth.helper.js
+// 1. login google account ของ บรืษัท
+// 2. copy code ที่ได้จาก browser ซึ่งอยู่ใน url มาใส่ใน terminal
+// 3. จะได้ token.json มาเก็บไว้ที่ credentials/token.json
+// 4. เอา token.json ไปใช้กับ project อื่นได้เลย
 if (require.main === module) {
   (async () => {
     const gs = new GoogleSheet();
