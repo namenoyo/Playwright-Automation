@@ -12,15 +12,6 @@ const { uploadGoogleSheet } = require('../../utils/uploadresult-google-sheet.js'
 const { contact_code_dictionary } = require('../../data/Alteration/contact_code_dict.data.js');
 const { GoogleSheet } = require('../../utils/google-sheet-OAuth.helper.js');
 
-// data test top
-// const { data_matrix_endorse } = require('../../data/Alteration/data_endorse_top/data_endorse_top_1-300.data.js');
-// const { data_matrix_endorse } = require('../../data/Alteration/data_endorse_top/data_endorse_top_301-600.data.js');
-// const { data_matrix_endorse } = require('../../data/Alteration/data_endorse_top/data_endorse_top_601-900.data.js');
-// const { data_matrix_endorse } = require('../../data/Alteration/data_endorse_top/data_endorse_top_901-1200.data.js');
-// const { data_matrix_endorse } = require('../../data/Alteration/data_endorse_top/data_endorse_top_1201-1500.data.js');
-// const { data_matrix_endorse } = require('../../data/Alteration/data_endorse_top/data_endorse_top_1501-1800.data.js');
-// const { data_matrix_endorse } = require('../../data/Alteration/data_endorse_top/data_endorse_top_1801-2100.data.js');
-// const { data_matrix_endorse } = require('../../data/Alteration/data_endorse_top/data_endorse_top_2101-2198.data.js');
 
 // CIS
 import { LoginPage } from '../../pages/login_t.page.js';
@@ -30,9 +21,27 @@ import { LogoutPage } from '../../pages/logout.page.js';
 
 test.describe.configure({ mode: 'parallel' }); // ให้เคสในไฟล์นี้รันขนานได้
 
-for (const data_endorse of data_matrix_endorse) {
 
-    test(`Scenario | ${data_endorse.channel_code}_${data_endorse.policy_type}_${data_endorse.policy_line}_${data_endorse.policy_status}_${data_endorse.contact_code}`, async ({ page }, testInfo) => {
+// startIdx คือ index เริ่มต้น (รวม index นี้)
+// endIdx คือ index สุดท้าย (แต่ "ไม่รวม" index นี้)
+
+// ตัวอย่าง:
+// ถ้า startIdx = 0, endIdx = 3 → ได้ข้อมูล index 0, 1, 2 (3 ตัวแรก)
+// ถ้า startIdx = 3, endIdx = 6 → ได้ข้อมูล index 3, 4, 5 (3 ตัวถัดไป)
+// ถ้า startIdx = 4, endIdx = 5 → ได้ข้อมูล index 4 (แค่ตัวเดียว)
+
+// สรุป:
+// startIdx = จุดเริ่มต้น (รวม)
+// endIdx = จุดสิ้นสุด (ไม่รวม)
+// จำนวนข้อมูลที่ได้ = endIdx - startIdx
+
+const startIdx = 0;
+const endIdx = 100;
+const testData = data_matrix_endorse.slice(startIdx, endIdx); // ตัดข้อมูลตามช่วงที่กำหนด
+
+for (const data_endorse of testData) {
+
+    test(`Scenario | ${data_endorse.channel_code}_${data_endorse.policy_type}_${data_endorse.policy_line}_${data_endorse.policy_status}_${data_endorse.contact_code} | ${data_endorse.policy_no}`, async ({ page }, testInfo) => {
         let policyno = `${data_endorse.policy_no}`
         // ตั้งค่า timeout สำหรับการทดสอบ
         test.setTimeout(180000); // 3 นาที
