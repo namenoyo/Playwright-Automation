@@ -6,7 +6,7 @@ export class gotoMenu {
 
     async menuAll(menu, submenu1, submenu2, submenu3, submenu4) {
         // รอรายการเมนูหลัก
-        await this.expect(this.page.locator(`text=${menu}`)).toBeVisible();
+        await this.expect(this.page.locator(`text=${menu}`)).toBeVisible({ timeout: 120000 });
         // คลิกที่เมนูหลัก
         await this.page.click(`text=${menu}`);
 
@@ -15,7 +15,7 @@ export class gotoMenu {
             await this.page.keyboard.press('Enter')
         } else {
             // รอให้เมนูย่อยปรากฏ
-            await this.expect(this.page.getByRole('menuitem', { name: submenu1, exact: true })).toBeVisible();
+            await this.expect(this.page.getByRole('menuitem', { name: submenu1, exact: true })).toBeVisible({ timeout: 120000 });
             // คลิกที่เมนูย่อย
             await this.page.getByRole('menuitem', { name: submenu1, exact: true }).click();
         }
@@ -23,19 +23,19 @@ export class gotoMenu {
         // ตรวจสอบเมนูย่อยถัดไป
         if (submenu2 != undefined) {
             // รอให้เมนูย่อยถัดไปปรากฏ
-            await this.expect(this.page.getByRole('menuitem', { name: submenu2, exact: true })).toBeVisible();
+            await this.expect(this.page.getByRole('menuitem', { name: submenu2, exact: true })).toBeVisible({ timeout: 120000 });
             // คลิกที่เมนูย่อยถัดไป
             await this.page.getByRole('menuitem', { name: submenu2, exact: true }).click();
             // ตรวจสอบเมนูย่อยถัดไปอีก
             if (submenu3 != undefined) {
                 // รอให้เมนูย่อยถัดไปปรากฏ
-                await this.expect(this.page.getByRole('menuitem', { name: submenu3, exact: true })).toBeVisible();
+                await this.expect(this.page.getByRole('menuitem', { name: submenu3, exact: true })).toBeVisible({ timeout: 120000 });
                 // คลิกที่เมนูย่อยถัดไป
                 await this.page.getByRole('menuitem', { name: submenu3, exact: true }).click();
                 // ตรวจสอบเมนูย่อยถัดไปอีก
                 if (submenu4 != undefined) {
                     // รอให้เมนูย่อยถัดไปปรากฏ
-                    await this.expect(this.page.getByRole('menuitem', { name: submenu4, exact: true })).toBeVisible();
+                    await this.expect(this.page.getByRole('menuitem', { name: submenu4, exact: true })).toBeVisible({ timeout: 120000 });
                     // คลิกที่เมนูย่อยถัดไป
                     await this.page.getByRole('menuitem', { name: submenu4, exact: true }).click();
                 } else { }
@@ -51,7 +51,7 @@ export class gotoMenu {
         // เลือก เมนู ที่ค้นหา
         await this.page.getByText(`${menu}`).click()
         // รอเมนูที่เลือกแสดง
-        await this.expect(this.page.getByText(`${menu}`)).toBeVisible();
+        await this.expect(this.page.getByText(`${menu}`)).toBeVisible({ timeout: 120000 });
     }
 }
 

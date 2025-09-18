@@ -8,8 +8,8 @@ class GoogleSheet {
   constructor() {
     this.SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
     this.TOKEN_PATH = path.resolve(__dirname, '../credentials/token.json');
-    this.CREDENTIALS_PATH = path.resolve(__dirname, '../credentials/client_secret_478587092772-4bkr7ctr9gki3f8uq7p7r1lh9emorkh7.apps.googleusercontent.com.json');
-    // this.CREDENTIALS_PATH = path.resolve(__dirname, '../credentials/client_secret_484402800987-2hlrd7m1rbh4lbrq1bupbjr898b4mrn1.apps.googleusercontent.com.json');
+    // this.CREDENTIALS_PATH = path.resolve(__dirname, '../credentials/client_secret_418688769943-2g4fl50qfor1jfnej5cno09r52s0ni62.apps.googleusercontent.com.json');
+    this.CREDENTIALS_PATH = path.resolve(__dirname, '../credentials/client_secret_484402800987-2hlrd7m1rbh4lbrq1bupbjr898b4mrn1.apps.googleusercontent.com.json');
   }
 
   // โหลดไฟล์ credentials.json
@@ -301,6 +301,11 @@ class GoogleSheet {
 module.exports = { GoogleSheet };
 
 // ถ้ารันไฟล์นี้ตรง ๆ
+// วิธีเรียกใช้: node utils/google-sheet-OAuth.helper.js
+// 1. login google account ของ บรืษัท
+// 2. copy code ที่ได้จาก browser ซึ่งอยู่ใน url มาใส่ใน terminal
+// 3. จะได้ token.json มาเก็บไว้ที่ credentials/token.json
+// 4. เอา token.json ไปใช้กับ project อื่นได้เลย
 if (require.main === module) {
   (async () => {
     const gs = new GoogleSheet();

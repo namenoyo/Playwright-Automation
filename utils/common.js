@@ -9,14 +9,43 @@ const normalizeText = (text) => {
     return codespace.replace(/\s+/g, ' ');
 }
 
-const changeobjecttoarray = (dataobject) => {
-    const resultchangeobj = dataobject.rows.map(obj => Object.values(obj));
-    return resultchangeobj;
+// const changeobjecttoarray = (dataobject) => {
+//     const resultchangeobj = dataobject.rows.map(obj => Object.values(obj));
+//     return resultchangeobj;
+// }
+
+const changeobjecttoarray = (data) => {
+    // ถ้าเป็น object ที่มี property rows
+    if (data && Array.isArray(data.rows)) {
+        return data.rows.map(obj => Object.values(obj));
+    }
+    // ถ้าเป็น array ของ object
+    if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
+        const keys = Object.keys(data[0]);
+        // คืนค่า array ที่มี header เป็น keys ตามด้วยค่าของแต่ละ object
+        return [keys, ...data.map(obj => keys.map(k => obj[k]))];
+    }
+    // ถ้าไม่เข้าเงื่อนไขข้างบน คืน array ว่าง
+    return [];
 }
 
-const pulldataobjectfromkeys = (dataobject, field) => {
-    const resultdatabasekeys = dataobject.rows.map(obj => field.map(key => obj[key]));
-    return resultdatabasekeys;
+// const pulldataobjectfromkeys = (dataobject, field) => {
+//     const resultdatabasekeys = dataobject.rows.map(obj => field.map(key => obj[key]));
+//     return resultdatabasekeys;
+// }
+
+const pulldataobjectfromkeys = (data, field) => {
+    // ถ้าเป็น object ที่มี property rows
+    if (data && Array.isArray(data.rows)) {
+        return data.rows.map(obj => field.map(key => obj[key]));
+    }
+    // ถ้าเป็น array ของ object
+    if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
+        // คืนค่า array ที่มี header เป็น field ตามด้วยค่าของแต่ละ object
+        return [field, ...data.map(obj => field.map(key => obj[key]))];
+    }
+    // ถ้าไม่เข้าเงื่อนไขข้างบน คืน array ว่าง
+    return [];
 }
 
 const formatQuery = (query) => {
@@ -89,7 +118,7 @@ const sendresultn8nbot = async (testcase, plangroup, insuresum, counttotalcase, 
 
 // ฟังก์ชันสำหรับ escape ตัวอักษรพิเศษใน regex
 const escapeRegex = (text) => {
-  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 module.exports = { popupAlert, normalizeText, changeobjecttoarray, pulldataobjectfromkeys, formatQuery, split_total_unit, chunkRange, getMaxWorkers, sendresultn8nbot, escapeRegex };
