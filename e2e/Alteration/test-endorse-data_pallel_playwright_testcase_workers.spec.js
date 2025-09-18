@@ -41,7 +41,7 @@ const testData = data_matrix_endorse.slice(startIdx, endIdx); // ตัดข้
 
 for (const data_endorse of testData) {
 
-    test(`Scenario | ${data_endorse.channel_code}_${data_endorse.policy_type}_${data_endorse.policy_line}_${data_endorse.policy_status}_${data_endorse.contact_code} | ${data_endorse.policy_no}`, async ({ page }, testInfo) => {
+    test(`Scenario | ${data_endorse.channel_code}_${data_endorse.policy_type}_${data_endorse.policy_line}_${data_endorse.policy_status}_${data_endorse.contact_code}`, async ({ page }, testInfo) => {
         let policyno = `${data_endorse.policy_no}`
         // ตั้งค่า timeout สำหรับการทดสอบ
         test.setTimeout(180000); // 3 นาที
