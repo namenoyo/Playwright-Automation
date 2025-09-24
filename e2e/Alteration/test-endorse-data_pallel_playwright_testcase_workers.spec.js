@@ -210,10 +210,8 @@ for (const data_endorse of testData) {
                 //     // คลิ๊กที่ช่อง เจ้าหน้าที่สาขา * และกรอกข้อมูล
                 //     await newPage.getByRole('textbox', { name: 'เจ้าหน้าที่สาขา' }).click().type('กรุณาระบุเจ้าหน้าที่สาขา');
                 // } else if (data_dict_contact_code === 'BNF') { // เงื่อนไขพิเศษ กรณี contact_code = BNF (ผู้รับประโยชน์)
-                //     // คลิ๊กที่ช่อง ชื่อ - นามสกุล *
-                //     await newPage.getByRole('textbox', { name: 'ชื่อ - นามสกุล *' }).click();
-                //     // กรอก ชื่อ - นามสกุล *
-                //     await newPage.getByRole('textbox', { name: 'ชื่อ - นามสกุล *' }).type('กรุณาระบุชื่อ - นามสกุล');
+                //     // คลิ๊กที่ช่อง ชื่อ - นามสกุล * และกรอกข้อมูล
+                //     await newPage.getByRole('textbox', { name: 'ชื่อ - นามสกุล *' }).click().type('กรุณาระบุชื่อ - นามสกุล');
                 //     // คลิ๊กที่ช่อง ความสัมพันธ์ *
                 //     await newPage.getByRole('textbox', { name: 'ความสัมพันธ์ *' }).click();
                 //     // เลือก ความสัมพันธ์ *
