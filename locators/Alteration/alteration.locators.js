@@ -76,5 +76,8 @@ export const detailinquiryformLocator = (page) => ({
 
 export const inquiryendorseformLocator = (page) => ({
     endorse_checkbox_locator: (endorsecode) => page.locator('div.MuiGrid-root.MuiGrid-item', { hasText: 'ประเภทสลักหลัง' }).locator(`label#${endorsecode}`).locator(`input#${endorsecode}`),
-    endorse_name_locator: (endorsecode, endorsename) => page.locator('div.MuiGrid-root.MuiGrid-item', { hasText: 'ประเภทสลักหลัง' }).locator(`label#${endorsecode}`).locator('span', { hasText: new RegExp(escapeRegex(endorsename)) })
+    endorse_name_locator: (endorsecode, endorsename) => page.locator('div.MuiGrid-root.MuiGrid-item', { hasText: 'ประเภทสลักหลัง' }).locator(`label#${endorsecode}`).locator('span', { hasText: new RegExp(escapeRegex(endorsename)) }),
+    action_button: page.locator('button', { hasText: 'ดำเนินการ' }),
+    confirm_popup: page.locator('div[role="dialog"]', { hasText: 'ยืนยันประเภทสลักหลัง' }),
+    confirm_button: page.locator('div[role="dialog"]').getByRole('button', { name: 'ยืนยัน' }),
 })
