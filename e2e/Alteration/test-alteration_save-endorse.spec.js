@@ -17,8 +17,8 @@ import { LogoutPage } from '../../pages/logout.page.js';
 const { mapsdataArray, mapsdataObject } = require('../../utils/maps-data.js');
 
 // data
-// const { data_matrix_save_endorse } = require('../../data/Alteration/data_save_endorse.data.js');
-const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc.data.js'); // P'Name
+const { data_matrix_save_endorse } = require('../../data/Alteration/data_save_endorse.data.js');
+// const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc.data.js'); // P'Name
 
 // data dictionary
 const { contact_code_dictionary } = require('../../data/Alteration/contact_code_dict.data.js');
@@ -42,7 +42,7 @@ test.describe.configure({ mode: 'parallel' }); // ให้เคสในไฟ
 // จำนวนข้อมูลที่ได้ = endIdx - startIdx
 
 const startIdx = 0;
-const endIdx = 2000;
+const endIdx = 1;
 const testData = data_matrix_save_endorse.slice(startIdx, endIdx); // ตัดข้อมูลตามช่วงที่กำหนด
 
 for (const data_save_endorse of testData) {
