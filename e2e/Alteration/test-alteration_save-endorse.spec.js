@@ -41,7 +41,7 @@ test.describe.configure({ mode: 'parallel' }); // ให้เคสในไฟ
 // จำนวนข้อมูลที่ได้ = endIdx - startIdx
 
 const startIdx = 0;
-const endIdx = 1;
+const endIdx = 2000;
 const testData = data_matrix_save_endorse.slice(startIdx, endIdx); // ตัดข้อมูลตามช่วงที่กำหนด
 
 for (const data_save_endorse of testData) {
@@ -186,11 +186,19 @@ for (const data_save_endorse of testData) {
                 await expect(newPage.getByText('3265258')).toBeVisible({ timeout: 60000 });
                 await newPage.getByText('3265258').click({ timeout: 60000 });
             } else if (contact_code === 'BRP') { // เงื่อนไขพิเศษ กรณี contact_code = BRP (เจ้าหน้าที่สาขา)
-                // คลิ๊กที่ช่อง เจ้าหน้าที่สาขา * และกรอกข้อมูล
-                await newPage.getByRole('textbox', { name: 'username' }).click();
-                await newPage.getByRole('textbox', { name: 'username' }).type(username, { delay: 100 }); // พิมพ์ช้าๆ ทีละตัวอักษร
+                if (username === '6600') {
+                    // คลิ๊กที่ช่อง เจ้าหน้าที่สาขา * และกรอกข้อมูล
+                    await newPage.getByRole('textbox', { name: 'username' }).click();
+                    await newPage.getByRole('textbox', { name: 'username' }).type('prasit.ku', { delay: 100 }); // พิมพ์ช้าๆ ทีละตัวอักษร
+                } else if (username === '0999') {
+                    // คลิ๊กที่ช่อง เจ้าหน้าที่สาขา * และกรอกข้อมูล
+                    await newPage.getByRole('textbox', { name: 'username' }).click();
+                    await newPage.getByRole('textbox', { name: 'username' }).type('lalita.th', { delay: 100 }); // พิมพ์ช้าๆ ทีละตัวอักษร
+                }
                 // กดปุ่ม ค้นหา
-                await newPage.getByRole('button', { name: 'ค้นหา' }).click();
+                await newPage.waitForTimeout(1000); // รอ 1 วินาที
+                await newPage.locator('div[class="MuiGrid-root MuiGrid-item"]', { hasText: 'ข้อมูลการทำสลักหลัง' }).getByRole('button', { name: 'ค้นหา' }).click();
+                await newPage.waitForTimeout(1000); // รอ 1 วินาที
             } else if (contact_code === 'BNF') { // เงื่อนไขพิเศษ กรณี contact_code = BNF (ผู้รับประโยชน์)
                 // คลิ๊กที่ช่อง ชื่อ - นามสกุล * และกรอกข้อมูล
                 await newPage.getByRole('textbox', { name: 'ชื่อ - นามสกุล *' }).click();
@@ -259,8 +267,8 @@ for (const data_save_endorse of testData) {
             // เช็คข้อมูลบนหน้าจอกับ expected รายละเอียดเอกสาร ... (จากการ mapping ข้อมูล)
             const result_function_maps_detail_document = await mapsdataobject.mapsdataarrayfile_checkdata_alteration_detaildocument(detailinquiryformlocator, data_save_endorse.expecteddata);
 
-            // // logout ออกจากระบบ
-            // await logoutpage.logoutNBSPortal_newPage(newPage);
+            // logout ออกจากระบบ
+            await logoutpage.logoutNBSPortal_newPage(newPage);
 
             const endtimestamp = getTimestamp(); // เวลาสิ้นสุด
             const endTime = Date.now();    // จบจับเวลา
