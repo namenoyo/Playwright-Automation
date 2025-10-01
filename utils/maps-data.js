@@ -399,6 +399,7 @@ export class mapsdataObject {
             if (locator != undefined && expectedvalue != undefined) {
                 // เช็คเงื่อนไข ถ้ามีข้อมูลใน key data มากกว่า 1 แสดงว่าเป็นข้อมูล data grid (กรณีเป็น array ซ้อน object)
                 if (expectedvalue[0].data.length > 1 && expectedvalue[0].type === 'detail_document') {
+
                     // แสดงข้อมูลหัวที่เช็ค
                     console.log(expectedvalue[0].label)
                     // นำข้อมูลหัวที่เช็ค เข้า array
@@ -417,8 +418,10 @@ export class mapsdataObject {
                         const text = (headerText ?? "").toString().trim();
                         // ลบ * ทั้งหมดออก
                         const cleaned = text.replace(/\*/g, "");
+                        // ลบ ... ทั้งหมด
+                        const cleaned_all = cleaned.replace(/\.\.\./g, "");
                         // ตัดคำแรกออกแล้วต่อข้อความใหม่
-                        const words = cleaned.trim().split(/\s+/);
+                        const words = cleaned_all.trim().split(/\s+/);
                         const remaining = words.slice(1).join(" "); // ตัดคำแรกทิ้ง
                         // สร้างข้อความใหม่
                         const formattedText_detaildoc = "หมายเหตุเอกสารแนบ : " + remaining;
@@ -427,9 +430,16 @@ export class mapsdataObject {
                         const found = Expected_inquiryformArraykey_label.find(item => item.document_name === remaining);
 
                         if (found.document_detail === 'NULL') {
-                            console.log('ไม่มีรายละเอียดเอกสารแนบ');
-                            // นำข้อมูลบรรทัด เข้า array
-                            assertion_result_array.push('ไม่มีรายละเอียดเอกสารแนบ');
+                            // console.log('ไม่มีรายละเอียดเอกสารแนบ');
+                            // // นำข้อมูลบรรทัด เข้า array
+                            // assertion_result_array.push('ไม่มีรายละเอียดเอกสารแนบ');
+                            if (await this.page.locator('div.MuiCollapse-wrapper').last().locator('tbody.MuiTableBody-root > tr').nth(i).locator('button[class="MuiButtonBase-root MuiIconButton-root"]').isVisible()) {
+                                console.log('❌ Mismatch: Expected = ไม่มีรายละเอียดเอกสารแนบ : Actual   = มีปุ่ม ... แสดงว่ามีรายละเอียดเอกสารแนบ');
+                                assertion_result_array.push(`❌ Mismatch: Expected = ไม่มีรายละเอียดเอกสารแนบ : Actual   = มีปุ่ม ... แสดงว่ามีรายละเอียดเอกสารแนบ`);
+                            } else {
+                                console.log('✅ Match: Expected = ไม่มีรายละเอียดเอกสารแนบ : Actual   = ไม่มีปุ่ม ... แสดงว่าไม่มีรายละเอียดเอกสารแนบ');
+                                assertion_result_array.push(`✅ Match: Expected = ไม่มีรายละเอียดเอกสารแนบ : Actual   = ไม่มีปุ่ม ... แสดงว่าไม่มีรายละเอียดเอกสารแนบ`);
+                            }
                         } else {
                             // Click ... ตามบรรทัด เพื่อดูรายละเอียด
                             await this.page.locator('div.MuiCollapse-wrapper').last().locator('tbody.MuiTableBody-root > tr').nth(i).locator('button[class="MuiButtonBase-root MuiIconButton-root"]').click();
