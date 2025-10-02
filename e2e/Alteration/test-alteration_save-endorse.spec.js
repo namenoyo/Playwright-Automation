@@ -10,9 +10,6 @@ import { gotoMenu } from '../../pages/menu.page.js';
 import { searchCustomerCIS } from "../../pages/CIS/customer_cis.page.js";
 import { LogoutPage } from '../../pages/logout.page.js';
 
-// Alteration
-
-
 // Utils
 const { mapsdataArray, mapsdataObject } = require('../../utils/maps-data.js');
 
@@ -42,7 +39,7 @@ test.describe.configure({ mode: 'parallel' }); // ให้เคสในไฟ
 // จำนวนข้อมูลที่ได้ = endIdx - startIdx
 
 const startIdx = 0;
-const endIdx = 1;
+const endIdx = 5000;
 const testData = data_matrix_save_endorse.slice(startIdx, endIdx); // ตัดข้อมูลตามช่วงที่กำหนด
 
 for (const data_save_endorse of testData) {
@@ -169,7 +166,7 @@ for (const data_save_endorse of testData) {
             // ดึงค่าจาก contact_code_dictionary
             const contactcode_dict = contact_code_dictionary[contact_code];
             // คลิ๊กที่ช่อง ประเภทติดต่อ (ผู้ติดต่อ) *
-            await newPage.getByRole('textbox', { name: 'ประเภทติดต่อ (ผู้ติดต่อ) *' }).click({ timeout: 60000 });
+            await newPage.getByRole('textbox', { name: 'ประเภทติดต่อ (ผู้ติดต่อ) *' }).click({ force: true, timeout: 60000 });
             // เลือกค่าจาก contactcode
             await newPage.getByText(contactcode_dict, { exact: true }).click({ timeout: 60000 });
 
@@ -189,11 +186,11 @@ for (const data_save_endorse of testData) {
             } else if (contact_code === 'BRP') { // เงื่อนไขพิเศษ กรณี contact_code = BRP (เจ้าหน้าที่สาขา)
                 if (username === '6600') {
                     // คลิ๊กที่ช่อง เจ้าหน้าที่สาขา * และกรอกข้อมูล
-                    await newPage.getByRole('textbox', { name: 'username' }).click();
+                    await newPage.getByRole('textbox', { name: 'username' }).click({ force: true, timeout: 60000 });
                     await newPage.getByRole('textbox', { name: 'username' }).type('prasit.ku', { delay: 100 }); // พิมพ์ช้าๆ ทีละตัวอักษร
                 } else if (username === '0999') {
                     // คลิ๊กที่ช่อง เจ้าหน้าที่สาขา * และกรอกข้อมูล
-                    await newPage.getByRole('textbox', { name: 'username' }).click();
+                    await newPage.getByRole('textbox', { name: 'username' }).click({ force: true, timeout: 60000 });
                     await newPage.getByRole('textbox', { name: 'username' }).type('lalita.th', { delay: 100 }); // พิมพ์ช้าๆ ทีละตัวอักษร
                 }
                 // กดปุ่ม ค้นหา
@@ -202,7 +199,7 @@ for (const data_save_endorse of testData) {
                 await newPage.waitForTimeout(1000); // รอ 1 วินาที
             } else if (contact_code === 'BNF') { // เงื่อนไขพิเศษ กรณี contact_code = BNF (ผู้รับประโยชน์)
                 // คลิ๊กที่ช่อง ชื่อ - นามสกุล * และกรอกข้อมูล
-                await newPage.getByRole('textbox', { name: 'ชื่อ - นามสกุล *' }).click();
+                await newPage.getByRole('textbox', { name: 'ชื่อ - นามสกุล *' }).click({ force: true, timeout: 60000 });
                 await newPage.getByRole('textbox', { name: 'ชื่อ - นามสกุล *' }).type('ออโต้ เพลไร้');
                 // คลิ๊กที่ช่อง ความสัมพันธ์ *
                 await newPage.getByRole('textbox', { name: 'ความสัมพันธ์ *' }).click();
@@ -210,7 +207,7 @@ for (const data_save_endorse of testData) {
                 await newPage.getByText('บุตร', { exact: true }).click();
             } else if (contact_code === 'PAY') { // เงื่อนไขพิเศษ กรณี contact_code = PAY (ผู้ชำระเงิน)
                 // คลิ๊กที่ช่อง ชื่อ - นามสกุล * และกรอกข้อมูล
-                await newPage.getByRole('textbox', { name: 'ชื่อ - นามสกุล *' }).click();
+                await newPage.getByRole('textbox', { name: 'ชื่อ - นามสกุล *' }).click({ force: true, timeout: 60000 });
                 await newPage.getByRole('textbox', { name: 'ชื่อ - นามสกุล *' }).type('ออโต้ เพลไร้');
                 // คลิ๊กที่ช่อง ความสัมพันธ์ *
                 await newPage.getByRole('textbox', { name: 'ความสัมพันธ์ *' }).click();
@@ -218,7 +215,7 @@ for (const data_save_endorse of testData) {
                 await newPage.getByText('บุตร', { exact: true }).click();
             } else if (contact_code === 'LGS') { // เงื่อนไขพิเศษ กรณี contact_code = LGS (ผู้ปกครองโดยชอบธรรม)
                 // คลิ๊กที่ช่อง ชื่อ - นามสกุล * และกรอกข้อมูล
-                await newPage.getByRole('textbox', { name: 'ชื่อ - นามสกุล *' }).click();
+                await newPage.getByRole('textbox', { name: 'ชื่อ - นามสกุล *' }).click({ force: true, timeout: 60000 });
                 await newPage.getByRole('textbox', { name: 'ชื่อ - นามสกุล *' }).type('ออโต้ เพลไร้');
                 // คลิ๊กที่ช่อง ความสัมพันธ์ *
                 await newPage.getByRole('textbox', { name: 'ความสัมพันธ์ *' }).click();
@@ -226,13 +223,13 @@ for (const data_save_endorse of testData) {
                 await newPage.getByText('บุตร', { exact: true }).click();
             } else if (contact_code === 'ATN') { // เงื่อนไขพิเศษ กรณี contact_code = ATN (ผู้รับมอบอำนาจ)
                 // คลิ๊กที่ช่อง ชื่อ - นามสกุล * และกรอกข้อมูล
-                await newPage.getByRole('textbox', { name: 'ชื่อ - นามสกุล *' }).click();
+                await newPage.getByRole('textbox', { name: 'ชื่อ - นามสกุล *' }).click({ force: true, timeout: 60000 });
                 await newPage.getByRole('textbox', { name: 'ชื่อ - นามสกุล *' }).type('ออโต้ เพลไร้');
             } else if (contact_code === 'BRN') { // เงื่อนไขพิเศษ กรณี contact_code = BRN (Branch สาขา)
                 // คลิ๊กที่ช่อง สาขา *
-                await newPage.getByRole('textbox', { name: 'สาขา *' }).click();
+                await newPage.getByRole('textbox', { name: 'สาขา *' }).click({ force: true, timeout: 60000 });
                 // ดึงค่าจาก username มาใช้เป็นสาขา
-                await newPage.locator('label', { hasText: username }).click();
+                await newPage.locator('label', { hasText: '0001' }).click({ force: true, timeout: 60000 });
             }
 
             // สร้าง instance ของ inquiryendorseformLocator
@@ -241,7 +238,7 @@ for (const data_save_endorse of testData) {
             // วนลูปเลือกสลักหลังตาม endorse_code
             for (const code of endorse_code) {
                 // คลิ๊กเลือกสลักหลังตาม code
-                await inquiryendorseformlocator.endorse_checkbox_locator(code).click();
+                await inquiryendorseformlocator.endorse_checkbox_locator(code).click({ timeout: 10000 });
                 await newPage.waitForTimeout(500); // รอ 0.5 วินาที
             }
 
