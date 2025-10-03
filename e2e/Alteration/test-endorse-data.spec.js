@@ -20,7 +20,7 @@ test.describe('Alteration - endorse check', () => {
     // loop ตามข้อมูล data_matrix_endorse เป็นหลัก
     for (const data_endorse of data_matrix_endorse) {
 
-        test(`Scenario: กรมธรรม์ ${data_endorse.policy_no}`, async ({ page }, testinfo) => {
+        test(`Scenario | ${data_endorse.channel_code}_${data_endorse.policy_type}_${data_endorse.policy_line}_${data_endorse.policy_status}_${data_endorse.contact_code}`, async ({ page }, testinfo) => {
             // ตั้งค่า timeout สำหรับการทดสอบ
             test.setTimeout(120000); // 120 วินาที
 
