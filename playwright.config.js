@@ -35,7 +35,7 @@ export default defineConfig({
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
 
-  video: 'off', // ปิดการอัดวิดีโอ
+    video: 'off', // ปิดการอัดวิดีโอ
 
     // video: 'retain-on-failure', // หรือ 'on' ถ้าอยากเก็บทุกเคส
 
@@ -49,11 +49,14 @@ export default defineConfig({
       use: {
         // ...devices['Desktop Chrome'],
         headless: true,
-        viewport: { width: 1366, height: 768 },
-        screen: { width: 1366, height: 768 },
+        viewport: { width: 1920, height: 1080 },
+        screen: { width: 1920, height: 1080 },
         launchOptions: {
-          args: ['--window-size=1080,1920'],
+          args: ['--window-size=1920,1080'],
         },
+        // video: 'on', // เปิดการอัดวิดีโอทุกเคส
+        // screenshot: 'only-on-failure', // ถ้าอยากเก็บ screenshot เฉพาะเคสล้ม
+
       },
     },
 
@@ -65,7 +68,7 @@ export default defineConfig({
     //     viewport: { width: 1366, height: 768 },
     //     screen: { width: 1366, height: 768 },
     //     launchOptions: {
-    //       args: ['--window-size=1080,1920'],
+    //       args: ['--window-size=1920,1080'],
     //     },
     //   },
     // },
@@ -78,7 +81,7 @@ export default defineConfig({
     //     viewport: { width: 1366, height: 768 },
     //     screen: { width: 1366, height: 768 },
     //     launchOptions: {
-    //       args: ['--window-size=1080,1920'],
+    //       args: ['--window-size=1920,1080'],
     //     },
     //   },
     // },
