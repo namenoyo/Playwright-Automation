@@ -2,8 +2,8 @@ import { logoutLocators, logoutnbsportal_newpage } from "../locators/logout.loca
 
 export class LogoutPage {
     constructor(page, expect) {
-        this.page = page,
-        this.expect = expect
+        this.page = page;
+        this.expect = expect;
         this.logoutlocators = logoutLocators(page);
     }
 

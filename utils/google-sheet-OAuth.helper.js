@@ -118,12 +118,11 @@ class GoogleSheet {
     return normalized;
   }
 
-  async fetchSheetData_key(auth, spreadsheetId, range) {
+  async fetchSheetData_key(auth, spreadsheetId, range, fields = null) {
     const sheets = google.sheets({ version: 'v4', auth });
     const res = await sheets.spreadsheets.values.get({ spreadsheetId, range });
 
     const values = res.data.values || [];
-
     if (values.length === 0) return [];
 
     // Extract header
@@ -155,11 +154,19 @@ class GoogleSheet {
       header.forEach((key, index) => {
         obj[key] = row[index] || '';
       });
+      // ถ้า fields ถูกกำหนด ให้เลือกเฉพาะ field ที่ต้องการ
+      if (fields && Array.isArray(fields)) {
+        const filtered = {};
+        for (const f of fields) {
+          filtered[f] = obj[f];
+        }
+        return filtered;
+      }
       return obj;
     });
 
     return data;
-  }
+}
 
   // บันทึกข้อมูลลง Google Sheet โดยรับ spreadsheetId และ range และ rows (ข้อมูลที่เป็น array 2D)
   async updateRows(auth, spreadsheetId, range, rows) {
@@ -184,21 +191,88 @@ class GoogleSheet {
   }
 
   // อัปเดตข้อมูลในแถวที่มีอยู่แล้ว ตาม row ที่ข้อมูลทำ
-  async updateDynamicRows(auth, spreadsheetId, sheetName, rangeheader, data) {
+  // async updateDynamicRows(auth, spreadsheetId, sheetName, rangeheader, data, startRow = 5) {
+  //   const sheets = google.sheets({ version: 'v4', auth });
+
+  //   // STEP 1: ดึงข้อมูลตั้งแต่ header (เช่นแถว startRow)
+  //   const allDataRes = await sheets.spreadsheets.values.get({
+  //     spreadsheetId,
+  //     range: `${sheetName}!${rangeheader}`
+  //   });
+
+  //   const rows = allDataRes.data.values || [];
+  //   if (rows.length === 0) throw new Error('ไม่พบข้อมูลในช่วงที่กำหนด');
+
+  //   const headers = rows[0];
+  //   const rowColIndex = headers.indexOf("Row");
+  //   if (rowColIndex === -1) {
+  //     throw new Error("ไม่พบคอลัมน์ชื่อ 'Row'");
+  //   }
+
+  //   function getColLetter(index) {
+  //     let col = '';
+  //     while (index >= 0) {
+  //       col = String.fromCharCode((index % 26) + 65) + col;
+  //       index = Math.floor(index / 26) - 1;
+  //     }
+  //     return col;
+  //   }
+
+  //   const updates = [];
+
+  //   // STEP 2: หาและอัปเดต
+  //   for (const updateItem of data) {
+  //     const matchRow = rows.findIndex(r => r[rowColIndex] == updateItem.Row);
+  //     if (matchRow === -1) continue;
+
+  //     // ใช้ startRow แทน 5 เพื่อให้ยืดหยุ่น
+  //     const sheetRowIndex = matchRow + startRow;
+
+  //     for (const key in updateItem) {
+  //       if (key === 'Row') continue;
+
+  //       const colIndex = headers.indexOf(key);
+  //       if (colIndex === -1) continue;
+
+  //       const colLetter = getColLetter(colIndex);
+  //       const cellRange = `${sheetName}!${colLetter}${sheetRowIndex}`;
+
+  //       updates.push({
+  //         range: cellRange,
+  //         values: [[updateItem[key]]]
+  //       });
+  //     }
+  //   }
+
+  //   if (updates.length === 0) return { message: 'No updates' };
+
+  //   // STEP 3: Batch update
+  //   const res = await sheets.spreadsheets.values.batchUpdate({
+  //     spreadsheetId,
+  //     requestBody: {
+  //       valueInputOption: 'RAW',
+  //       data: updates
+  //     }
+  //   });
+
+  //   return res.data;
+  // }
+  async updateDynamicRows(auth, spreadsheetId, sheetName, rangeheader, data, startRow = 5, keyColumn = "Row") {
     const sheets = google.sheets({ version: 'v4', auth });
 
-    // STEP 1: ดึงข้อมูลตั้งแต่ header (แถว 5) ลงไป
+    // STEP 1: ดึงข้อมูลตั้งแต่ header (เช่นแถว startRow)
     const allDataRes = await sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: `${sheetName}!${rangeheader}` // เริ่มดึงตั้งแต่แถว 5
+      range: `${sheetName}!${rangeheader}`
     });
 
-    const rows = allDataRes.data.values;
-    const headers = rows[0]; // แถวแรกที่ดึงมา = header จริง
+    const rows = allDataRes.data.values || [];
+    if (rows.length === 0) throw new Error('ไม่พบข้อมูลในช่วงที่กำหนด');
 
-    const rowColIndex = headers.indexOf("Row");
+    const headers = rows[0];
+    const rowColIndex = headers.indexOf(keyColumn);
     if (rowColIndex === -1) {
-      throw new Error("ไม่พบคอลัมน์ชื่อ 'Row'");
+      throw new Error(`ไม่พบคอลัมน์ชื่อ '${keyColumn}'`);
     }
 
     function getColLetter(index) {
@@ -214,17 +288,14 @@ class GoogleSheet {
 
     // STEP 2: หาและอัปเดต
     for (const updateItem of data) {
-      // หาว่า Row นี้อยู่บรรทัดไหน (ใน data ที่ดึง)
-      const matchRow = rows.findIndex(r => r[rowColIndex] == updateItem.Row);
-
+      const matchRow = rows.findIndex(r => r[rowColIndex] == updateItem[keyColumn]);
       if (matchRow === -1) continue;
 
-      // matchRow เป็น index ใน array `rows` ซึ่งเริ่มจาก header ที่ rowIndex=0
-      // ดังนั้นใน sheet จริง แถว = matchRow + 5 (เพราะ header อยู่แถว 5)
-      const sheetRowIndex = matchRow + 5;
+      // ใช้ startRow แทน 5 เพื่อให้ยืดหยุ่น
+      const sheetRowIndex = matchRow + startRow;
 
       for (const key in updateItem) {
-        if (key === 'Row') continue;
+        if (key === keyColumn) continue;
 
         const colIndex = headers.indexOf(key);
         if (colIndex === -1) continue;
@@ -251,7 +322,8 @@ class GoogleSheet {
     });
 
     return res.data;
-  }
+}
+
 
   // เพิ่มแถวใหม่ที่ range ที่กำหนด โดยไม่ลบข้อมูลเก่า ใช้สำหรับ append ข้อมูลใหม่ต่อท้ายข้อมูลเก่า
   async appendRows(auth, spreadsheetId, range, rows) {
@@ -271,8 +343,8 @@ class GoogleSheet {
   async getSheetDataTestCase(spreadsheetId, sheetName, auth) {
     const sheets = google.sheets({ version: "v4", auth });
     const res = await sheets.spreadsheets.values.get({
-        spreadsheetId,
-        range: sheetName,
+      spreadsheetId,
+      range: sheetName,
     });
 
     const rows = res.data.values;
@@ -284,11 +356,11 @@ class GoogleSheet {
 
     // แปลง array -> object
     const objects = dataRows.map(row => {
-        const obj = {};
-        headerRow.forEach((key, i) => {
-            obj[key] = row[i] || ""; // ถ้าไม่มีค่าให้เป็น empty string
-        });
-        return obj;
+      const obj = {};
+      headerRow.forEach((key, i) => {
+        obj[key] = row[i] || ""; // ถ้าไม่มีค่าให้เป็น empty string
+      });
+      return obj;
     });
 
     return objects;
