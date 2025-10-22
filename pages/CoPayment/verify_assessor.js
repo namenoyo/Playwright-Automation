@@ -119,6 +119,11 @@ export class VerifyAssessor {
             await informationLocator.datetimedischargehospital.type(data.datetimedischargehospital, { delay: 150, timeout: 10000 });
             await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         }
+        // กรอก จำนวนเงินที่เรียกร้องทั้งหมด เฉพาะถ้ามีค่า
+        if (data.totalamountclaim) {
+            await informationLocator.totalamountclaim.type(data.totalamountclaim, { delay: 150, timeout: 10000 });
+            await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
+        }
         // กรอก จำนวนวันที่เรียกร้องห้อง ICU เฉพาะถ้ามีค่า
         if (data.daysicuroom || data.daysicuroom === 0 || data.daysicuroom === '0') {
             await informationLocator.daysicuroom.type(data.daysicuroom, { delay: 150, timeout: 10000 });
