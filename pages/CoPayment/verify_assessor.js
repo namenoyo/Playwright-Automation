@@ -1,3 +1,5 @@
+import { info } from 'console';
+
 const { searchVerifyAssessor, popupAddReceiptVerifyAssessor, informationVerifyAssessor } = require('../../locators/CoPayment/verify_assessor.locator');
 
 
@@ -61,6 +63,8 @@ export class VerifyAssessor {
             response.url().includes(`https://intranet-api.ochi.link/thaisamut/rs/claimtx/v2/fax/common/getCopaymentData/list`) &&
             response.status() === 200
         );
+
+        await this.page.waitForTimeout(1000); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
     }
 
     async informationVerifyAssessor(data) {
@@ -69,7 +73,7 @@ export class VerifyAssessor {
         // Section ข้อมูลสถานพยาบาล
         // เลือก ชื่อสถานพยาบาล
         if (data.namehospital) {
-            await informationLocator.namehospital.type(data.namehospital, { delay: 150, timeout: 10000 });
+            await informationLocator.namehospital.fill(data.namehospital, { timeout: 10000 });
             await this.page.getByText(data.namehospital, { exact: true }).nth(1).click({ timeout: 10000 });
             await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         }
@@ -96,77 +100,90 @@ export class VerifyAssessor {
         // รอ popup กรุณายืนยัน หายไป
         await this.expect(this.page.locator('div[role="dialog"]', { hasText: 'กรุณายืนยัน' })).not.toBeVisible({ timeout: 60000 });
         // เลือก คุณภาพสถานพยาบาล เป็น ตามมาตรฐาน
-        await informationLocator.qualityhospital.type('ดีมาก', { delay: 150, timeout: 10000 });
+        await informationLocator.qualityhospital.fill('ดีมาก', { timeout: 10000 });
         await this.page.getByText('ดีมาก', { exact: true }).nth(1).click({ timeout: 10000 });
+        await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
 
         // กรอก วันและเวลาที่สถานพยาบาลส่งเอกสาร
         if (data.datetimesentdocumenthospital) {
-            await informationLocator.datetimesentdocumenthospital.type(data.datetimesentdocumenthospital, { delay: 150, timeout: 10000 });
+            await informationLocator.datetimesentdocumenthospital.fill(data.datetimesentdocumenthospital, { timeout: 10000 });
             await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         }
         // กรอก วันและเวลาที่เกิดเหตุ เฉพาะถ้ามีค่า
         if (data.datetimeincident) {
-            await informationLocator.datetimeincident.type(data.datetimeincident, { delay: 150, timeout: 10000 });
+            await informationLocator.datetimeincident.fill(data.datetimeincident, { timeout: 10000 });
             await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         }
         // กรอก วันและเวลาที่เข้ารักษา เฉพาะถ้ามีค่า
         if (data.datetimetreatmentstart) {
-            await informationLocator.datetimetreatmentstart.type(data.datetimetreatmentstart, { delay: 150, timeout: 10000 });
+            await informationLocator.datetimetreatmentstart.fill(data.datetimetreatmentstart, { timeout: 10000 });
             await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         }
         // กรอก วันและเวลาที่ออกจากสถานพยาบาล เฉพาะถ้ามีค่า
         if (data.datetimedischargehospital) {
-            await informationLocator.datetimedischargehospital.type(data.datetimedischargehospital, { delay: 150, timeout: 10000 });
+            await informationLocator.datetimedischargehospital.fill(data.datetimedischargehospital, { timeout: 10000 });
             await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         }
         // กรอก จำนวนเงินที่เรียกร้องทั้งหมด เฉพาะถ้ามีค่า
         if (data.totalamountclaim) {
-            await informationLocator.totalamountclaim.type(data.totalamountclaim, { delay: 150, timeout: 10000 });
+            // เคลียร์ค่าก่อนกรอกใหม่
+            await informationLocator.totalamountclaim.fill('', { timeout: 10000 });
+            await informationLocator.totalamountclaim.fill(data.totalamountclaim, { timeout: 10000 });
             await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         }
         // กรอก จำนวนวันที่เรียกร้องห้อง ICU เฉพาะถ้ามีค่า
         if (data.daysicuroom || data.daysicuroom === 0 || data.daysicuroom === '0') {
-            await informationLocator.daysicuroom.type(data.daysicuroom, { delay: 150, timeout: 10000 });
+            await informationLocator.daysicuroom.fill(data.daysicuroom, { timeout: 10000 });
+            await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         }
         // กรอก Blood Pressure (BP) เฉพาะถ้ามีค่า
         if (data.bloodpressure) {
-            await informationLocator.bloodpressure.type(data.bloodpressure, { delay: 150, timeout: 10000 });
+            await informationLocator.bloodpressure.fill(data.bloodpressure, { timeout: 10000 });
+            await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         }
         // กรอก Heart Rate / Pulse Rate (HR / PR) เฉพาะถ้ามีค่า
         if (data.heartrate) {
-            await informationLocator.heartrate.type(data.heartrate, { delay: 150, timeout: 10000 });
+            await informationLocator.heartrate.fill(data.heartrate, { timeout: 10000 });
+            await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         }
         // กรอก Temperature (T) เฉพาะถ้ามีค่า
         if (data.temperature) {
-            await informationLocator.temperature.type(data.temperature, { delay: 150, timeout: 10000 });
+            await informationLocator.temperature.fill(data.temperature, { timeout: 10000 });
+            await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         }
         // กรอก Respiration Rate (RR) เฉพาะถ้ามีค่า
         if (data.respirationrate) {
-            await informationLocator.respirationrate.type(data.respirationrate, { delay: 150, timeout: 10000 });
+            await informationLocator.respirationrate.fill(data.respirationrate, { timeout: 10000 });
+            await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         }
         // เลือก Claim Type เฉพาะถ้ามีค่า
         if (data.claimtype) {
-            await informationLocator.claimtype.type(data.claimtype, { delay: 150, timeout: 10000 });
+            await informationLocator.claimtype.fill(data.claimtype, { timeout: 10000 });
             await this.page.getByText(data.claimtype, { exact: true }).nth(1).click({ timeout: 10000 });
+            await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         }
         // เลือก Cause of Claim เฉพาะถ้ามีค่า
         if (data.causeofclaim) {
-            await informationLocator.causeofclaim.type(data.causeofclaim, { delay: 150, timeout: 10000 });
+            await informationLocator.causeofclaim.fill(data.causeofclaim, { timeout: 10000 });
             await this.page.getByText(data.causeofclaim, { exact: true }).nth(1).click({ timeout: 10000 });
+            await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         }
         // เลือก ผลการรักษา เฉพาะถ้ามีค่า
         if (data.treatmentresult) {
-            await informationLocator.treatmentresult.type(data.treatmentresult, { delay: 150, timeout: 10000 });
+            await informationLocator.treatmentresult.fill(data.treatmentresult, { timeout: 10000 });
             await this.page.getByText(data.treatmentresult, { exact: true }).nth(1).click({ timeout: 10000 });
+            await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         }
         // เลือก Treatment Plan เฉพาะถ้ามีค่า
         if (data.treatmentplan) {
-            await informationLocator.treatmentplan.type(data.treatmentplan, { delay: 150, timeout: 10000 });
+            await informationLocator.treatmentplan.fill(data.treatmentplan, { timeout: 10000 });
             await this.page.getByText(data.treatmentplan, { exact: true }).nth(1).click({ timeout: 10000 });
+            await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         }
         // กรอก Incident Cause (สาเหตุการเคลม) เฉพาะถ้ามีค่า
         if (data.incidentcause) {
-            await informationLocator.incidentcause.type(data.incidentcause, { delay: 150, timeout: 10000 });
+            await informationLocator.incidentcause.fill(data.incidentcause, { timeout: 10000 });
+            await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         }
 
         // Section ICD10
@@ -175,9 +192,10 @@ export class VerifyAssessor {
         // รอ popup ICD10 แสดง
         await this.expect(informationLocator.popupform).toBeVisible({ timeout: 60000 });
         // กรอก ICD10 code
-        await informationLocator.icd10code.type('K123', { delay: 150, timeout: 10000 });
+        await informationLocator.icd10code.fill('K123', { timeout: 10000 });
         // เลือก ICD10 code
         await this.page.getByText('K123').click({ timeout: 10000 });
+        await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         // กดปุ่ม ยืนยัน
         await informationLocator.icd10confirmbutton.click({ timeout: 10000 });
         // รอ popup ICD10 หายไป
@@ -194,7 +212,7 @@ export class VerifyAssessor {
                 // กดปุ่ม ปิด เพื่อปิด popup
                 await informationLocator.popupform.getByRole('button', { name: 'ปิด', exact: true }).click({ timeout: 10000 });
                 // เลือก ชื่อสถานพยาบาล อีกครั้ง
-                await informationLocator.namehospital.type(data.namehospital, { delay: 150, timeout: 10000 });
+                await informationLocator.namehospital.fill(data.namehospital, { timeout: 10000 });
                 await this.page.getByText(data.namehospital, { exact: true }).nth(1).click({ timeout: 10000 });
                 await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
                 // กดปุ่ม service type ของ rider ที่ระบุ อีกครั้ง
@@ -203,7 +221,7 @@ export class VerifyAssessor {
             // รอหน้าจอ popup แสดง
             await this.expect(informationLocator.popupform).toBeVisible({ timeout: 60000 });
             // กรอก service type code
-            await informationLocator.servicetypecode.type(data.servicetypecode, { delay: 150, timeout: 10000 });
+            await informationLocator.servicetypecode.fill(data.servicetypecode, { timeout: 10000 });
             await this.page.getByText(data.servicetypecode, { exact: true }).nth(1).click({ timeout: 10000 });
             await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
             // กดปุ่ม บันทึก
@@ -218,23 +236,28 @@ export class VerifyAssessor {
         // รอ popup เพิ่มรายการค่าใช้จ่าย แสดง
         await this.expect(informationLocator.popupform).toBeVisible({ timeout: 60000 });
         // กรอก เลขที่กรมธรรม์
-        await informationLocator.addexpensepolicyno.type(data.policyno, { delay: 150, timeout: 10000 });
+        await informationLocator.addexpensepolicyno.fill(data.policyno, { timeout: 10000 });
         // เลือก เลขที่กรมธรรม์
         await this.page.locator('div[role="dialog"]').getByText(data.policyno, { exact: true }).nth(1).click({ timeout: 10000 });
+        await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         // กรอก สัญญาเพิ่มเติม
-        await informationLocator.addexpenseridercode.type(data.rider, { delay: 150, timeout: 10000 });
+        await informationLocator.addexpenseridercode.fill(data.rider, { timeout: 10000 });
         // เลือก สัญญาเพิ่มเติม
         await this.page.locator('div[role="dialog"]').getByText(data.rider, { exact: true }).nth(1).click({ timeout: 10000 });
+        await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         // กรอก Standard Billing
-        await informationLocator.addexpensestandardbilling.type(data.standardbilling, { delay: 150, timeout: 10000 });
+        await informationLocator.addexpensestandardbilling.fill(data.standardbilling, { timeout: 10000 });
         // เลือก Standard Billing
         await this.page.locator('div[role="dialog"]').getByText(data.standardbilling).nth(2).click({ timeout: 10000 });
+        await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         // กรอก หมวดความคุ้มครอง
-        await informationLocator.addexpenseprotectioncategory.type(data.protectioncategory, { delay: 150, timeout: 10000 });
+        await informationLocator.addexpenseprotectioncategory.fill(data.protectioncategory, { timeout: 10000 });
         // เลือก หมวดความคุ้มครอง
         await this.page.locator('div[role="dialog"]').getByText(data.protectioncategory).nth(2).click({ timeout: 10000 });
+        await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         // กรอก Charge
-        await informationLocator.addexpensechargeamount.type(data.chargeamount, { delay: 150, timeout: 10000 });
+        await informationLocator.addexpensechargeamount.fill('', { timeout: 10000 }); // เคลียร์ค่าก่อนกรอกใหม่
+        await informationLocator.addexpensechargeamount.fill(data.chargeamount, { timeout: 10000 });
         // กดปุ่ม ยืนยัน
         await informationLocator.addexpensebuttonsavebutton.click({ timeout: 10000 });
         // รอ popup เพิ่มรายการค่าใช้จ่าย หายไป
@@ -279,12 +302,12 @@ export class VerifyAssessor {
         // รอหน้าจอ popup บันทึกผลการพิจารณา แสดง
         await this.expect(informationLocator.popupform.getByText('บันทึกผลการพิจารณา')).toBeVisible({ timeout: 60000 });
         // พิมพ์ เสนอการพิจารณา
-        await informationLocator.consideration.type('เสนอความเห็น', { delay: 150, timeout: 10000 });
+        await informationLocator.consideration.fill('เสนอความเห็น', { timeout: 10000 });
         // เลือก ผลการพิจารณา
         await this.page.getByText('เสนอความเห็น', { exact: true }).nth(1).click({ timeout: 10000 });
         await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         // พิมพ์ เหตุผลที่เสนอพิจารณา
-        await informationLocator.reasonsconsideration.type('เสนออนุมัติ', { delay: 150, timeout: 10000 });
+        await informationLocator.reasonsconsideration.fill('เสนออนุมัติ', { timeout: 10000 });
         // เลือก เหตุผลที่เสนอพิจารณา
         await this.page.getByText('เสนออนุมัติ', { exact: true }).nth(1).click({ timeout: 10000 });
         await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
@@ -293,6 +316,7 @@ export class VerifyAssessor {
         // เลือก Auditor ที่ต้องการมอบหมาย
         await informationLocator.assigntoauditorfirst.click({ timeout: 10000 });
         await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
+
         // เก็บข้อความชื่อ Auditor ที่ต้องการมอบหมาย
         const auditorname = await informationLocator.assigntoauditortext.textContent({ timeout: 10000 });
         const auditornamevalue = auditorname.split(',').pop().trim();

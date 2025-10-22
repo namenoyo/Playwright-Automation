@@ -4,14 +4,12 @@ const { GoogleSheet } = require('../../utils/google-sheet-OAuth.helper');
 const { VerifyAssessor } = require('../../pages/CoPayment/verify_assessor.js');
 const { ExpenseRecordAuditor } = require('../../pages/CoPayment/expense_record_auditor.js');
 
-import { markAsUntransferable } from 'worker_threads';
 import { LoginPage } from '../../pages/login_t.page.js';
 import { LogoutPage } from '../../pages/logout.page.js';
 import { gotoMenu } from '../../pages/menu.page.js';
 import { gotoMenu_NBS_Portal } from '../../pages/menu_nbs_portal.page.js';
 
 import path from 'path';
-import { stat } from 'fs';
 
 test('Data Co-Payment', async ({ page }, testInfo) => {
 
@@ -78,6 +76,7 @@ test('Data Co-Payment', async ({ page }, testInfo) => {
         const path_file = path.resolve(__dirname, '../../pic/ochi-thank@2x.png');
         const documentname = 'สำเนาบัตรประชาชน/ใบขับขี่ ผอป./สำเนาสูติบัตร/สำเนาบัตรประชาชนผู้ปกครอง';
         const documentothername = 'บัตรประกัน ผอป.';
+        const surgery = row['ผ่าตัดใหญ่'];
 
         // สร้าง array สำหรับเก็บผลลัพธ์
         let data_create = [];
@@ -179,7 +178,7 @@ test('Data Co-Payment', async ({ page }, testInfo) => {
             // ค้นหาข้อมูลในหน้าจอ บันทึกค่าใช้จ่าย (Auditor)
             await expense_record_auditor.searchExpenseRecordAuditor({ expenserecordreceiptno: expensenoauditor });
             // กรอกข้อมูลในหน้าจอ บันทึกค่าใช้จ่าย (Auditor)
-            await expense_record_auditor.informationExpenseRecordAuditor({ necessaryadmit: necessaryadmit });
+            await expense_record_auditor.informationExpenseRecordAuditor({ necessaryadmit: necessaryadmit, surgery: surgery });
             // save ข้อมูล บันทึกค่าใช้จ่าย (Auditor)
             await expense_record_auditor.saveExpenseRecordAuditor();
 

@@ -36,6 +36,16 @@ export class ExpenseRecordAuditor {
                 await locator.necessaryadmit.nth(1).click({ timeout: 10000 });
             }
         }
+        // เลือก ผ่าตัดใหญ่
+        if (data.surgery) {
+            // เลือก ไม่มี
+            if (data.surgery === 'N') {
+                await locator.surgery.nth(0).click({ timeout: 10000 });
+                // เลือก มี
+            } else if (data.surgery === 'Y') {
+                await locator.surgery.nth(1).click({ timeout: 10000 });
+            }
+        }
 
         // Section ข้อมูลประกอบการพิจารณา
         // กรอก เหตุผลสำหรับออกจดหมายให้สถานพยาบาลและลูกค้า
@@ -68,15 +78,18 @@ export class ExpenseRecordAuditor {
         // รอ popup บันทึกผลพิจารณา แสดง
         await this.expect(locator.subpopupformrecordconsideration).toBeVisible({ timeout: 60000 });
         // กรอก ผลการพิจารณา
-        await locator.decisionconsideration.type('อนุมัติ', { delay: 200 });
+        await locator.decisionconsideration.fill('อนุมัติ');
         // เลือก ผลการพิจารณา เป็น อนุมัติ
         await this.page.getByText('อนุมัติ', { exact: true }).nth(1).click({ timeout: 10000 });
+        await this.page.waitForTimeout(700); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         // กรอก เหตุผลการพิจารณา
-        await locator.reasonsconsideration.type('อนุมัติสินไหม', { delay: 200 });
+        await locator.reasonsconsideration.fill('อนุมัติสินไหม');
         // กดปุ่ม บันทึกและส่งพิจารณา
         await this.page.getByText('อนุมัติสินไหม', { exact: true }).nth(1).click({ timeout: 10000 });
+        await this.page.waitForTimeout(700); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         // กรอก ความคิดเห็น
-        await locator.commentsconsideration.type('-', { delay: 200 });
+        await locator.commentsconsideration.fill('-', { delay: 200 });
+        await this.page.waitForTimeout(700); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         // กดปุ่ม ยืนยัน บันทึกผลพิจารณา
         await locator.confirmrsubecordconsiderationbutton.click({ timeout: 10000 });
         // รอให้ popup บันทึกผลพิจารณา หายไป
