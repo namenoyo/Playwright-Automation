@@ -13,14 +13,14 @@ export class LogoutPage {
             console.log(`Dialog message: ${dialog.message()}`)
             await dialog.accept(); // หรือ dialog.dismiss() ถ้าต้องการยกเลิก
         });
-        await this.logoutlocators.logoutNBSWebButton.click();
+        await this.logoutlocators.logoutNBSWebButton.click({ timeout: 10000 });
     }
 
     async logoutNBSPortal() {
         await this.expect(this.page.locator(this.logoutlocators.logoutNBSPortalButton)).toBeVisible({ timeout: 60000 });
-        await this.page.locator(this.logoutlocators.logoutNBSPortalButton).click();
+        await this.page.locator(this.logoutlocators.logoutNBSPortalButton).click({ timeout: 10000 });
         await this.expect(this.logoutlocators.logoutNBSPortalConfirm).toBeVisible({ timeout: 60000 });
-        await this.logoutlocators.logoutNBSPortalConfirm.click();
+        await this.logoutlocators.logoutNBSPortalConfirm.click({ timeout: 10000 });
     }
 
     async logoutNBSPortal_newPage(newPage) {
@@ -28,17 +28,17 @@ export class LogoutPage {
         const logoutButton = logoutnbsportal_newpage.logoutNBSPortalButton(newPage);
 
         await this.expect(logoutButton).toBeVisible({ timeout: 60000 });
-        await logoutButton.click();
+        await logoutButton.click({ timeout: 10000 });
 
         await this.expect(confirmButton).toBeVisible({ timeout: 60000 });
-        await confirmButton.click();
+        await confirmButton.click({ timeout: 10000 });
     }
 
     async logoutSPLife() {
         await this.expect(this.logoutlocators.arrowDownButton).toBeVisible({ timeout: 60000 });
-        await this.logoutlocators.arrowDownButton.click();
+        await this.logoutlocators.arrowDownButton.click({ timeout: 10000 });
         await this.expect(this.logoutlocators.logoutButton).toBeVisible({ timeout: 60000 });
-        await this.logoutlocators.logoutButton.click();
+        await this.logoutlocators.logoutButton.click({ timeout: 10000 });
         // await this.expect(this.page.locator('p', { hasText: "เข้าสู่ระบบใช้งาน SP Life" })).toBeVisible({ timeout: 60000 });
     }
 }

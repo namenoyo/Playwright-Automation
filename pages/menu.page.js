@@ -17,7 +17,7 @@ export class gotoMenu {
             // รอให้เมนูย่อยปรากฏ
             await this.expect(this.page.getByRole('menuitem', { name: submenu1, exact: true })).toBeVisible({ timeout: 120000 });
             // คลิกที่เมนูย่อย
-            await this.page.getByRole('menuitem', { name: submenu1, exact: true }).click();
+            await this.page.getByRole('menuitem', { name: submenu1, exact: true }).click({ timeout: 100000 });
         }
 
         // ตรวจสอบเมนูย่อยถัดไป
@@ -25,19 +25,19 @@ export class gotoMenu {
             // รอให้เมนูย่อยถัดไปปรากฏ
             await this.expect(this.page.getByRole('menuitem', { name: submenu2, exact: true })).toBeVisible({ timeout: 120000 });
             // คลิกที่เมนูย่อยถัดไป
-            await this.page.getByRole('menuitem', { name: submenu2, exact: true }).click();
+            await this.page.getByRole('menuitem', { name: submenu2, exact: true }).click({ timeout: 100000 });
             // ตรวจสอบเมนูย่อยถัดไปอีก
             if (submenu3 != undefined) {
                 // รอให้เมนูย่อยถัดไปปรากฏ
                 await this.expect(this.page.getByRole('menuitem', { name: submenu3, exact: true })).toBeVisible({ timeout: 120000 });
                 // คลิกที่เมนูย่อยถัดไป
-                await this.page.getByRole('menuitem', { name: submenu3, exact: true }).click();
+                await this.page.getByRole('menuitem', { name: submenu3, exact: true }).click({ timeout: 100000 });
                 // ตรวจสอบเมนูย่อยถัดไปอีก
                 if (submenu4 != undefined) {
                     // รอให้เมนูย่อยถัดไปปรากฏ
                     await this.expect(this.page.getByRole('menuitem', { name: submenu4, exact: true })).toBeVisible({ timeout: 120000 });
                     // คลิกที่เมนูย่อยถัดไป
-                    await this.page.getByRole('menuitem', { name: submenu4, exact: true }).click();
+                    await this.page.getByRole('menuitem', { name: submenu4, exact: true }).click({ timeout: 100000 });
                 } else { }
             }
         } else { }
@@ -49,7 +49,7 @@ export class gotoMenu {
         // พิมพ์ ค้นหา เมนู
         await this.page.locator('#textSearch').type(menu)
         // เลือก เมนู ที่ค้นหา
-        await this.page.getByText(`${menu}`).click()
+        await this.page.getByText(`${menu}`).click({ timeout: 100000 })
         // รอเมนูที่เลือกแสดง
         await this.expect(this.page.getByText(`${menu}`)).toBeVisible({ timeout: 120000 });
     }
