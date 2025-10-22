@@ -4,14 +4,12 @@ const { GoogleSheet } = require('../../utils/google-sheet-OAuth.helper');
 const { VerifyAssessor } = require('../../pages/CoPayment/verify_assessor.js');
 const { ExpenseRecordAuditor } = require('../../pages/CoPayment/expense_record_auditor.js');
 
-import { markAsUntransferable } from 'worker_threads';
 import { LoginPage } from '../../pages/login_t.page.js';
 import { LogoutPage } from '../../pages/logout.page.js';
 import { gotoMenu } from '../../pages/menu.page.js';
 import { gotoMenu_NBS_Portal } from '../../pages/menu_nbs_portal.page.js';
 
 import path from 'path';
-import { stat } from 'fs';
 
 test('Data Co-Payment', async ({ page }, testInfo) => {
 
@@ -29,17 +27,17 @@ test('Data Co-Payment', async ({ page }, testInfo) => {
     const googlesheet = new GoogleSheet();
     const auth = await googlesheet.initAuth();
     const spreadsheetId = '1OCNWPq2uMoiC-PRhA85Ewe-WSHqNpILFY4DR_hxUX9I';
-    const readrange = `Test_Data!A4:AZ1000000`;
+    const readrange = `Test_Data!A4:BT1000000`;
     rows = await googlesheet.fetchSheetData_key(auth, spreadsheetId, readrange);
 
     const sheetnamewrite = `Test_Data`;
-    const range_write = `A4:AZ`;
+    const range_write = `A4:BT`;
 
     // console.log(`Total rows fetched: ${rows.length}`);
     // console.log(`Rows data:`, rows);
 
     // setting เวลาให้เคสนี้รัน
-    test.setTimeout(18000000); // 5 ชั่วโมง
+    test.setTimeout(36000000); // 10 ชั่วโมง
 
     for (const [index, row] of rows.entries()) {
 
@@ -78,6 +76,7 @@ test('Data Co-Payment', async ({ page }, testInfo) => {
         const path_file = path.resolve(__dirname, '../../pic/ochi-thank@2x.png');
         const documentname = 'สำเนาบัตรประชาชน/ใบขับขี่ ผอป./สำเนาสูติบัตร/สำเนาบัตรประชาชนผู้ปกครอง';
         const documentothername = 'บัตรประกัน ผอป.';
+        const surgery = row['ผ่าตัดใหญ่'];
 
         // สร้าง array สำหรับเก็บผลลัพธ์
         let data_create = [];
@@ -94,7 +93,7 @@ test('Data Co-Payment', async ({ page }, testInfo) => {
         }
 
         // Process Assessor
-        if (statusdata === 'Waiting for make data' && row.เลขที่รับเรื่องตรวจสอบสิทธิ์ === '' && row.เลขที่รับเรื่องบันทึกค่าใช้จ่าย === '') {
+        if ((statusdata === 'Waiting for make data' || statusdata === 'Process make data') && row.เลขที่รับเรื่องตรวจสอบสิทธิ์ === '' && row.เลขที่รับเรื่องบันทึกค่าใช้จ่าย === '') {
 
             // อัพเดท status เป็น 'Process make data'
             data_create.push({ [uniquekey]: rowdata, status: 'Process make data' });
@@ -121,7 +120,7 @@ test('Data Co-Payment', async ({ page }, testInfo) => {
             // กดเพิ่มรายการรับเรื่อง
             await verify_assessor.addReceiptVerifyAssessor();
             // ค้นหาและเพิ่มรายการรับเรื่อง
-            await verify_assessor.searchaddReceiptVerifyAssessor({ policyno: policyno });
+            await verify_assessor.searchaddReceiptVerifyAssessor({ policyno: policyno, env: env });
             // กรอกข้อมูลในหน้าจอ ตรวจสอบสิทธิ์และประเมินค่าใช้จ่าย (Assessor)
             await verify_assessor.informationVerifyAssessor({ namehospital: namehospital, datetimesentdocumenthospital: datetimesentdocumenthospital, datetimeincident: datetimeincident, datetimetreatmentstart: datetimetreatmentstart, datetimedischargehospital: datetimedischargehospital, daysicuroom: daysicuroom, bloodpressure: bloodpressure, heartrate: heartrate, temperature: temperature, respirationrate: respirationrate, claimtype: claimtype, causeofclaim: causeofclaim, treatmentresult: treatmentresult, treatmentplan: treatmentplan, incidentcause: incidentcause, rider: rider, servicetypecode: servicetypecode, policyno: policyno, chargeamount: chargeamount, path_file: path_file, documentname: documentname, documentothername: documentothername, standardbilling: standardbilling, protectioncategory: protectioncategory, totalamountclaim: totalamountclaim });
             // save ข้อมูล ตรวจสอบสิทธิ์และประเมินค่าใช้จ่าย (Assessor)
@@ -148,7 +147,7 @@ test('Data Co-Payment', async ({ page }, testInfo) => {
         let usernameauditor, passwordauditor, statusdataauditor, aboutauthenticationnoauditor, expensenoauditor, necessaryadmit;
         // เช็คจากสถานะก่อน เพื่อไม่ต้อง fetch ข้อมูลซ้ำ จากข้อมูลที่ไม่ได้พร้อมทำรายการ
         if (statusdata === 'Process make data' || statusdata === 'Waiting for make data') {
-            
+
             const fields = ['Auditor', 'Password_Auditor', 'status', 'เลขที่รับเรื่องตรวจสอบสิทธิ์', 'เลขที่รับเรื่องบันทึกค่าใช้จ่าย', 'ความจำเป็นต้อง Admit'];
             // Fetch data from Google Sheets before all tests
             rows2 = await googlesheet.fetchSheetData_key(auth, spreadsheetId, readrange, fields);
@@ -179,7 +178,7 @@ test('Data Co-Payment', async ({ page }, testInfo) => {
             // ค้นหาข้อมูลในหน้าจอ บันทึกค่าใช้จ่าย (Auditor)
             await expense_record_auditor.searchExpenseRecordAuditor({ expenserecordreceiptno: expensenoauditor });
             // กรอกข้อมูลในหน้าจอ บันทึกค่าใช้จ่าย (Auditor)
-            await expense_record_auditor.informationExpenseRecordAuditor({ necessaryadmit: necessaryadmit });
+            await expense_record_auditor.informationExpenseRecordAuditor({ necessaryadmit: necessaryadmit, surgery: surgery });
             // save ข้อมูล บันทึกค่าใช้จ่าย (Auditor)
             await expense_record_auditor.saveExpenseRecordAuditor();
 
@@ -187,8 +186,20 @@ test('Data Co-Payment', async ({ page }, testInfo) => {
             // จบการทดสอบด้วย Playwright
             // ----------------------------------------------------------------------------------------------------------------
 
+            // datetime finish time (yyyy-mm-dd hh:mm:ss)
+            const now = new Date();
+            const thTime = new Intl.DateTimeFormat('th-TH', {
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', second: '2-digit',
+                hour12: false, timeZone: 'Asia/Bangkok'
+            }).format(now);
+            // แปลงรูปแบบให้เป็น yyyy-mm-dd hh:mm:ss
+            const [d, t] = thTime.split(' ');
+            const [day, month, year] = d.split('/');
+            const finishTime = `${year}-${month}-${day} ${t}`;
+
             // อัพเดท status เป็น 'Finish make data'
-            data_create.push({ [uniquekey]: rowdata, status: 'Finish make data' });
+            data_create.push({ [uniquekey]: rowdata, status: 'Finish make data', ['Finish Time']: finishTime, ['Testing By']: 'Automate Playwright' });
             // อัพโหลดผลลัพธ์ไปยัง Google Sheet เป็นการ update ที่ range ที่กำหนด
             await googlesheet.updateDynamicRows(auth, spreadsheetId, sheetnamewrite, range_write, data_create, row_header, uniquekey);
             // เคลียร์ array หลังอัพโหลด
@@ -198,7 +209,7 @@ test('Data Co-Payment', async ({ page }, testInfo) => {
             await logoutPage.logoutNBSPortal();
             await page.waitForLoadState('networkidle');
 
-            console.log(`เสร็จสิ้นการสร้างข้อมูลสำหรับ ${uniquekey}: ${rowdata} | Policy No: ${policyno}\n`);
+            console.log(`\nเสร็จสิ้นการสร้างข้อมูลสำหรับ ${uniquekey}: ${rowdata} | Policy No: ${policyno}\n`);
             console.log(`----------------------------------------------`);
         }
 

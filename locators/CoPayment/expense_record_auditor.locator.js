@@ -14,6 +14,7 @@ export const informationExpenseRecordAuditor = (page) => ({
 
     // Section ข้อมูลความจำเป็นทางการแพทย์ (เก็บสถิติสำหรับ CoPayment)
     necessaryadmit: page.locator('div[class="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-12 MuiGrid-grid-sm-12"]', { hasText: 'มีความจำเป็นต้อง Admit หรือไม่' }).getByRole('radio'),
+    surgery: page.locator('div[class="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-12 MuiGrid-grid-sm-12"]', { hasText: 'ผ่าตัดใหญ่' }).getByRole('radio'),
 
     // Section ข้อมูลประกอบการพิจารณา
     reasonslettershospital: page.getByRole('textbox', { name: 'เหตุผลสำหรับออกจดหมายให้สถานพยาบาลและลูกค้า *' }),
