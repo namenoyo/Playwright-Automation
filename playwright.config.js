@@ -53,18 +53,34 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
+      
+      // 1366x768
       use: {
         // ...devices['Desktop Chrome'],
         headless: true,
-        viewport: { width: 1920, height: 1080 },
-        screen: { width: 1920, height: 1080 },
+        viewport: { width: 1366, height: 768 },
+        screen: { width: 1366, height: 768 },
         launchOptions: {
-          args: ['--window-size=1920,1080'],
+          args: ['--window-size=1366,768'],
         },
         // video: 'on', // เปิดการอัดวิดีโอทุกเคส
         // screenshot: 'only-on-failure', // ถ้าอยากเก็บ screenshot เฉพาะเคสล้ม
 
       },
+
+      // // 1920x1080
+      // use: {
+      //   // ...devices['Desktop Chrome'],
+      //   headless: true,
+      //   viewport: { width: 1920, height: 1080 },
+      //   screen: { width: 1920, height: 1080 },
+      //   launchOptions: {
+      //     args: ['--window-size=1920,1080'],
+      //   },
+      //   // video: 'on', // เปิดการอัดวิดีโอทุกเคส
+      //   // screenshot: 'only-on-failure', // ถ้าอยากเก็บ screenshot เฉพาะเคสล้ม
+
+      // },
     },
 
     // {

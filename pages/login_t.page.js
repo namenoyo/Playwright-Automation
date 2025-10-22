@@ -12,6 +12,19 @@ export class LoginPage {
         await this.page.waitForLoadState('networkidle');
     }
 
+    async gotoNBSENV(env) {
+        if (env === 'SIT') {
+            await this.page.goto('https://sitnbs.thaisamut.co.th/nbsweb/secure/home.html');
+            // Wait for the page to load
+            await this.page.waitForLoadState('networkidle');
+        } else if (env === 'UAT') {
+            await this.page.goto('https://uatnbs.thaisamut.co.th/nbsweb/secure/home.html');
+            // Wait for the page to load
+            await this.page.waitForLoadState('networkidle');
+        }
+
+    }
+
     async login(username, password) {
         await this.page.fill(loginLocators.usernameInput, username);
         await this.page.fill(loginLocators.passwordInput, password);
