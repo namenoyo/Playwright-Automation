@@ -63,8 +63,8 @@ export default defineConfig({
         launchOptions: {
           args: ['--window-size=1366,768'],
         },
-        video: 'on', // เปิดการอัดวิดีโอทุกเคส
-        screenshot: 'only-on-failure', // ถ้าอยากเก็บ screenshot เฉพาะเคสล้ม
+        // video: 'on', // เปิดการอัดวิดีโอทุกเคส
+        // screenshot: 'only-on-failure', // ถ้าอยากเก็บ screenshot เฉพาะเคสล้ม
 
       },
 
