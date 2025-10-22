@@ -33,6 +33,7 @@ export const informationVerifyAssessor = (page) => ({
     datetimeincident: page.getByRole('textbox', { name: 'วันและเวลาที่เกิดเหตุ *' }),
     datetimetreatmentstart: page.getByRole('textbox', { name: 'วันและเวลาที่เข้ารับการรักษา *' }),
     datetimedischargehospital: page.getByRole('textbox', { name: 'วันและเวลาที่ออกจากสถานพยาบาล *' }),
+    totalamountclaim: page.getByRole('textbox', { name: 'จำนวนเงินที่เรียกร้องทั้งหมด *' }),
     daysicuroom: page.getByRole('textbox', { name: 'จำนวนวันที่เรียกร้องห้อง ICU *' }),
     bloodpressure: page.getByRole('textbox', { name: 'Blood Pressure (BP) *' }),
     heartrate: page.getByRole('textbox', { name: 'Heart Rate / Pulse Rate (HR / PR) *' }),
