@@ -36,6 +36,7 @@ test('Run MVY UL', async ({ page }) => {
     const username = 'boss';
     const password = '1234';
     const policyno = 'UL00003011'; // เลขกรมธรรม์ที่ต้องการทดสอบ
+    const env = 'SIT' // SIT / UAT
 
     // Login
     const loginPage = new LoginPage(page);
@@ -49,7 +50,7 @@ test('Run MVY UL', async ({ page }) => {
     const fundRedemptionReceipt = new FundRedemptionReceipt(page, expect);
 
     // ไปยังหน้า NBS
-    await loginPage.gotoNBS();
+    await loginPage.gotoNBSENV(env);
     // เข้าสู่ระบบด้วยชื่อผู้ใช้และรหัสผ่าน
     await loginPage.login(username, password);
 
