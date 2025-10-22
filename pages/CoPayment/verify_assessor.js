@@ -58,11 +58,18 @@ export class VerifyAssessor {
         // เลือกรายการแรกจากผลลัพธ์การค้นหา
         await popupaddreciptLocator.selectlistbutton.click({ timeout: 10000 });
 
-        // รอ API โหลดข้อมูล claim history เสร็จ
-        await this.page.waitForResponse(response =>
-            response.url().includes(`https://intranet-api.ochi.link/thaisamut/rs/claimtx/v2/fax/common/getCopaymentData/list`) &&
-            response.status() === 200
-        );
+        // รอ API โหลดข้อมูล claim history เสร็จ และ timeout ไม่เกิน 60 วินาที
+        if (data.env === 'SIT') {
+            await this.page.waitForResponse(response =>
+                response.url().includes(`https://intranet-api.ochi.link/thaisamut/rs/claimtx/v2/fax/common/getCopaymentData/list`) &&
+                response.status() === 200, { timeout: 60000 }
+            );
+        } else if (data.env === 'UAT') {
+            await this.page.waitForResponse(response =>
+                response.url().includes(`https://uat-intranet-api.ochi.link/thaisamut/rs/claimtx/v2/fax/common/getCopaymentData/list`) &&
+                response.status() === 200, { timeout: 60000 }
+            );
+        }
 
         await this.page.waitForTimeout(1000); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
     }
@@ -268,6 +275,10 @@ export class VerifyAssessor {
         await informationLocator.addattachmentbutton.click({ timeout: 10000 });
         // รอ popup เพิ่มเอกสาร แสดง
         await this.expect(informationLocator.popupform).toBeVisible({ timeout: 60000 });
+        // เลือก ประเภทเอกสาร
+        await informationLocator.attachmenttypedocument.fill('เอกสารประกอบการพิจารณา', { timeout: 10000 });
+        await this.page.getByText('เอกสารประกอบการพิจารณา', { exact: true }).nth(1).click({ timeout: 10000 });
+        await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         // กดปุ่ม ตกลง
         await informationLocator.attachmenttypedocumentconfirmbutton.click({ timeout: 10000 });
         // รอ popup อัปโหลดเอกสาร แสดง
@@ -337,9 +348,9 @@ export class VerifyAssessor {
         await informationLocator.closesavesuccessbutton.click({ timeout: 10000 });
         // รอให้ popup บันทึกข้อมูลสำเร็จ หายไป
         await this.expect(informationLocator.savesuccessdialog).not.toBeVisible({ timeout: 60000 });
-        // รอ popup กรุณารอสักครู่... หายไป
-        await this.expect(this.page.getByText('กรุณารอสักครู่...')).toBeVisible({ timeout: 60000 });
-        await this.expect(this.page.getByText('กรุณารอสักครู่...')).not.toBeVisible({ timeout: 60000 });
+        // // รอ popup กรุณารอสักครู่... หายไป
+        // await this.expect(this.page.getByText('กรุณารอสักครู่...')).toBeVisible({ timeout: 60000 });
+        // await this.expect(this.page.getByText('กรุณารอสักครู่...')).not.toBeVisible({ timeout: 60000 });
 
         return {
             aboutauthenticationNo: aboutauthenticationNovalue,

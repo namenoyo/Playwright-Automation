@@ -64,6 +64,13 @@ export class ExpenseRecordAuditor {
             await locator.popupform.getByRole('button', { name: 'ปิด', exact: true }).click({ timeout: 10000 });
         }
 
+        // ตรวจสอบว่ามี popup วันที่เกิดเหตุที่ระบุ เป็นเคลมย้อนหลังในปีกรมธรรม์ หรือไม่
+        const popupText_before = await locator.popupform.textContent();
+        if (popupText_before.includes('วันที่เกิดเหตุที่ระบุ เป็นเคลมย้อนหลังในปีกรมธรรม์')) {
+            // กดปุ่ม ยืนยัน เพื่อปิด popup
+            await locator.popupform.getByRole('button', { name: 'ยืนยัน', exact: true }).click({ timeout: 10000 });
+        }
+
         // Section popup บันทึกสภาวะ
         // รอให้ popup บันทึกสภาวะ แสดง
         await this.expect(locator.popupformrecordcondition).toBeVisible({ timeout: 60000 });
