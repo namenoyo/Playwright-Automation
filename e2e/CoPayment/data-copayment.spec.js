@@ -69,6 +69,7 @@ test('Data Co-Payment', async ({ page }, testInfo) => {
         const treatmentplan = row['Treatment Plan *'];
         const incidentcause = row['Incident Cause (สาเหตุการเคลม) *'];
         const rider = row['สัญญาเพิ่มเติม *'];
+        const icd10 = row['icd10 code'];
         const servicetypecode = row['Service Type'];
         const chargeamount = row['Charge Amount'];
         const standardbilling = row['Standard Billing *'];
@@ -122,7 +123,7 @@ test('Data Co-Payment', async ({ page }, testInfo) => {
             // ค้นหาและเพิ่มรายการรับเรื่อง
             await verify_assessor.searchaddReceiptVerifyAssessor({ policyno: policyno, env: env });
             // กรอกข้อมูลในหน้าจอ ตรวจสอบสิทธิ์และประเมินค่าใช้จ่าย (Assessor)
-            await verify_assessor.informationVerifyAssessor({ namehospital: namehospital, datetimesentdocumenthospital: datetimesentdocumenthospital, datetimeincident: datetimeincident, datetimetreatmentstart: datetimetreatmentstart, datetimedischargehospital: datetimedischargehospital, daysicuroom: daysicuroom, bloodpressure: bloodpressure, heartrate: heartrate, temperature: temperature, respirationrate: respirationrate, claimtype: claimtype, causeofclaim: causeofclaim, treatmentresult: treatmentresult, treatmentplan: treatmentplan, incidentcause: incidentcause, rider: rider, servicetypecode: servicetypecode, policyno: policyno, chargeamount: chargeamount, path_file: path_file, documentname: documentname, documentothername: documentothername, standardbilling: standardbilling, protectioncategory: protectioncategory, totalamountclaim: totalamountclaim });
+            await verify_assessor.informationVerifyAssessor({ namehospital: namehospital, datetimesentdocumenthospital: datetimesentdocumenthospital, datetimeincident: datetimeincident, datetimetreatmentstart: datetimetreatmentstart, datetimedischargehospital: datetimedischargehospital, daysicuroom: daysicuroom, bloodpressure: bloodpressure, heartrate: heartrate, temperature: temperature, respirationrate: respirationrate, claimtype: claimtype, causeofclaim: causeofclaim, treatmentresult: treatmentresult, treatmentplan: treatmentplan, incidentcause: incidentcause, rider: rider, servicetypecode: servicetypecode, policyno: policyno, chargeamount: chargeamount, path_file: path_file, documentname: documentname, documentothername: documentothername, standardbilling: standardbilling, protectioncategory: protectioncategory, totalamountclaim: totalamountclaim, icd10: icd10 });
             // save ข้อมูล ตรวจสอบสิทธิ์และประเมินค่าใช้จ่าย (Assessor)
             const value_success = await verify_assessor.saveinformationVerifyAssessor();
             const aboutauthenticationNovalue = value_success.aboutauthenticationNo;
