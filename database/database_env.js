@@ -52,6 +52,13 @@ const configdb = {
             DB_HOST: '11.100.7.58',
             DB_PORT: 5432,
             DB_NAME: 'coreul',
+        },
+        UAT_EDIT: {
+            DB_USER: '',
+            DB_PASSWORD: '',
+            DB_HOST: '11.100.7.58',
+            DB_PORT: 5432,
+            DB_NAME: 'coreul',
         }
     }
 }

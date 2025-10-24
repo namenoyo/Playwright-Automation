@@ -18,6 +18,7 @@ const { InvestmentOrderCheckPage } = require('../../pages/Unit_Linked/Investment
 const { InvestmentOrderResultPage } = require('../../pages/Unit_Linked/InvestmentOrderResultPage.js');
 const { DailyNavUpdatePage } = require('../../pages/Unit_Linked/DailyNavUpdatePage.js');
 const { FundRedemptionReceipt } = require('../../pages/Unit_Linked/FundRedemptionReceiptPage.js');
+const { BatchManualSupportPage } = require('../../pages/Unit_Linked/BatchManualSupportPage.js');
 
 // Login, menu
 import { LoginPage } from '../../pages/login_t.page.js';
@@ -31,12 +32,17 @@ const { toDashed, toPlain } = require('../../utils/formatDate.js');
 test('Run MVY UL', async ({ page }) => {
 
     // ตั้งค่า timeout สำหรับการทดสอบ
-    test.setTimeout(3600000); // 1 ชั่วโมง
+    test.setTimeout(7200000); // 2 ชั่วโมง
 
+    // ข้อมูลสำหรับทดสอบ
     const username = 'boss';
     const password = '1234';
-    const policyno = 'UL00003011'; // เลขกรมธรรม์ที่ต้องการทดสอบ
+    const policyno = 'UL00003017'; // เลขกรมธรรม์ที่ต้องการทดสอบ
     const env = 'SIT' // SIT / UAT
+    const fix_endloop = ''; // กำหนดจำนวนรอบที่ต้องการให้ทำงาน (ถ้าไม่ต้องการให้ทำงานแบบวนซ้ำ ให้กำหนดเป็นค่าว่าง '')
+    // connection database
+    const db_name = 'coreul';
+    const db_env = 'SIT_EDIT';
 
     // Login
     const loginPage = new LoginPage(page);
@@ -48,6 +54,7 @@ test('Run MVY UL', async ({ page }) => {
     const investmentOrderResultPage = new InvestmentOrderResultPage(page, expect);
     const dailyNavUpdatePage = new DailyNavUpdatePage(page, expect);
     const fundRedemptionReceipt = new FundRedemptionReceipt(page, expect);
+    const batchManualSupportPage = new BatchManualSupportPage(page, expect);
 
     // ไปยังหน้า NBS
     await loginPage.gotoNBSENV(env);
@@ -59,25 +66,17 @@ test('Run MVY UL', async ({ page }) => {
 
     let endloop;
 
-    const fix_endloop = ''; // กำหนดจำนวนรอบที่ต้องการให้ทำงาน (ถ้าไม่ต้องการให้ทำงานแบบวนซ้ำ ให้กำหนดเป็นค่าว่าง '')
-
     while (endloop !== 'Y' && endloop !== fix_endloop) { // หลังจากเสร็จแล้วต้องเอา endloop !== '1' ออก เพราะจะแค่ทดสอบ 1 รอบ
 
         console.log('\n-------------------------------------------- Start of Process --------------------------------------------');
 
         // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "IT Support" > "Monitor batch"
         await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'IT Support', 'Monitor batch');
-
         // รอหน้าโหลดเสร็จ
         await page.waitForLoadState('networkidle');
         await expect(page.locator('text = Monitor / Run batch')).toBeVisible({ timeout: 60000 });
 
         let db;
-
-        // เช็คข้อมูลใน database ก่อน
-        // connection database
-        const db_name = 'coreul';
-        const db_env = 'SIT_EDIT';
 
         db = new Database({
             user: configdb[db_name][db_env].DB_USER,
@@ -89,18 +88,23 @@ test('Run MVY UL', async ({ page }) => {
 
         const query_next_due = 'select p.PMNDDT from tpsplc01 p where p.polnvc = $1;';
         const query_mvy = 'select p.NMFDDT from tpsplc01 p where p.polnvc = $1;';
+        const query_policy_year = 'select p.polynm from tpsplc01 p where p.polnvc = $1;';
         const params = [policyno];
 
         const result_next_due = await db.query(query_next_due, params);
         const result_mvy = await db.query(query_mvy, params);
+        const result_policy_year = await db.query(query_policy_year, params);
 
         const next_due_date = result_next_due.rows[0].pmnddt;
         const mvy_date = result_mvy.rows[0].nmfddt;
+        const policy_year = parseInt(result_policy_year.rows[0].polynm);
+        // const policy_year = 5; // test กรณี ปีกรมธรรม์ >= 5
 
         const cutText_next_due_date = next_due_date.substring(0, 8);
 
         console.log('\nวันที่กำหนดชำระถัดไป (Next Due): ' + cutText_next_due_date);
         console.log('วันที่หักค่าธรรมเนียมรายเดือนงวดถัดไป (MVY): ' + mvy_date);
+        console.log('ปีกรมธรรม์: ' + policy_year);
 
         // ฟังก์ชันแปลง yyyyMMdd → Date
         function parseDate(yyyymmdd) {
@@ -223,6 +227,29 @@ test('Run MVY UL', async ({ page }) => {
                 }
             }
         } else {
+
+            // Create RV if policy year >= 5
+            if (policy_year >= 5) {
+                console.log("\nทำการรันสร้าง RV เนื่องจาก ปีกรมธรรม์ >= 5");
+
+                // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "IT Support" > "Batch Manual Support"
+                await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'IT Support', 'Batch Manual Support');
+                // รอหน้าโหลดเสร็จ
+                await page.waitForLoadState('networkidle');
+                await expect(page.locator('div[class="layout-m-hd"]'), { hasText: 'Batch Manual Support' }).toBeVisible({ timeout: 60000 });
+
+                // รัน batch สร้าง RV UL
+                await batchManualSupportPage.runBatchINV({ batch: 'CreateRV', policyno: policyno });
+
+                // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "IT Support" > "Monitor batch"
+                await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'IT Support', 'Monitor batch');
+                // รอหน้าโหลดเสร็จ
+                await page.waitForLoadState('networkidle');
+                await expect(page.locator('text = Monitor / Run batch')).toBeVisible({ timeout: 60000 });
+            }
+
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
             console.log("\nทำงานต่อ: วันที่กำหนดชำระถัดไป (Next Due) >= วันที่หักค่าธรรมเนียมรายเดือนงวดถัดไป (MVY)");
 
             // ปรับวัน วันที่หักค่าธรรมเนียมรายเดือนงวดถัดไป (MVY)
@@ -353,7 +380,7 @@ test('Run MVY UL', async ({ page }) => {
             const query_check_fundredemptionreceipt = "SELECT distinct tivinv01.invovc,TIVREQ01.ordrdt,TIVREQ01.fundnm from TIVREQ01,tivinv01 where TIVREQ01.invoid = tivinv01.invoid and TIVREQ01.polnvc in ($1) and TIVINV01.iostvc = 'IO05'"
             const result_check_fundredemptionreceipt = await db.query(query_check_fundredemptionreceipt, [policyno]);
 
-            // รับผลการซื้อขาย หน่วยลงทุน
+            // บันทึกรับเงินจากบลจ. (คำสั่งขาย)
             // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Investment" > "บันทึกรับเงินจากบลจ. (คำสั่งขาย) V2"
             await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'Investment', 'บันทึกรับเงินจากบลจ. (คำสั่งขาย) V2');
             // รอหน้าโหลดเสร็จ
@@ -366,12 +393,28 @@ test('Run MVY UL', async ({ page }) => {
             // loop ตามจำนวนคำสั่งซื้อขายที่เจอใน database
             for (const row_fundredemptionreceipt of result_check_fundredemptionreceipt.rows) {
                 const fund_name_fundredemptionreceipt = fund_code_dictionary[row_fundredemptionreceipt.fundnm] || 'Unknown Fund';
-                console.log(`\nรับผลการขายหน่วยลงทุน เลขที่อ้างอิง: ${row_fundredemptionreceipt.invovc}, วันที่สั่งซื้อขาย: ${row_fundredemptionreceipt.ordrdt}, กองทุน: ${fund_name_fundredemptionreceipt.code}`);
+                console.log(`\nบันทึกรับเงินจากบลจ. เลขที่อ้างอิง: ${row_fundredemptionreceipt.invovc}, วันที่สั่งซื้อขาย: ${row_fundredemptionreceipt.ordrdt}, กองทุน: ${fund_name_fundredemptionreceipt.code}`);
 
                 // ยืนยัน บันทึกรับเงินจากบลจ. (คำสั่งขาย) ตามเลขที่อ้างอิง จาก database
                 await page.waitForTimeout(1000); // เพิ่ม delay 1 วินาที เพื่อรอข้อมูลโหลด
                 await fundRedemptionReceipt.clickFundRedemptionReceiptConfirmButton({ invoiceno: row_fundredemptionreceipt.invovc, date: row_fundredemptionreceipt.ordrdt });
 
+            }
+
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            // Update RV if policy year >= 5
+            if (policy_year >= 5) {
+                console.log("\nทำการรันอัพเดท RV เนื่องจาก ปีกรมธรรม์ >= 5");
+
+                // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "IT Support" > "Batch Manual Support"
+                await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'IT Support', 'Batch Manual Support');
+                // รอหน้าโหลดเสร็จ
+                await page.waitForLoadState('networkidle');
+                await expect(page.locator('div[class="layout-m-hd"]'), { hasText: 'Batch Manual Support' }).toBeVisible({ timeout: 60000 });
+
+                // รัน batch สร้าง RV UL
+                await batchManualSupportPage.runBatchINV({ batch: 'UpdateRV', policyno: policyno });
             }
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
