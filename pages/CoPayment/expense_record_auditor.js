@@ -49,7 +49,8 @@ export class ExpenseRecordAuditor {
 
         // Section ข้อมูลประกอบการพิจารณา
         // กรอก เหตุผลสำหรับออกจดหมายให้สถานพยาบาลและลูกค้า
-        await locator.reasonslettershospital.type('-', { delay: 200 });
+        await locator.reasonslettershospital.type(data.remark_auditor, { delay: 200 });
+        await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
     }
 
     async saveExpenseRecordAuditor() {
