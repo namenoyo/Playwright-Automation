@@ -78,6 +78,7 @@ test('Data Co-Payment', async ({ page }, testInfo) => {
         const documentname = 'สำเนาบัตรประชาชน/ใบขับขี่ ผอป./สำเนาสูติบัตร/สำเนาบัตรประชาชนผู้ปกครอง';
         const documentothername = 'บัตรประกัน ผอป.';
         const surgery = row['ผ่าตัดใหญ่'];
+        const remark_auditor = row['หมายเหตุ'];
 
         // สร้าง array สำหรับเก็บผลลัพธ์
         let data_create = [];
@@ -179,7 +180,7 @@ test('Data Co-Payment', async ({ page }, testInfo) => {
             // ค้นหาข้อมูลในหน้าจอ บันทึกค่าใช้จ่าย (Auditor)
             await expense_record_auditor.searchExpenseRecordAuditor({ expenserecordreceiptno: expensenoauditor });
             // กรอกข้อมูลในหน้าจอ บันทึกค่าใช้จ่าย (Auditor)
-            await expense_record_auditor.informationExpenseRecordAuditor({ necessaryadmit: necessaryadmit, surgery: surgery });
+            await expense_record_auditor.informationExpenseRecordAuditor({ necessaryadmit: necessaryadmit, surgery: surgery, remark_auditor: remark_auditor });
             // save ข้อมูล บันทึกค่าใช้จ่าย (Auditor)
             await expense_record_auditor.saveExpenseRecordAuditor();
 
