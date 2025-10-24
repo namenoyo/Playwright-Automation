@@ -199,9 +199,9 @@ export class VerifyAssessor {
         // รอ popup ICD10 แสดง
         await this.expect(informationLocator.popupform).toBeVisible({ timeout: 60000 });
         // กรอก ICD10 code
-        await informationLocator.icd10code.fill('K123', { timeout: 10000 });
+        await informationLocator.icd10code.fill(data.icd10, { timeout: 10000 });
         // เลือก ICD10 code
-        await this.page.getByText('K123').click({ timeout: 10000 });
+        await this.page.getByText(data.icd10).click({ timeout: 10000 });
         await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         // กดปุ่ม ยืนยัน
         await informationLocator.icd10confirmbutton.click({ timeout: 10000 });
