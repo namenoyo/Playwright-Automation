@@ -20,6 +20,8 @@ export class ExpenseRecordAuditor {
         // คลิกปุ่ม ดำเนินการ
         await locator.actionexpenserecordbutton(data.expenserecordreceiptno).click({ timeout: 10000 });
         await this.page.waitForLoadState('networkidle');
+
+        await this.page.waitForTimeout(1000); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
     }
 
     async informationExpenseRecordAuditor(data) {
@@ -28,29 +30,31 @@ export class ExpenseRecordAuditor {
         // Section ข้อมูลความจำเป็นทางการแพทย์ (เก็บสถิติสำหรับ CoPayment)
         // เลือก มีความจำเป็นต้อง Admit หรือไม่
         if (data.necessaryadmit) {
-            // เลือก ไม่มี
-            if (data.necessaryadmit === 'N') {
-                await locator.necessaryadmit.nth(0).click({ timeout: 10000 });
-                // เลือก มี
-            } else if (data.necessaryadmit === 'Y') {
-                await locator.necessaryadmit.nth(1).click({ timeout: 10000 });
+            if (data.necessaryadmit === 'N') { // เลือก ไม่มี
+                await locator.necessaryadmit_no.click({ timeout: 10000 });
+                await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
+            } else if (data.necessaryadmit === 'Y') { // เลือก มี
+                await locator.necessaryadmit_yes.click({ timeout: 10000 });
+                await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
             }
         }
         // เลือก ผ่าตัดใหญ่
         if (data.surgery) {
-            // เลือก ไม่มี
-            if (data.surgery === 'N') {
-                await locator.surgery.nth(0).click({ timeout: 10000 });
-                // เลือก มี
-            } else if (data.surgery === 'Y') {
-                await locator.surgery.nth(1).click({ timeout: 10000 });
+            if (data.surgery === 'N') {// เลือก ไม่มี
+                await locator.surgery_no.click({ timeout: 10000 });
+                await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
+            } else if (data.surgery === 'Y') { // เลือก มี
+                await locator.surgery_yes.click({ timeout: 10000 });
+                await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
             }
         }
 
         // Section ข้อมูลประกอบการพิจารณา
         // กรอก เหตุผลสำหรับออกจดหมายให้สถานพยาบาลและลูกค้า
-        await locator.reasonslettershospital.type(data.remark_auditor, { delay: 200 });
+        await locator.reasonslettershospital.fill(data.remark_auditor, { timeout: 10000 });
         await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
+
+        page.locator('div[class="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-12 MuiGrid-grid-sm-12"]', { hasText: 'มีความจำเป็นต้อง Admit หรือไม่' }).getByRole('radio', { name: '"มี"' })
     }
 
     async saveExpenseRecordAuditor() {

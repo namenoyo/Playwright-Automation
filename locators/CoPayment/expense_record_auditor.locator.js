@@ -13,8 +13,10 @@ export const informationExpenseRecordAuditor = (page) => ({
     savebutton: page.getByRole('button', { name: 'บันทึกผลพิจารณา', exact: true }),
 
     // Section ข้อมูลความจำเป็นทางการแพทย์ (เก็บสถิติสำหรับ CoPayment)
-    necessaryadmit: page.locator('div[class="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-12 MuiGrid-grid-sm-12"]', { hasText: 'มีความจำเป็นต้อง Admit หรือไม่' }).getByRole('radio'),
-    surgery: page.locator('div[class="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-12 MuiGrid-grid-sm-12"]', { hasText: 'ผ่าตัดใหญ่' }).getByRole('radio'),
+    necessaryadmit_no: page.locator('div[class="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-12 MuiGrid-grid-sm-12"]', { hasText: 'มีความจำเป็นต้อง Admit หรือไม่' }).getByRole('radio', { name: '"ไม่มี"' }),
+    necessaryadmit_yes: page.locator('div[class="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-12 MuiGrid-grid-sm-12"]', { hasText: 'มีความจำเป็นต้อง Admit หรือไม่' }).getByRole('radio', { name: '"มี"' }),
+    surgery_no: page.locator('div[class="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-12 MuiGrid-grid-sm-12"]', { hasText: 'ผ่าตัดใหญ่' }).getByRole('radio', { name: 'No' }),
+    surgery_yes: page.locator('div[class="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-12 MuiGrid-grid-sm-12"]', { hasText: 'ผ่าตัดใหญ่' }).getByRole('radio', { name: 'Yes' }),
 
     // Section ข้อมูลประกอบการพิจารณา
     reasonslettershospital: page.getByRole('textbox', { name: 'เหตุผลสำหรับออกจดหมายให้สถานพยาบาลและลูกค้า *' }),
