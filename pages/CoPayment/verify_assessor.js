@@ -1,5 +1,3 @@
-import { info } from 'console';
-
 const { searchVerifyAssessor, popupAddReceiptVerifyAssessor, informationVerifyAssessor } = require('../../locators/CoPayment/verify_assessor.locator');
 
 
@@ -135,6 +133,7 @@ export class VerifyAssessor {
         if (data.totalamountclaim) {
             // เคลียร์ค่าก่อนกรอกใหม่
             await informationLocator.totalamountclaim.fill('', { timeout: 10000 });
+            await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
             await informationLocator.totalamountclaim.fill(data.totalamountclaim, { timeout: 10000 });
             await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         }
@@ -264,7 +263,9 @@ export class VerifyAssessor {
         await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         // กรอก Charge
         await informationLocator.addexpensechargeamount.fill('', { timeout: 10000 }); // เคลียร์ค่าก่อนกรอกใหม่
+        await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         await informationLocator.addexpensechargeamount.fill(data.chargeamount, { timeout: 10000 });
+        await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
         // กดปุ่ม ยืนยัน
         await informationLocator.addexpensebuttonsavebutton.click({ timeout: 10000 });
         // รอ popup เพิ่มรายการค่าใช้จ่าย หายไป

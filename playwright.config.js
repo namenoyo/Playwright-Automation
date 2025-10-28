@@ -57,7 +57,7 @@ export default defineConfig({
           args: ['--window-size=1366,768'],
         },
         // video: 'on', // เปิดการอัดวิดีโอทุกเคส
-        // screenshot: 'only-on-failure', // ถ้าอยากเก็บ screenshot เฉพาะเคสล้ม
+        screenshot: 'only-on-failure', // ถ้าอยากเก็บ screenshot เฉพาะเคสล้ม
 
       },
 
