@@ -41,6 +41,9 @@ export class gotoMenu {
                 } else { }
             }
         } else { }
+
+        // รอโหลดหน้าเมนูเสร็จสิ้น
+        await this.page.waitForLoadState('networkidle');
     }
 
     async menuProtal(menu) {

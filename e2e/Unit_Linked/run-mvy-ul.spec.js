@@ -37,12 +37,12 @@ test('Run MVY UL', async ({ page }) => {
     // ข้อมูลสำหรับทดสอบ
     const username = 'boss';
     const password = '1234';
-    const policyno = 'UL00003017'; // เลขกรมธรรม์ที่ต้องการทดสอบ
+    const policyno = 'UL00003016'; // เลขกรมธรรม์ที่ต้องการทดสอบ
     const env = 'SIT' // SIT / UAT
-    const fix_endloop = ''; // กำหนดจำนวนรอบที่ต้องการให้ทำงาน (ถ้าไม่ต้องการให้ทำงานแบบวนซ้ำ ให้กำหนดเป็นค่าว่าง '')
+    const fix_endloop = '1'; // กำหนดจำนวนรอบที่ต้องการให้ทำงาน (ถ้าไม่ต้องการให้ทำงานแบบวนซ้ำ ให้กำหนดเป็นค่าว่าง '')
     // connection database
     const db_name = 'coreul';
-    const db_env = 'SIT_EDIT';
+    const db_env = 'SIT_EDIT'; // SIT | SIT_EDIT / UAT | UAT_EDIT
 
     // Login
     const loginPage = new LoginPage(page);
@@ -123,6 +123,16 @@ test('Run MVY UL', async ({ page }) => {
             const day = String(d.getDate()).padStart(2, "0");
             return `${year}${month}${day}`;
         }
+        // ฟังก์ชันแปลง Date → yyyyMMdd บวก 1 วันก่อน
+        function formatDatePlusOne(date) {
+            const d = new Date(date); // clone เพื่อไม่กระทบ date ต้นฉบับ
+            d.setDate(d.getDate() + 1); // บวก 1 วัน
+
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, "0");
+            const day = String(d.getDate()).padStart(2, "0");
+            return `${year}${month}${day}`;
+        }
         // ฟังก์ชันแปลง Date → yyyyMMdd ลบ 30 วันก่อน
         function formatDateMinus30(date) {
             const d = new Date(date); // clone เพื่อไม่กระทบ date ต้นฉบับ
@@ -186,7 +196,7 @@ test('Run MVY UL', async ({ page }) => {
             } else {
                 console.log("\nไป Generate Bill: วันที่กำหนดชำระถัดไป (Next Due) < วันที่หักค่าธรรมเนียมรายเดือนงวดถัดไป (MVY) and วันที่หักค่าธรรมเนียมรายเดือนงวดถัดไป (MVY) >= วันที่ทำการสร้างบิล (Bill)");
 
-                console.log('business and process date: ' + businessProcessDate_genbill + ' process date: ' + gen_bill_date);
+                console.log('business and current process date: ' + businessProcessDate_genbill + ' process date: ' + gen_bill_date);
 
                 // update database
                 const query_update_all_date_policy = 'update tpsplc01 set busndt = $2, crpcdt = $2, pctddt = $3 where polnvc = $1;';
@@ -219,7 +229,7 @@ test('Run MVY UL', async ({ page }) => {
 
                 // เช็คว่ามีการสร้างบิลหรือไม่
                 const params_check_genbill = await db.query(query_check_genbill, [policyno, convert_cutText_end_grace_period]);
-                console.log('จำนวนบิลที่เจอ: ' + params_check_genbill.rows[0].countgenbill);
+                console.log('\nจำนวนบิลที่เจอ: ' + params_check_genbill.rows[0].countgenbill);
 
                 if (params_check_genbill.rows[0].countgenbill > 0) {
                     check_genbill = true;
@@ -252,30 +262,62 @@ test('Run MVY UL', async ({ page }) => {
 
             console.log("\nทำงานต่อ: วันที่กำหนดชำระถัดไป (Next Due) >= วันที่หักค่าธรรมเนียมรายเดือนงวดถัดไป (MVY)");
 
-            // ปรับวัน วันที่หักค่าธรรมเนียมรายเดือนงวดถัดไป (MVY)
-            const dashed = toDashed(mvy_date); // แปลงเป็น yyyy-MM-dd
-            const adjustedDate_mvy = adjustDate.adjustDate(dashed);
-            const process_date = toPlain(adjustedDate_mvy); // แปลงเป็น yyyyMMdd
+            // เช็คคำสั่งขายคงค้าง
+            const query_check_invoice = "SELECT distinct tivinv01.invovc,TIVREQ01.ordrdt,TIVREQ01.fundnm from TIVREQ01,tivinv01 where TIVREQ01.invoid = tivinv01.invoid and TIVREQ01.polnvc in ($1) and TIVREQ01.irstvc = 'IR01' and TIVREQ01.iotcvc = 'R'"
+            const result_check_invoice = await db.query(query_check_invoice, [policyno]);
 
-            console.log('business and process date: ' + business_process_date + ' process date: ' + process_date);
+            // เช็คว่ามีคำสั่งขายคงค้างอยู่หรือไม่ ถ้าไม่มีให้รัน Batch Daily
+            if (result_check_invoice.rows.length === 0) {
 
-            // update database
-            const query_update_all_date_policy = 'update tpsplc01 set busndt = $2, crpcdt = $2, pctddt = $3 where polnvc = $1;';
-            const result_update_all_date_policy = await db.query(query_update_all_date_policy, [policyno, business_process_date, process_date]);
+                console.log('\nไม่มีคำสั่งขายคงค้างอยู่ ไปต่อเพื่อรัน Batch Daily');
 
-            console.log('Update all date policy result: ' + result_update_all_date_policy.rowCount);
+                let check_batch_daily_success = false;
+                // เช็คว่ามีการรัน Batch Daily สำเร็จจริงไหม
+                while (!check_batch_daily_success) {
+                    // ปรับวัน วันที่หักค่าธรรมเนียมรายเดือนงวดถัดไป (MVY)
+                    const dashed = toDashed(mvy_date); // แปลงเป็น yyyy-MM-dd
+                    const adjustedDate_mvy = adjustDate.adjustDate(dashed);
+                    const process_date = toPlain(adjustedDate_mvy); // แปลงเป็น yyyyMMdd
 
-            /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                    console.log('\nbusiness and current process date: ' + business_process_date + ' process date: ' + process_date);
 
-            // ทำการรัน batch manual ที่หน้าเว็บ
-            // เช็คสถานะ batch ก่อนรันว่าเป็น "NO PROCESS" หรือ "DONE" หรือไม่
-            await monitorBatchPage.checkStatusBeforeRunBatch();
+                    // update database
+                    const query_update_all_date_policy = 'update tpsplc01 set busndt = $2, crpcdt = $2, pctddt = $3 where polnvc = $1;';
+                    const result_update_all_date_policy = await db.query(query_update_all_date_policy, [policyno, business_process_date, process_date]);
 
-            // รัน batch MVY UL
-            await monitorBatchPage.runJobBatchDailyPolicy({ policyno: policyno });
+                    console.log('Update all date policy result: ' + result_update_all_date_policy.rowCount);
 
-            // เช็คสถานะ batch หลังรันว่าเป็น "NO PROCESS" หรือ "DONE" หรือไม่
-            await monitorBatchPage.checkStatusAfterRunBatch();
+                    /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+                    // ทำการรัน batch manual ที่หน้าเว็บ
+                    // เช็คสถานะ batch ก่อนรันว่าเป็น "NO PROCESS" หรือ "DONE" หรือไม่
+                    await monitorBatchPage.checkStatusBeforeRunBatch();
+
+                    // รัน batch MVY UL
+                    await monitorBatchPage.runJobBatchDailyPolicy({ policyno: policyno });
+
+                    // เช็คสถานะ batch หลังรันว่าเป็น "NO PROCESS" หรือ "DONE" หรือไม่
+                    await monitorBatchPage.checkStatusAfterRunBatch();
+
+                    /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+                    // query ตรวจสอบวันที่ของกรมธรรม์
+                    const query_check_date_policy = 'select p.busndt from tpsplc01 p where p.polnvc = $1;';
+                    const result_check_date_policy = await db.query(query_check_date_policy, [policyno]);
+
+                    // บวก 1 วัน เพื่อเทียบว่าวันที่ business date ของกรมธรรม์ มีการรัน batch แล้วหรือยัง
+                    const business_date_policy_plus1 = formatDatePlusOne(parseDate(process_date));
+                    if (result_check_date_policy.rows[0].busndt === business_date_policy_plus1) {
+                        check_batch_daily_success = true;
+                        console.log('\nรัน Batch Daily สำเร็จ');
+                    } else {
+                        console.log('\nรัน Batch Daily ไม่สำเร็จ ต้องรันใหม่');
+                    }
+                }
+                
+            } else {
+                console.log('\nมีคำสั่งขายคงค้างอยู่ ข้าม step รัน Batch Daily');
+            }
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -377,6 +419,7 @@ test('Run MVY UL', async ({ page }) => {
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+            // คำสั่งเช็คข้อมูลในตาราง TIVREQ01 และ TIVINV01 ว่ามีการสร้างรายการคำสั่งซื้อขายหรือไม่
             const query_check_fundredemptionreceipt = "SELECT distinct tivinv01.invovc,TIVREQ01.ordrdt,TIVREQ01.fundnm from TIVREQ01,tivinv01 where TIVREQ01.invoid = tivinv01.invoid and TIVREQ01.polnvc in ($1) and TIVINV01.iostvc = 'IO05'"
             const result_check_fundredemptionreceipt = await db.query(query_check_fundredemptionreceipt, [policyno]);
 
