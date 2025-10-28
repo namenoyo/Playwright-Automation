@@ -6,9 +6,9 @@ export class gotoMenu {
 
     async menuAll(menu, submenu1, submenu2, submenu3, submenu4) {
         // รอรายการเมนูหลัก
-        await this.expect(this.page.locator(`text=${menu}`)).toBeVisible({ timeout: 120000 });
+        await this.expect(this.page.locator('td#mainmenu').locator(`text=${menu}`)).toBeVisible({ timeout: 120000 });
         // คลิกที่เมนูหลัก
-        await this.page.click(`text=${menu}`);
+        await this.page.locator('td#mainmenu').locator(`text=${menu}`).click({ timeout: 100000 });
 
         if (menu == 'ระบบงาน NBS Portal' && submenu1 == 'Home') {
             await this.page.keyboard.press('ArrowDown')
