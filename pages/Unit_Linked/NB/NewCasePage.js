@@ -1,4 +1,4 @@
-const { search_NewCase, table_NewCase } = require('../../../locators/Unit_Linked/NB/NewCase.locators.js');
+const { search_NewCase, table_NewCase, popup_NewCase_CustomerInfo } = require('../../../locators/Unit_Linked/NB/NewCase.locators.js');
 
 class NewCasePage {
     constructor(page, expect) {
@@ -6,6 +6,7 @@ class NewCasePage {
         this.expect = expect;
         this.searchnewcase = search_NewCase(page);
         this.tablenewcase = table_NewCase(page);
+        this.popupnewcase_customerinfo = popup_NewCase_CustomerInfo(page);
     }
 
     async searchNewCase(data) {
@@ -47,11 +48,11 @@ class NewCasePage {
 
     async clickAddNewCustomerPopupCustomerInfo(data) {
         // กดปุ่ม เพิ่มลูกค้า ใน popup
-        await this.popupnewcase.newcase_popupCustomerInfo_btnAddCustomer.click({ timeout: 10000 });
+        await this.popupnewcase_customerinfo.newcase_popupCustomerInfo_btnAddCustomer.click({ timeout: 10000 });
         // รอ popup เพิ่มข้อมูลลูกค้า ปรากฏ
         await this.expect(this.page.locator('#show-cis-confirm-content')).toBeVisible({ timeout: 60000 });
         // เลือก ประเภทบัตร
-        await this.popupnewcase.newcase_popupCustomerInfo_optionCustomerType(data.typecard).click({ timeout: 10000 });
+        await this.popupnewcase_customerinfo.newcase_popupCustomerInfo_optionCustomerType(data.typecard);
     }
 
 }

@@ -12,5 +12,5 @@ export const table_NewCase = (page) => ({
 
 export const popup_NewCase_CustomerInfo = (page) => ({
     newcase_popupCustomerInfo_btnAddCustomer: page.locator('#addCisCustomer'),
-    newcase_popupCustomerInfo_optionCustomerType: (typecard) => page.locator('#cisCustomerType').selectOption({ label: typecard }),
+    newcase_popupCustomerInfo_optionCustomerType: (typecard) => page.locator('#cusCardTypeTarget > select').selectOption({ label: typecard }),
 });
