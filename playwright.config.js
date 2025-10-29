@@ -32,7 +32,7 @@ export default defineConfig({
    // อย่าให้หยุดทั้งรันทันทีที่พังตัวเดียว
   maxFailures: Number.POSITIVE_INFINITY, // หรือเอาออกไปเลย
    // กันหมดเวลาทั้งรัน (ตั้งให้พอ)
-  globalTimeout: 60 * 60 * 1000, // 60 นาที (หรือเหมาะกับงานคุณ)
+  globalTimeout: 24 * 60 * 60 * 1000, // 24 ชั่วโมง
 
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */

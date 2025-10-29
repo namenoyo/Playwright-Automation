@@ -47,6 +47,11 @@ test('บันทึกข้อมูลเคสใหม่ (บันทึ
         const agentcode = row['agentcode']; // รหัสตัวแทน
         const requestcode = row['requestcode']; // รหัสคำขอ
         const typecard = row['typecard']; // ประเภทบัตร
+        const cardno = row['cardno']; // หมายเลขบัตร
+        const title = row['title']; // คำนำหน้า
+        const name = row['name']; // ชื่อ
+        const surname = row['surname']; // นามสกุล
+        const birthday = row['birthday']; // วันเกิด
 
         if ((statuscreatedata === 'Waiting for Create Data' || statuscreatedata === 'Process for Create Data') && ulmenu === 'CRS') {
 
@@ -73,7 +78,7 @@ test('บันทึกข้อมูลเคสใหม่ (บันทึ
                 // พิ่มข้อมูลใหม่
                 await newcasePage.clickAddNewCase();
                 // เพิ่มข้อมูลลูกค้า
-                await newcasePage.clickAddNewCustomerPopupCustomerInfo({ typecard: typecard });
+                await newcasePage.clickAddNewCustomerPopupCustomerInfo({ typecard: typecard, cardno: cardno, title: title, name: name, surname: surname, birthday: birthday });
             } else {
                 console.log(`พบข้อมูล รหัสคำขอ ${requestcode} ในตาราง`);
             }
