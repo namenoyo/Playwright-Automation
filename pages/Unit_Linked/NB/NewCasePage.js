@@ -53,6 +53,43 @@ class NewCasePage {
         await this.expect(this.page.locator('#show-cis-confirm-content')).toBeVisible({ timeout: 60000 });
         // เลือก ประเภทบัตร
         await this.popupnewcase_customerinfo.newcase_popupCustomerInfo_optionCustomerType(data.typecard);
+        // กรอก หมายเลขบัตร
+        await this.popupnewcase_customerinfo.newcase_popupCustomerInfo_txtCardNo.fill(data.cardno);
+        // กรอก คำนำหน้า
+        await this.popupnewcase_customerinfo.newcase_popupCustomerInfo_txtTitle.fill(data.title);
+        await this.expect(this.popupnewcase_customerinfo.newcase_popupCustomerInfo_listTitle(data.title)).toBeVisible({ timeout: 60000 });
+        await this.popupnewcase_customerinfo.newcase_popupCustomerInfo_listTitle(data.title).click({ timeout: 10000 });
+        // กรอก ชื่อ
+        await this.popupnewcase_customerinfo.newcase_popupCustomerInfo_txtName.fill(data.name);
+        // กรอก นามสกุล
+        await this.popupnewcase_customerinfo.newcase_popupCustomerInfo_txtSurname.fill(data.surname);
+        // กรอก วันเกิด
+        await this.popupnewcase_customerinfo.newcase_popupCustomerInfo_txtBirthday.fill(data.birthday);
+        await this.page.waitForTimeout(300); // เพิ่ม delay 300 มิลลิวินาที เพื่อรอข้อมูลโหลด
+        // กดปุ่ม ยืนยัน ใน popup เพิ่มข้อมูลลูกค้า
+        await this.popupnewcase_customerinfo.newcase_popupCustomerInfo_btnConfirmAddCustomer.click({ timeout: 10000 });
+
+        // รอ popup ไม่พบข้อมูลลูกค้า ปรากฏ
+        await this.expect(this.page.locator('div[class="confirm-dialog yui3-panel-content yui3-widget-stdmod"]', { hasText: 'ไม่พบลูกค้าอยู่ในระบบ CIS ยืนยันการใช้ข้อมูลใช่หรือไม่' })).toBeVisible({ timeout: 60000 });
+        // กดปุ่ม ใช่ ใน popup ไม่พบข้อมูลลูกค้า
+        await this.page.locator('div[class="confirm-dialog yui3-panel-content yui3-widget-stdmod"]', { hasText: 'ไม่พบลูกค้าอยู่ในระบบ CIS ยืนยันการใช้ข้อมูลใช่หรือไม่' }).getByText('ใช่', { exact: true }).click({ timeout: 10000 });
+        // รอ popup ไม่พบข้อมูลลูกค้า ปิด
+        await this.expect(this.page.locator('div[class="confirm-dialog yui3-panel-content yui3-widget-stdmod"]', { hasText: 'ไม่พบลูกค้าอยู่ในระบบ CIS ยืนยันการใช้ข้อมูลใช่หรือไม่' })).not.toBeVisible({ timeout: 60000 });
+
+        // รอ popup เพิ่มข้อมูลลูกค้า ปิด
+        await this.expect(this.page.locator('#show-cis-confirm-content')).not.toBeVisible({ timeout: 60000 });
+        // รอ popup บันทึกข้อมูลเคสใหม่ ปรากฏ
+        await this.expect(this.page.locator('#dialog-content')).toBeVisible({ timeout: 60000 });
+    }
+
+    async formAddNewCase(data) {
+        // Tab 1: ผู้เอาประกัน/ตัวแทน/แบบประกัน
+
+
+        // Tab 2: ผู้รับผลประโยชน์/คำแถลองสุขภาพ
+
+
+        // Tab 3: เอกสารประกอบการเอาประกัน
     }
 
 }
