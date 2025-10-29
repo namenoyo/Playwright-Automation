@@ -37,6 +37,23 @@ class NewCasePage {
         // ตรวจสอบว่ามีข้อมูล รหัสคำขอ ในตารางหรือไม่
         return await this.tablenewcase.newcase_tblCaseRow(data.requestcode).isVisible({ timeout: 60000 });
     }
+
+    async clickAddNewCase() {
+        // กดปุ่ม เพิ่มเคสใหม่
+        await this.searchnewcase.newcase_btnAddNewCase.click({ timeout: 10000 });
+        // รอ popup เลือกข้อมูลลูกค้า ปรากฏ
+        await this.expect(this.page.locator('#show-cis-customer-select-content')).toBeVisible({ timeout: 60000 });
+    }
+
+    async clickAddNewCustomerPopupCustomerInfo(data) {
+        // กดปุ่ม เพิ่มลูกค้า ใน popup
+        await this.popupnewcase.newcase_popupCustomerInfo_btnAddCustomer.click({ timeout: 10000 });
+        // รอ popup เพิ่มข้อมูลลูกค้า ปรากฏ
+        await this.expect(this.page.locator('#show-cis-confirm-content')).toBeVisible({ timeout: 60000 });
+        // เลือก ประเภทบัตร
+        await this.popupnewcase.newcase_popupCustomerInfo_optionCustomerType(data.typecard).click({ timeout: 10000 });
+    }
+
 }
 
 module.exports = { NewCasePage };

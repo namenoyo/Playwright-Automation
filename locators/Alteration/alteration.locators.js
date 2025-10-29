@@ -1,4 +1,4 @@
-import { datadict_endorse_checkbox } from "../../data/Alteration/inquiryform_datadict_endorse_checkbox_2_Sub_Status_v1.data"
+import { datadict_endorse_checkbox_sub_status } from "../../data/Alteration/inquiryform_datadict_endorse_checkbox_2_Sub_Status_v1.data"
 const { escapeRegex } = require('../../utils/common');
 
 export const menualterationLocator = (page, mainmenu, submenu) => ({

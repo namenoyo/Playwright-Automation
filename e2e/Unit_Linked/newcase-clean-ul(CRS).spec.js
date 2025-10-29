@@ -46,6 +46,7 @@ test('บันทึกข้อมูลเคสใหม่ (บันทึ
         const branchcode = row['branchcode']; // สาขาต้นสังกัด
         const agentcode = row['agentcode']; // รหัสตัวแทน
         const requestcode = row['requestcode']; // รหัสคำขอ
+        const typecard = row['typecard']; // ประเภทบัตร
 
         if ((statuscreatedata === 'Waiting for Create Data' || statuscreatedata === 'Process for Create Data') && ulmenu === 'CRS') {
 
@@ -67,8 +68,12 @@ test('บันทึกข้อมูลเคสใหม่ (บันทึ
             await newcasePage.searchNewCase({ env: env, branchcode: branchcode, agentcode: agentcode });
             // ตรวจสอบว่ามีข้อมูล รหัสคำขอ ในตารางหรือไม่
             const checkrequestcodeintable = await newcasePage.checkRequestCodeInTable({ requestcode: requestcode });
+            // ถ้าไม่พบข้อมูล รหัสคำขอ ในตาราง ให้แสดงทำก่ารบันทึกข้อมูลเคสใหม่
             if (!checkrequestcodeintable) {
-                console.log(`ไม่พบข้อมูล รหัสคำขอ ${requestcode} ในตาราง`);
+                // พิ่มข้อมูลใหม่
+                await newcasePage.clickAddNewCase();
+                // เพิ่มข้อมูลลูกค้า
+                await newcasePage.clickAddNewCustomerPopupCustomerInfo({ typecard: typecard });
             } else {
                 console.log(`พบข้อมูล รหัสคำขอ ${requestcode} ในตาราง`);
             }
