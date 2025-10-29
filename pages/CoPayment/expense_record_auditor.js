@@ -53,8 +53,6 @@ export class ExpenseRecordAuditor {
         // กรอก เหตุผลสำหรับออกจดหมายให้สถานพยาบาลและลูกค้า
         await locator.reasonslettershospital.fill(data.remark_auditor, { timeout: 10000 });
         await this.page.waitForTimeout(500); // เพิ่ม delay เล็กน้อยเพื่อรอการประมวลผล
-
-        page.locator('div[class="MuiGrid-root MuiGrid-item MuiGrid-grid-xs-12 MuiGrid-grid-sm-12"]', { hasText: 'มีความจำเป็นต้อง Admit หรือไม่' }).getByRole('radio', { name: '"มี"' })
     }
 
     async saveExpenseRecordAuditor() {
