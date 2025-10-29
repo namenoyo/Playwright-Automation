@@ -1,6 +1,7 @@
 const { test, expect } = require('@playwright/test');
 
 const { GoogleSheet } = require('../../utils/google-sheet-OAuth.helper');
+const { NewCasePage } = require('../../pages/Unit_Linked/NB/NewCasePage.js');
 
 // Login, menu
 import { LoginPage } from '../../pages/login_t.page.js';
@@ -16,6 +17,8 @@ test('บันทึกข้อมูลเคสใหม่ (บันทึ
     const logoutPage = new LogoutPage(page, expect);
     // Menu
     const gotomenu = new gotoMenu(page, expect);
+    // New Case Page
+    const newcasePage = new NewCasePage(page, expect);
 
     let rows = [];
 
@@ -40,6 +43,9 @@ test('บันทึกข้อมูลเคสใหม่ (บันทึ
         const env = row['env']; // สภาพแวดล้อมการทดสอบ
         const username = row['username']; // ชื่อผู้ใช้
         const password = row['password']; // รหัสผ่าน
+        const branchcode = row['branchcode']; // สาขาต้นสังกัด
+        const agentcode = row['agentcode']; // รหัสตัวแทน
+        const requestcode = row['requestcode']; // รหัสคำขอ
 
         if ((statuscreatedata === 'Waiting for Create Data' || statuscreatedata === 'Process for Create Data') && ulmenu === 'CRS') {
 
@@ -58,18 +64,26 @@ test('บันทึกข้อมูลเคสใหม่ (บันทึ
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
             // ค้นหาข้อมูลเคสใหม่
+            await newcasePage.searchNewCase({ env: env, branchcode: branchcode, agentcode: agentcode });
+            // ตรวจสอบว่ามีข้อมูล รหัสคำขอ ในตารางหรือไม่
+            const checkrequestcodeintable = await newcasePage.checkRequestCodeInTable({ requestcode: requestcode });
+            if (!checkrequestcodeintable) {
+                console.log(`ไม่พบข้อมูล รหัสคำขอ ${requestcode} ในตาราง`);
+            } else {
+                console.log(`พบข้อมูล รหัสคำขอ ${requestcode} ในตาราง`);
+            }
 
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             
 
             // แบ่งคอลัมน์ addreward ออกเป็น array โดยใช้ '|' เป็นตัวคั่น
             const addreward_array = row.addreward.split('|').map(r => r.trim());
-            console.log(addreward_array);
 
 
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-            // logout
-            await logoutPage.logoutNBSWeb();
+            // // logout
+            // await logoutPage.logoutNBSWeb();
 
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         }
