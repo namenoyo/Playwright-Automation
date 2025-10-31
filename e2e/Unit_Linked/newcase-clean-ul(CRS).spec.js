@@ -36,6 +36,13 @@ test('บันทึกข้อมูลเคสใหม่ (บันทึ
 
     for (const row of rows) {
 
+        // ดึงวันที่ปัจจุบัน โดยใช้ format dd/mm/yyyy เป็น พ.ศ.
+        const currentDate = new Date();
+        const day = String(currentDate.getDate()).padStart(2, '0');
+        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+        const year = String(currentDate.getFullYear() + 543).padStart(4, '0');
+        const todaydate = `${day}/${month}/${year}`;
+
         // กำหนดค่าตัวแปรสำหรับการทดสอบ
         const uniquekey = row['Keys row'];
         const statuscreatedata = row['Status Create Data'];
@@ -79,6 +86,8 @@ test('บันทึกข้อมูลเคสใหม่ (บันทึ
                 await newcasePage.clickAddNewCase();
                 // เพิ่มข้อมูลลูกค้า
                 await newcasePage.clickAddNewCustomerPopupCustomerInfo({ typecard: typecard, cardno: cardno, title: title, name: name, surname: surname, birthday: birthday });
+                // กรอกข้อมูล บันทึกข้อมูลเคสใหม่
+                await newcasePage.formAddNewCase({ requestcode: requestcode, todaydate: todaydate });
             } else {
                 console.log(`พบข้อมูล รหัสคำขอ ${requestcode} ในตาราง`);
             }
