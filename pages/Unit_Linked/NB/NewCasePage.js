@@ -1,4 +1,4 @@
-const { search_NewCase, table_NewCase, popup_NewCase_CustomerInfo } = require('../../../locators/Unit_Linked/NB/NewCase.locators.js');
+const { search_NewCase, table_NewCase, popup_NewCase_CustomerInfo, form_AddNewCase } = require('../../../locators/Unit_Linked/NB/NewCase.locators.js');
 
 class NewCasePage {
     constructor(page, expect) {
@@ -7,6 +7,7 @@ class NewCasePage {
         this.searchnewcase = search_NewCase(page);
         this.tablenewcase = table_NewCase(page);
         this.popupnewcase_customerinfo = popup_NewCase_CustomerInfo(page);
+        this.formaddnewcase = form_AddNewCase(page);
     }
 
     async searchNewCase(data) {
@@ -84,7 +85,19 @@ class NewCasePage {
 
     async formAddNewCase(data) {
         // Tab 1: ผู้เอาประกัน/ตัวแทน/แบบประกัน
-
+        // Section: 1. ชื่อและนามสกุลของผู้เอาประกันภัย
+        await this.formaddnewcase.newcase_formAddNewCase_tab1_txtRequestCode.fill(data.requestcode);
+        // คลิ๊กนอกช่องกรอกข้อมูล เพื่อให้ข้อมูลถูกบันทึก
+        await this.formaddnewcase.newcase_formAddNewCase_tab1_txtDateRequestCode.click();
+        await this.page.waitForTimeout(300); // เพิ่ม delay 300 มิลลิวินาที เพื่อรอข้อมูลโหลด
+        // รอ popup แจ้งเตือน ไม่พบข้อมูลแบบประเมินความเสี่ยง ปรากฏ
+        await this.expect(this.page.locator('#alert-dialog-model-id', { hasText: 'เนื่องจากไม่พบข้อมูลแบบประเมินความเสี่ยง กรุณาระบุข้อมูล' })).toBeVisible({ timeout: 60000 });
+        // กดปุ่ม ตกลง ใน popup แจ้งเตือน ไม่พบข้อมูลแบบประเมินความเสี่ยง
+        await this.page.locator('#alert-dialog-model-id', { hasText: 'เนื่องจากไม่พบข้อมูลแบบประเมินความเสี่ยง กรุณาระบุข้อมูล' }).getByText('ตกลง', { exact: true }).click({ timeout: 10000 });
+        // รอ popup แจ้งเตือน ไม่พบข้อมูลแบบประเมินความเสี่ยง ปิด
+        await this.expect(this.page.locator('#alert-dialog-model-id', { hasText: 'เนื่องจากไม่พบข้อมูลแบบประเมินความเสี่ยง กรุณาระบุข้อมูล' })).not.toBeVisible({ timeout: 60000 });
+        // กรอก วันที่เขียนใบคำขอ โดยใช้วันที่ปัจจุบัน
+        await this.formaddnewcase.newcase_formAddNewCase_tab1_txtDateRequestCode.fill(data.todaydate);
 
         // Tab 2: ผู้รับผลประโยชน์/คำแถลองสุขภาพ
 
