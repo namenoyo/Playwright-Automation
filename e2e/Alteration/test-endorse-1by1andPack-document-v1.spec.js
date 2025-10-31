@@ -16,6 +16,7 @@ const { mapsdataArray, mapsdataObject } = require('../../utils/maps-data.js');
 // data
 // const { data_matrix_save_endorse } = require('../../data/Alteration/data_save_endorse.data.js');
 const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc_v1.data.js'); // P'Name
+// const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc_retest_v1.data.js'); // สำหรับ Retest Test Data 
 
 // data dictionary
 const { contact_code_dictionary } = require('../../data/Alteration/contact_code_dict_v1.data.js');
@@ -38,8 +39,8 @@ test.describe.configure({ mode: 'parallel' }); // ให้เคสในไฟ
 // endIdx = จุดสิ้นสุด (ไม่รวม)
 // จำนวนข้อมูลที่ได้ = endIdx - startIdx
 
-const startIdx = 3563;
-const endIdx = 10000;
+const startIdx = 0;
+const endIdx = 400;
 const testData = data_matrix_save_endorse.slice(startIdx, endIdx); // ตัดข้อมูลตามช่วงที่กำหนด
 
 for (const data_save_endorse of testData) {
