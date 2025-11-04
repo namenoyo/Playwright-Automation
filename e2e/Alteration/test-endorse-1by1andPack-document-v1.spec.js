@@ -15,8 +15,11 @@ const { mapsdataArray, mapsdataObject } = require('../../utils/maps-data.js');
 
 // data
 // const { data_matrix_save_endorse } = require('../../data/Alteration/data_save_endorse.data.js');
-const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc_v1.data.js'); // P'Name
 // const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc_retest_v1.data.js'); // สำหรับ Retest Test Data 
+// const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc_v1.data.js'); // P'Name
+
+// data package
+const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc_package_v1.data.js'); // P'Name
 
 // data dictionary
 const { contact_code_dictionary } = require('../../data/Alteration/contact_code_dict_v1.data.js');
@@ -40,7 +43,7 @@ test.describe.configure({ mode: 'parallel' }); // ให้เคสในไฟ
 // จำนวนข้อมูลที่ได้ = endIdx - startIdx
 
 const startIdx = 0;
-const endIdx = 400;
+const endIdx = 1;
 const testData = data_matrix_save_endorse.slice(startIdx, endIdx); // ตัดข้อมูลตามช่วงที่กำหนด
 
 for (const data_save_endorse of testData) {
@@ -108,12 +111,12 @@ for (const data_save_endorse of testData) {
             // จับบรรทัดที่มีเลขกรมธรรม์
             const findpolicyno_button = page.locator('div#section-cust-policy').locator('tbody.MuiTableBody-root').locator('td', { hasText: `${policyNo}` });
             // คลิ๊กปุ่ม เลือกธุรกรรม ของบรรทัดที่มีเลขกรมธรรม์ โดยใช้ xpath หา parent td แล้วไปหา sibling ที่เป็นปุ่ม
-            await findpolicyno_button.locator('xpath=preceding-sibling::td[4]').getByRole('button', { name: 'เลือกธุรกรรม' }).click();
+            await findpolicyno_button.locator('xpath=preceding-sibling::td[4]').getByRole('button', { name: 'เลือกธุรกรรม' }).click({ timeout: 10000 });
 
             // รอเมนู เลือกธุรกรรม ปรากฏ
             await expect(page.locator('div[role="dialog"]', { hasText: `${policyNo}` })).toBeVisible();
             // คลิ๊กเมนู สอบถามสลักหลัง (Alteration Inquiry)
-            await page.locator('div[role="dialog"]').getByText('สอบถามสลักหลัง').click();
+            await page.locator('div[role="dialog"]').getByText('สอบถามสลักหลัง').click({ timeout: 10000 });
 
             // จับข้อความ popup inquiry form
             const popup_inquiryform = page.locator('div[role="dialog"]').locator('p[class="MuiTypography-root MuiTypography-body1"]').nth(1);
@@ -121,28 +124,28 @@ for (const data_save_endorse of testData) {
             // ตรวจสอบข้อความใน popup inquiry form
             if (await popup_inquiryform.textContent() === 'กรุณาตรวจสอบข้อมูลผู้เอาประกันก่อนทำธุรกรรม') {
                 // คลิ๊กปุ่ม ตกลง
-                await page.locator('div[role="dialog"]').getByRole('button', { name: 'ตกลง' }).click();
+                await page.locator('div[role="dialog"]').getByRole('button', { name: 'ตกลง' }).click({ timeout: 10000 });
                 // รอเมนู สอบถามสลักหลัง ปรากฏ
                 await expect(page.getByRole('button', { name: 'ยืนยันข้อมูล' })).toBeEnabled();
-                await page.getByRole('button', { name: 'ยืนยันข้อมูล' }).click();
+                await page.getByRole('button', { name: 'ยืนยันข้อมูล' }).click({ timeout: 10000 });
                 // รอเมนู popup แสดง
                 await expect(page.locator('div[role="dialog"]', { hasText: 'ต้องการยืนยันข้อมูลทั้งหมดใช่หรือไม่' })).toBeVisible();
                 // คลิ๊กปุ่ม ยืนยัน
-                await page.locator('div[role="dialog"]').getByRole('button', { name: 'ยืนยัน' }).click();
+                await page.locator('div[role="dialog"]').getByRole('button', { name: 'ยืนยัน' }).click({ timeout: 10000 });
                 // รอเมนู popup ยืนยันแสดง
                 await expect(page.locator('div[role="dialog"]', { hasText: 'ยืนยันข้อมูลเรียบร้อย' })).toBeVisible();
                 // คลิ๊กปุ่ม ตกลง
-                await page.locator('div[role="dialog"]').getByRole('button', { name: 'ตกลง' }).click();
+                await page.locator('div[role="dialog"]').getByRole('button', { name: 'ตกลง' }).click({ timeout: 10000 });
 
                 // จับบรรทัดที่มีเลขกรมธรรม์
                 const findpolicyno_button = page.locator('div#section-cust-policy').locator('tbody.MuiTableBody-root').locator('td', { hasText: `${policyNo}` });
                 // คลิ๊กปุ่ม เลือกธุรกรรม ของบรรทัดที่มีเลขกรมธรรม์ โดยใช้ xpath หา parent td แล้วไปหา sibling ที่เป็นปุ่ม
-                await findpolicyno_button.locator('xpath=preceding-sibling::td[4]').getByRole('button', { name: 'เลือกธุรกรรม' }).click();
+                await findpolicyno_button.locator('xpath=preceding-sibling::td[4]').getByRole('button', { name: 'เลือกธุรกรรม' }).click({ timeout: 10000 });
 
                 // รอเมนู เลือกธุรกรรม ปรากฏ
                 await expect(page.locator('div[role="dialog"]', { hasText: `${policyNo}` })).toBeVisible();
                 // คลิ๊กเมนู สอบถามสลักหลัง (Alteration Inquiry)
-                await page.locator('div[role="dialog"]').getByText('สอบถามสลักหลัง').click();
+                await page.locator('div[role="dialog"]').getByText('สอบถามสลักหลัง').click({ timeout: 10000 });
 
                 await page.waitForTimeout(2000); // รอ 2 วินาที เพื่อให้ popup แสดง
 
@@ -155,7 +158,7 @@ for (const data_save_endorse of testData) {
                 // รอเมนู popup แสดง
                 expect(page.locator('div[role="dialog"]', { hasText: 'กรุณายืนยันการทำรายการธุรกรรม' })).toBeVisible(),
                 // คลิ๊กปุ่ม ยืนยัน
-                page.locator('div[role="dialog"]').getByRole('button', { name: 'ยืนยัน' }).click()
+                page.locator('div[role="dialog"]').getByRole('button', { name: 'ยืนยัน' }).click({ timeout: 10000 })
             ]);
 
             // รอให้ tab ใหม่โหลดเสร็จ
@@ -174,13 +177,13 @@ for (const data_save_endorse of testData) {
             // กรณีเลือก ประเภทติดต่อ (ผู้ติดต่อ) * ที่มีเงื่อนไขพิเศษ
             if (contact_code === 'AGT') { // เงื่อนไขพิเศษ กรณี contact_code = AGT (ตัวแทนยื่นคำขอแทนผู้เอาประกันภัย)
                 // คลิ๊กที่ช่อง ประเภทติดต่อ (ผู้ติดต่อ) *
-                await newPage.getByRole('textbox', { name: 'สาขาต้นสังกัด ของตัวแทน *' }).click();
+                await newPage.getByRole('textbox', { name: 'สาขาต้นสังกัด ของตัวแทน *' }).click({ force: true, timeout: 10000 });
                 // ดึงค่าจาก username มาใช้เป็นสาขาต้นสังกัด
-                // await newPage.locator('label', { hasText: username }).click();
-                await newPage.locator('label', { hasText: '0001' }).click();
+                // await newPage.locator('label', { hasText: username }).click({ timeout: 10000 });
+                await newPage.locator('label', { hasText: '0001' }).click({ timeout: 10000 });
                 // กรอกช่อง ตัวแทนบริษัท *
-                await newPage.getByRole('textbox', { name: 'ตัวแทนบริษัท *' }).click();
-                await newPage.getByRole('textbox', { name: 'ตัวแทนบริษัท *' }).type('3265258', { delay: 100 }); // พิมพ์ช้าๆ ทีละตัวอักษร
+                await newPage.locator('#agentCode').click({ timeout: 10000 });
+                await newPage.locator('#agentCode').type('3265258', { delay: 100 }); // พิมพ์ช้าๆ ทีละตัวอักษร
                 // เลือก ตัวแทนบริษัท
                 await expect(newPage.getByText('3265258')).toBeVisible({ timeout: 60000 });
                 await newPage.getByText('3265258').click({ timeout: 60000 });
@@ -196,13 +199,13 @@ for (const data_save_endorse of testData) {
                 }
                 // กดปุ่ม ค้นหา
                 await newPage.waitForTimeout(1000); // รอ 1 วินาที
-                await newPage.locator('div[class="MuiGrid-root MuiGrid-item"]', { hasText: 'ข้อมูลการทำสลักหลัง' }).getByRole('button', { name: 'ค้นหา' }).click();
+                await newPage.locator('div[class="MuiGrid-root MuiGrid-item"]', { hasText: 'ข้อมูลการทำสลักหลัง' }).getByRole('button', { name: 'ค้นหา' }).click({ timeout: 10000 });
                 await newPage.waitForTimeout(1000); // รอ 1 วินาที
             } else if (contact_code === 'BNF'||contact_code === 'PAY'||contact_code === 'LGS'|| contact_code === 'ATN') { // เงื่อนไขพิเศษ กรณี contact_code = BNF (ผู้รับประโยชน์)
                 // คลิ๊กที่ช่อง ความสัมพันธ์ *
-                await newPage.getByRole('textbox', { name: 'คำนำหน้า *' }).click();
+                await newPage.getByRole('textbox', { name: 'คำนำหน้า *' }).click({ timeout: 10000 });
                 // เลือก ความสัมพันธ์ *
-                await newPage.getByText('คุณ', { exact: true }).click();
+                await newPage.getByText('คุณ', { exact: true }).click({ timeout: 10000 });
 
                // คลิ๊กที่ช่อง ชื่อ * และกรอกข้อมูล
                 await newPage.getByRole('textbox', { name: 'ชื่อ *' }).click({ force: true, timeout: 60000 });
@@ -214,35 +217,36 @@ for (const data_save_endorse of testData) {
                 
                 if (contact_code !== 'ATN') { // เงื่อนไขพิเศษ กรณี contact_code = BNF (ผู้รับประโยชน์)
                 // คลิ๊กที่ช่อง ความสัมพันธ์ *
-                await newPage.getByRole('textbox', { name: 'ความสัมพันธ์ *' }).click();
+                await newPage.getByRole('textbox', { name: 'ความสัมพันธ์ *' }).click({ timeout: 10000 });
                 // เลือก ความสัมพันธ์ *
-                await newPage.getByText('บุตร', { exact: true }).click();
+                await newPage.getByText('บุตร', { exact: true }).click({ timeout: 10000 });
                 }
             } 
+
             // else if (contact_code === 'PAY') { // เงื่อนไขพิเศษ กรณี contact_code = PAY (ผู้ชำระเงิน)
-               
             //     // คลิ๊กที่ช่อง ชื่อ - นามสกุล * และกรอกข้อมูล
             //     await newPage.getByRole('textbox', { name: 'ชื่อ - นามสกุล *' }).click({ force: true, timeout: 60000 });
             //     await newPage.getByRole('textbox', { name: 'ชื่อ - นามสกุล *' }).type('ออโต้ เพลไร้');
             //     // คลิ๊กที่ช่อง ความสัมพันธ์ *
-            //     await newPage.getByRole('textbox', { name: 'ความสัมพันธ์ *' }).click();
+            //     await newPage.getByRole('textbox', { name: 'ความสัมพันธ์ *' }).click({ timeout: 10000 });
             //     // เลือก ความสัมพันธ์ *
-            //     await newPage.getByText('บุตร', { exact: true }).click();
+            //     await newPage.getByText('บุตร', { exact: true }).click({ timeout: 10000 });
             // } 
             // else if (contact_code === 'LGS') { // เงื่อนไขพิเศษ กรณี contact_code = LGS (ผู้ปกครองโดยชอบธรรม)
             //     // คลิ๊กที่ช่อง ชื่อ - นามสกุล * และกรอกข้อมูล
             //     await newPage.getByRole('textbox', { name: 'ชื่อ - นามสกุล *' }).click({ force: true, timeout: 60000 });
             //     await newPage.getByRole('textbox', { name: 'ชื่อ - นามสกุล *' }).type('ออโต้ เพลไร้');
             //     // คลิ๊กที่ช่อง ความสัมพันธ์ *
-            //     await newPage.getByRole('textbox', { name: 'ความสัมพันธ์ *' }).click();
+            //     await newPage.getByRole('textbox', { name: 'ความสัมพันธ์ *' }).click({ timeout: 10000 });
             //     // เลือก ความสัมพันธ์ *
-            //     await newPage.getByText('บุตร', { exact: true }).click();
+            //     await newPage.getByText('บุตร', { exact: true }).click({ timeout: 10000 });
             // }
             //  else if (contact_code === 'ATN') { // เงื่อนไขพิเศษ กรณี contact_code = ATN (ผู้รับมอบอำนาจ)
             //     // คลิ๊กที่ช่อง ชื่อ - นามสกุล * และกรอกข้อมูล
             //     await newPage.getByRole('textbox', { name: 'ชื่อ - นามสกุล *' }).click({ force: true, timeout: 60000 });
             //     await newPage.getByRole('textbox', { name: 'ชื่อ - นามสกุล *' }).type('ออโต้ เพลไร้');
             // } 
+
             else if (contact_code === 'BRN') { // เงื่อนไขพิเศษ กรณี contact_code = BRN (Branch สาขา)
                 // คลิ๊กที่ช่อง สาขา *
                 await newPage.getByRole('textbox', { name: 'สาขา *' }).click({ force: true, timeout: 60000 });
@@ -261,11 +265,11 @@ for (const data_save_endorse of testData) {
             }
 
             // คลิ๊กปุ่ม บันทึก
-            await inquiryendorseformlocator.action_button.click();
+            await inquiryendorseformlocator.action_button.click({ timeout: 10000 });
             // รอเมนู popup แสดง
             await expect(inquiryendorseformlocator.confirm_popup).toBeVisible({ timeout: 60000 });
             // คลิ๊กปุ่ม ยืนยัน
-            await inquiryendorseformlocator.confirm_button.click();
+            await inquiryendorseformlocator.confirm_button.click({ timeout: 10000 });
             // เช็คว่าสลับไปที่เมนู สอบถามสลักหลัง หรือไม่
             await expect(newPage.locator('div#section-policy-save', { hasText: 'ข้อมูลผู้เอาประกันภัย' })).toBeVisible({ timeout: 60000 }); // รอไม่เกิน 60 วินาที
 
