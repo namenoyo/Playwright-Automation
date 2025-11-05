@@ -429,25 +429,22 @@ export class mapsdataObject {
                         // หา object ที่ document_name ตรงกับ header detail document
                         const found = Expected_inquiryformArraykey_label.find(item => item.document_name === remaining);
 
-                        // ดึงชื่อ รายการเอกสาร ตามบรรทัดที่ loop
-                        const check_endorse_match = await this.page.locator('div.MuiCollapse-wrapper').last().locator('tbody.MuiTableBody-root > tr').nth(i).textContent();
-                        // ตัดคำข้างหน้าและข้างหลังออก
-                        const match = check_endorse_match.match(/\. (.+)/);
-
-                        // เช็คว่าชื่อ รายการเอกสาร ตรงกับ ข้อมูล header detail document หรือไม่
-                        if (match[1].includes(remaining)) {
-                            if (found.document_detail === 'NULL') {
-                                // console.log('ไม่มีรายละเอียดเอกสารแนบ');
-                                // // นำข้อมูลบรรทัด เข้า array
-                                // assertion_result_array.push('ไม่มีรายละเอียดเอกสารแนบ');
-                                if (await this.page.locator('div.MuiCollapse-wrapper').last().locator('tbody.MuiTableBody-root > tr').nth(i).locator('button[class="MuiButtonBase-root MuiIconButton-root"]').isVisible()) {
-                                    console.log('❌ Mismatch: Expected = ไม่มีรายละเอียดเอกสารแนบ : Actual   = มีปุ่ม ... แสดงว่ามีรายละเอียดเอกสารแนบ');
-                                    assertion_result_array.push(`❌ Mismatch: Expected = ไม่มีรายละเอียดเอกสารแนบ : Actual   = มีปุ่ม ... แสดงว่ามีรายละเอียดเอกสารแนบ`);
-                                } else {
-                                    console.log('✅ Match: Expected = ไม่มีรายละเอียดเอกสารแนบ : Actual   = ไม่มีปุ่ม ... แสดงว่าไม่มีรายละเอียดเอกสารแนบ');
-                                    assertion_result_array.push(`✅ Match: Expected = ไม่มีรายละเอียดเอกสารแนบ : Actual   = ไม่มีปุ่ม ... แสดงว่าไม่มีรายละเอียดเอกสารแนบ`);
-                                }
+                        if (found.document_detail === 'NULL') {
+                            // console.log('ไม่มีรายละเอียดเอกสารแนบ');
+                            // // นำข้อมูลบรรทัด เข้า array
+                            // assertion_result_array.push('ไม่มีรายละเอียดเอกสารแนบ');
+                            if (await this.page.locator('div.MuiCollapse-wrapper').last().locator('tbody.MuiTableBody-root > tr').nth(i).locator('button[class="MuiButtonBase-root MuiIconButton-root"]').isVisible()) {
+                                console.log('❌ Mismatch: Expected = ไม่มีรายละเอียดเอกสารแนบ : Actual   = มีปุ่ม ... แสดงว่ามีรายละเอียดเอกสารแนบ');
+                                assertion_result_array.push(`❌ Mismatch: Expected = ไม่มีรายละเอียดเอกสารแนบ : Actual   = มีปุ่ม ... แสดงว่ามีรายละเอียดเอกสารแนบ`);
                             } else {
+                                console.log('✅ Match: Expected = ไม่มีรายละเอียดเอกสารแนบ : Actual   = ไม่มีปุ่ม ... แสดงว่าไม่มีรายละเอียดเอกสารแนบ');
+                                assertion_result_array.push(`✅ Match: Expected = ไม่มีรายละเอียดเอกสารแนบ : Actual   = ไม่มีปุ่ม ... แสดงว่าไม่มีรายละเอียดเอกสารแนบ`);
+                            }
+                        } else {
+                            const check_endorse_detail = await this.page.locator('div.MuiCollapse-wrapper').last().locator('tbody.MuiTableBody-root > tr').nth(i).locator('button[class="MuiButtonBase-root MuiIconButton-root"]');
+
+                            // เช็คว่าปุ่ม ... แสดงอยู่หรือไม่
+                            if (await check_endorse_detail.isVisible()) {
                                 // Click ... ตามบรรทัด เพื่อดูรายละเอียด
                                 await this.page.locator('div.MuiCollapse-wrapper').last().locator('tbody.MuiTableBody-root > tr').nth(i).locator('button[class="MuiButtonBase-root MuiIconButton-root"]').click();
 
@@ -468,15 +465,62 @@ export class mapsdataObject {
 
                                 // กดปิด popup detail
                                 await this.page.getByRole('dialog').locator('span[class="MuiIconButton-label"]').click();
+                            } else {
+                                // ปุ่ม ... ไม่แสดง แสดงว่าควรจะมีรายละเอียด แต่ไม่มีปุ่มให้คลิก
+                                console.log('❌ Mismatch: Expected = มีรายละเอียดเอกสารแนบ : Actual   = ไม่มีปุ่ม ... แสดงว่าไม่มีรายละเอียดเอกสารแนบ');
+                                assertion_result_array.push(`❌ Mismatch: Expected = มีรายละเอียดเอกสารแนบ : Actual   = ไม่มีปุ่ม ... แสดงว่าไม่มีรายละเอียดเอกสารแนบ`);
                             }
-                        } else {
-                            console.log('ตรวจสอบชื่อ รายการเอกสาร ไม่ตรงกัน');
-                            // นำข้อมูลบรรทัด เข้า array
-                            assertion_result_array.push('ตรวจสอบชื่อ รายการเอกสาร ไม่ตรงกัน');
-                            // แสดงผลกรณีชื่อ รายการเอกสาร ไม่ตรงกับ ข้อมูล header detail document
-                            console.log(`❌ Mismatch: Expected = ${remaining} : Actual   = ${match[1]}`);
-                            assertion_result_array.push(`❌ Mismatch: Expected = ${remaining} : Actual   = ${match[1]}`);
                         }
+
+                        // // ดึงชื่อ รายการเอกสาร ตามบรรทัดที่ loop
+                        // const check_endorse_match = await this.page.locator('div.MuiCollapse-wrapper').last().locator('tbody.MuiTableBody-root > tr').nth(i).textContent();
+                        // // ตัดคำข้างหน้าและข้างหลังออก
+                        // const match = check_endorse_match.match(/\. (.+)/);
+
+                        // // เช็คว่าชื่อ รายการเอกสาร ตรงกับ ข้อมูล header detail document หรือไม่
+                        // if (match[1].includes(remaining)) {
+                        //     if (found.document_detail === 'NULL') {
+                        //         // console.log('ไม่มีรายละเอียดเอกสารแนบ');
+                        //         // // นำข้อมูลบรรทัด เข้า array
+                        //         // assertion_result_array.push('ไม่มีรายละเอียดเอกสารแนบ');
+                        //         if (await this.page.locator('div.MuiCollapse-wrapper').last().locator('tbody.MuiTableBody-root > tr').nth(i).locator('button[class="MuiButtonBase-root MuiIconButton-root"]').isVisible()) {
+                        //             console.log('❌ Mismatch: Expected = ไม่มีรายละเอียดเอกสารแนบ : Actual   = มีปุ่ม ... แสดงว่ามีรายละเอียดเอกสารแนบ');
+                        //             assertion_result_array.push(`❌ Mismatch: Expected = ไม่มีรายละเอียดเอกสารแนบ : Actual   = มีปุ่ม ... แสดงว่ามีรายละเอียดเอกสารแนบ`);
+                        //         } else {
+                        //             console.log('✅ Match: Expected = ไม่มีรายละเอียดเอกสารแนบ : Actual   = ไม่มีปุ่ม ... แสดงว่าไม่มีรายละเอียดเอกสารแนบ');
+                        //             assertion_result_array.push(`✅ Match: Expected = ไม่มีรายละเอียดเอกสารแนบ : Actual   = ไม่มีปุ่ม ... แสดงว่าไม่มีรายละเอียดเอกสารแนบ`);
+                        //         }
+                        //     } else {
+                        //         // Click ... ตามบรรทัด เพื่อดูรายละเอียด
+                        //         await this.page.locator('div.MuiCollapse-wrapper').last().locator('tbody.MuiTableBody-root > tr').nth(i).locator('button[class="MuiButtonBase-root MuiIconButton-root"]').click();
+
+                        //         // ใช้ function เช็คข้อมูล expected กับ header หน้าจอ
+                        //         result = await checkvalueexpected.checkvalueOnscreen(locator.nth(0), formattedText_detaildoc, expectedarray.policy_no);
+                        //         // ใช้ function เช็คข้อมูล expected กับ detail หน้าจอ
+                        //         result_detail = await checkvalueexpected.checkvalueOnscreen(locator.nth(1), found.document_detail, expectedarray.policy_no);
+
+                        //         // นำค่า status ที่ return เข้า array
+                        //         status_result_array.push(result.status_result)
+                        //         // นำค่า assertion ที่ return เข้า array
+                        //         assertion_result_array.push(result.assertion_result)
+
+                        //         // นำค่า status ที่ return เข้า array
+                        //         status_result_array.push(result_detail.status_result)
+                        //         // นำค่า assertion ที่ return เข้า array
+                        //         assertion_result_array.push(result_detail.assertion_result)
+
+                        //         // กดปิด popup detail
+                        //         await this.page.getByRole('dialog').locator('span[class="MuiIconButton-label"]').click();
+                        //     }
+                        // } else {
+                        //     console.log('ตรวจสอบชื่อ รายการเอกสาร ไม่ตรงกัน');
+                        //     // นำข้อมูลบรรทัด เข้า array
+                        //     assertion_result_array.push('ตรวจสอบชื่อ รายการเอกสาร ไม่ตรงกัน');
+                        //     // แสดงผลกรณีชื่อ รายการเอกสาร ไม่ตรงกับ ข้อมูล header detail document
+                        //     console.log(`❌ Mismatch: Expected = ${remaining} : Actual   = ${match[1]}`);
+                        //     assertion_result_array.push(`❌ Mismatch: Expected = ${remaining} : Actual   = ${match[1]}`);
+                        // }
+
                     }
                     console.log('')
                     // นำค่าว่างเข้า array
