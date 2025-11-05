@@ -23,5 +23,7 @@ export const popup_NewCase_CustomerInfo = (page) => ({
 });
 
 export const form_AddNewCase = (page) => ({
-    
+    // Tab 1: ผู้เอาประกัน/ตัวแทน/แบบประกัน
+    newcase_formAddNewCase_tab1_txtRequestCode: page.locator('#insureDetailsCriteria_requestCode'),
+    newcase_formAddNewCase_tab1_txtDateRequestCode: page.locator('#insureDetailsCriteria_confirmDate'),
 });

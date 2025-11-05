@@ -11,6 +11,7 @@ const { fund_code_dictionary } = require('../../data/Unit_Linked/fund_code_dict.
 const { menubar_InvestmentOrderCheck, table_InvestmentOrderCheck } = require('../../locators/Unit_Linked/InvestmentOrderCheck.locators.js');
 const { menubar_InvestmentOrderResult, table_InvestmentOrderResult } = require('../../locators/Unit_Linked/InvestmentOrderResult.locators.js');
 const { table_DailyNavUpdate } = require('../../locators/Unit_Linked/DailyNavUpdate.locator.js');
+const { menubar_InvestmentOrderOper } = require('../../locators/Unit_Linked/VerifyInvestmentOrderOper.locators.js');
 
 // Page
 const { MonitorBatchPage } = require('../../pages/Unit_Linked/MonitorBatchPage.js');
@@ -19,6 +20,7 @@ const { InvestmentOrderResultPage } = require('../../pages/Unit_Linked/Investmen
 const { DailyNavUpdatePage } = require('../../pages/Unit_Linked/DailyNavUpdatePage.js');
 const { FundRedemptionReceipt } = require('../../pages/Unit_Linked/FundRedemptionReceiptPage.js');
 const { BatchManualSupportPage } = require('../../pages/Unit_Linked/BatchManualSupportPage.js');
+const { VerifyInvestmentOrderOperPage } = require('../../pages/Unit_Linked/VerifyInvestmentOrderOperPage.js');
 
 // Login, menu
 import { LoginPage } from '../../pages/login_t.page.js';
@@ -37,9 +39,9 @@ test('Run MVY UL', async ({ page }) => {
     // ข้อมูลสำหรับทดสอบ
     const username = 'boss';
     const password = '1234';
-    const policyno = 'UL00003018'; // เลขกรมธรรม์ที่ต้องการทดสอบ
+    const policyno = 'UL00003021'; // เลขกรมธรรม์ที่ต้องการทดสอบ
     const env = 'SIT' // SIT / UAT
-    const fix_endloop = ''; // กำหนดจำนวนรอบที่ต้องการให้ทำงาน (ถ้าไม่ต้องการให้ทำงานแบบวนซ้ำ ให้กำหนดเป็นค่าว่าง '')
+    const fix_endloop = '1'; // กำหนดจำนวนรอบที่ต้องการให้ทำงาน (ถ้าไม่ต้องการให้ทำงานแบบวนซ้ำ ให้กำหนดเป็นค่าว่าง '')
     // connection database
     const db_name = 'coreul';
     const db_env = 'SIT_EDIT'; // SIT | SIT_EDIT / UAT | UAT_EDIT
@@ -55,6 +57,7 @@ test('Run MVY UL', async ({ page }) => {
     const dailyNavUpdatePage = new DailyNavUpdatePage(page, expect);
     const fundRedemptionReceipt = new FundRedemptionReceipt(page, expect);
     const batchManualSupportPage = new BatchManualSupportPage(page, expect);
+    const verifyInvestmentOrderOperPage = new VerifyInvestmentOrderOperPage(page, expect);
 
     // ไปยังหน้า NBS
     await loginPage.gotoNBSENV(env);
@@ -262,205 +265,239 @@ test('Run MVY UL', async ({ page }) => {
 
             console.log("\nทำงานต่อ: วันที่กำหนดชำระถัดไป (Next Due) >= วันที่หักค่าธรรมเนียมรายเดือนงวดถัดไป (MVY)");
 
-            // เช็คคำสั่งขายคงค้าง
-            const query_check_invoice = "SELECT distinct tivinv01.invovc,TIVREQ01.ordrdt,TIVREQ01.fundnm from TIVREQ01,tivinv01 where TIVREQ01.invoid = tivinv01.invoid and TIVREQ01.polnvc in ($1) and TIVREQ01.irstvc = 'IR01' and TIVREQ01.iotcvc = 'R'"
-            const result_check_invoice = await db.query(query_check_invoice, [policyno]);
+            // // เช็คคำสั่งขายคงค้าง
+            // const query_check_invoice = "SELECT distinct tivinv01.invovc,TIVREQ01.ordrdt,TIVREQ01.fundnm from TIVREQ01,tivinv01 where TIVREQ01.invoid = tivinv01.invoid and TIVREQ01.polnvc in ($1) and TIVREQ01.irstvc = 'IR01' and TIVREQ01.iotcvc = 'R'"
+            // const result_check_invoice = await db.query(query_check_invoice, [policyno]);
 
-            // เช็คว่ามีคำสั่งขายคงค้างอยู่หรือไม่ ถ้าไม่มีให้รัน Batch Daily
-            if (result_check_invoice.rows.length === 0) {
+            // // เช็คว่ามีคำสั่งขายคงค้างอยู่หรือไม่ ถ้าไม่มีให้รัน Batch Daily
+            // if (result_check_invoice.rows.length === 0) {
 
-                console.log('\nไม่มีคำสั่งขายคงค้างอยู่ ไปต่อเพื่อรัน Batch Daily');
+            //     console.log('\nไม่มีคำสั่งขายคงค้างอยู่ ไปต่อเพื่อรัน Batch Daily');
 
-                let check_batch_daily_success = false;
-                // เช็คว่ามีการรัน Batch Daily สำเร็จจริงไหม
-                while (!check_batch_daily_success) {
-                    // ปรับวัน วันที่หักค่าธรรมเนียมรายเดือนงวดถัดไป (MVY)
-                    const dashed = toDashed(mvy_date); // แปลงเป็น yyyy-MM-dd
-                    const adjustedDate_mvy = adjustDate.adjustDate(dashed);
-                    const process_date = toPlain(adjustedDate_mvy); // แปลงเป็น yyyyMMdd
+            //     let check_batch_daily_success = false;
+            //     // เช็คว่ามีการรัน Batch Daily สำเร็จจริงไหม
+            //     while (!check_batch_daily_success) {
+            //         // ปรับวัน วันที่หักค่าธรรมเนียมรายเดือนงวดถัดไป (MVY)
+            //         const dashed = toDashed(mvy_date); // แปลงเป็น yyyy-MM-dd
+            //         const adjustedDate_mvy = adjustDate.adjustDate(dashed);
+            //         const process_date = toPlain(adjustedDate_mvy); // แปลงเป็น yyyyMMdd
 
-                    console.log('\nbusiness and current process date: ' + business_process_date + ' process date: ' + process_date);
+            //         console.log('\nbusiness and current process date: ' + business_process_date + ' process date: ' + process_date);
 
-                    // update database
-                    const query_update_all_date_policy = 'update tpsplc01 set busndt = $2, crpcdt = $2, pctddt = $3 where polnvc = $1;';
-                    const result_update_all_date_policy = await db.query(query_update_all_date_policy, [policyno, business_process_date, process_date]);
+            //         // update database
+            //         const query_update_all_date_policy = 'update tpsplc01 set busndt = $2, crpcdt = $2, pctddt = $3 where polnvc = $1;';
+            //         const result_update_all_date_policy = await db.query(query_update_all_date_policy, [policyno, business_process_date, process_date]);
 
-                    console.log('Update all date policy result: ' + result_update_all_date_policy.rowCount);
+            //         console.log('Update all date policy result: ' + result_update_all_date_policy.rowCount);
 
-                    /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //         /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-                    // ทำการรัน batch manual ที่หน้าเว็บ
-                    // เช็คสถานะ batch ก่อนรันว่าเป็น "NO PROCESS" หรือ "DONE" หรือไม่
-                    await monitorBatchPage.checkStatusBeforeRunBatch();
+            //         // ทำการรัน batch manual ที่หน้าเว็บ
+            //         // เช็คสถานะ batch ก่อนรันว่าเป็น "NO PROCESS" หรือ "DONE" หรือไม่
+            //         await monitorBatchPage.checkStatusBeforeRunBatch();
 
-                    // รัน batch MVY UL
-                    await monitorBatchPage.runJobBatchDailyPolicy({ policyno: policyno });
+            //         // รัน batch MVY UL
+            //         await monitorBatchPage.runJobBatchDailyPolicy({ policyno: policyno });
 
-                    // เช็คสถานะ batch หลังรันว่าเป็น "NO PROCESS" หรือ "DONE" หรือไม่
-                    await monitorBatchPage.checkStatusAfterRunBatch();
+            //         // เช็คสถานะ batch หลังรันว่าเป็น "NO PROCESS" หรือ "DONE" หรือไม่
+            //         await monitorBatchPage.checkStatusAfterRunBatch();
 
-                    /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //         /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-                    // query ตรวจสอบวันที่ของกรมธรรม์
-                    const query_check_date_policy = 'select p.busndt from tpsplc01 p where p.polnvc = $1;';
-                    const result_check_date_policy = await db.query(query_check_date_policy, [policyno]);
+            //         // query ตรวจสอบวันที่ของกรมธรรม์
+            //         const query_check_date_policy = 'select p.busndt from tpsplc01 p where p.polnvc = $1;';
+            //         const result_check_date_policy = await db.query(query_check_date_policy, [policyno]);
 
-                    // บวก 1 วัน เพื่อเทียบว่าวันที่ business date ของกรมธรรม์ มีการรัน batch แล้วหรือยัง
-                    const business_date_policy_plus1 = formatDatePlusOne(parseDate(process_date));
-                    if (result_check_date_policy.rows[0].busndt === business_date_policy_plus1) {
-                        check_batch_daily_success = true;
-                        console.log('\nรัน Batch Daily สำเร็จ');
-                    } else {
-                        console.log('\nรัน Batch Daily ไม่สำเร็จ ต้องรันใหม่');
-                    }
+            //         // บวก 1 วัน เพื่อเทียบว่าวันที่ business date ของกรมธรรม์ มีการรัน batch แล้วหรือยัง
+            //         const business_date_policy_plus1 = formatDatePlusOne(parseDate(process_date));
+            //         if (result_check_date_policy.rows[0].busndt === business_date_policy_plus1) {
+            //             check_batch_daily_success = true;
+            //             console.log('\nรัน Batch Daily สำเร็จ');
+            //         } else {
+            //             console.log('\nรัน Batch Daily ไม่สำเร็จ ต้องรันใหม่');
+            //         }
+            //     }
+
+            // } else {
+            //     console.log('\nมีคำสั่งขายคงค้างอยู่ ข้าม step รัน Batch Daily');
+            // }
+
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            let status_transaction = '';
+            let invoiceid_transaction = '';
+            let endloop_transaction = '';
+
+            while (((status_transaction !== 'VR01' || status_transaction !== 'VR02') && invoiceid_transaction !== '0') && endloop_transaction !== '1') {
+                // เช็คเลขธุรกรรม และ สถานะตรวจสอบคำสั่งซื้อ-ขาย สำหรับฝ่ายปฏิบัติการ
+                const query_check_transactionstatus = "select distinct ordrdt,vrstvc,altnvc,invoid from tivreq01 t where t.polnvc in ($1) and irstvc = 'IR01'"
+                const result_check_transactionstatus = await db.query(query_check_transactionstatus, [policyno]);
+
+                if (result_check_transactionstatus.rows[0].vrstvc === 'VR01' && result_check_transactionstatus.rows[0].invoid === '0') {
+                    // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Policy Service" > "ตรวจสอบคำสั่งขายประจำวัน"
+                    await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'Policy Service', 'ตรวจสอบคำสั่งขายประจำวัน');
+                    // ค้นหาข้อมูลคำสั่งขาย
+                    await verifyInvestmentOrderOperPage.search_waiting_VerifyInvestmentOrderOper({ date: result_check_transactionstatus.rows[0].ordrdt });
+
+                } else if (result_check_transactionstatus.rows[0].vrstvc === 'VR02' && result_check_transactionstatus.rows[0].invoid === '0') {
+                    // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Policy Service" > "ตรวจสอบคำสั่งขายประจำวัน"
+                    await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'Policy Service', 'ตรวจสอบคำสั่งขายประจำวัน');
+                    // กด tab "ตรวจสอบและยืนยันคำสั่งขายประจำวัน"
+                    await menubar_InvestmentOrderOper(page).investmentorderoper_btnVerifyInvestmentOrder.click({ timeout: 10000 });
+                    // ค้นหาข้อมูลคำสั่งขาย
+                    await verifyInvestmentOrderOperPage.search_verify_VerifyInvestmentOrderOper({ date: result_check_transactionstatus.rows[0].ordrdt });
+                    // เลือก checkbox ตาม transaction no
+                    await verifyInvestmentOrderOperPage.click_verify_VerifyInvestmentOrderOperCheckButton({ transactionno: result_check_transactionstatus.rows[0].altnvc });
+                    // ยืนยันคำสั่งขาย จากฝ่าย ปฏิบัติการ
+                    await verifyInvestmentOrderOperPage.confirm_verify_VerifyInvestmentOrderOper();
                 }
-                
-            } else {
-                console.log('\nมีคำสั่งขายคงค้างอยู่ ข้าม step รัน Batch Daily');
+
+                endloop_transaction = '1';
             }
+
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-            // คำสั่งเช็คข้อมูลในตาราง TIVREQ01 และ TIVINV01 ว่ามีการสร้างรายการคำสั่งซื้อขายหรือไม่
-            const query_check_invoice_ul = "SELECT distinct tivinv01.invovc,TIVREQ01.ordrdt,TIVREQ01.fundnm from TIVREQ01,tivinv01 where TIVREQ01.invoid = tivinv01.invoid and TIVREQ01.polnvc in ($1) and TIVREQ01.irstvc = 'IR01' and TIVREQ01.iotcvc = 'R'"
-            const result_check_invoice_ul = await db.query(query_check_invoice_ul, [policyno]);
+            // // คำสั่งเช็คข้อมูลในตาราง TIVREQ01 และ TIVINV01 ว่ามีการสร้างรายการคำสั่งซื้อขายหรือไม่
+            // const query_check_invoice_ul = "SELECT distinct tivinv01.invovc,TIVREQ01.ordrdt,TIVREQ01.fundnm from TIVREQ01,tivinv01 where TIVREQ01.invoid = tivinv01.invoid and TIVREQ01.polnvc in ($1) and TIVREQ01.irstvc = 'IR01' and TIVREQ01.iotcvc = 'R'"
+            // const result_check_invoice_ul = await db.query(query_check_invoice_ul, [policyno]);
 
-            // ตรวจคำสั่ง ซื้อขายที่สร้างขึ้น
-            // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Investment" > "ตรวจสอบคำสั่ง ซื้อ-ขาย V2"
-            await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'Investment', 'ตรวจสอบคำสั่ง ซื้อ-ขาย V2');
-            // รอหน้าโหลดเสร็จ
-            await page.waitForLoadState('networkidle');
-            await expect(page.locator('text = ตรวจสอบคำสั่งซื้อขาย')).toBeVisible({ timeout: 60000 });
+            // // ตรวจคำสั่ง ซื้อขายที่สร้างขึ้น
+            // // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Investment" > "ตรวจสอบคำสั่ง ซื้อ-ขาย V2"
+            // await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'Investment', 'ตรวจสอบคำสั่ง ซื้อ-ขาย V2');
+            // // รอหน้าโหลดเสร็จ
+            // await page.waitForLoadState('networkidle');
+            // await expect(page.locator('text = ตรวจสอบคำสั่งซื้อขาย')).toBeVisible({ timeout: 60000 });
 
-            // loop ตามจำนวนคำสั่งซื้อขายที่เจอใน database
-            for (const row_invoice_ul_ordercheck of result_check_invoice_ul.rows) {
-                const fund_name_ordercheck = fund_code_dictionary[row_invoice_ul_ordercheck.fundnm] || 'Unknown Fund';
-                console.log(`\nตรวจสอบคำสั่งขาย เลขที่อ้างอิง: ${row_invoice_ul_ordercheck.invovc}, วันที่สั่งซื้อขาย: ${row_invoice_ul_ordercheck.ordrdt}, กองทุน: ${fund_name_ordercheck.code}`);
+            // // loop ตามจำนวนคำสั่งซื้อขายที่เจอใน database
+            // for (const row_invoice_ul_ordercheck of result_check_invoice_ul.rows) {
+            //     const fund_name_ordercheck = fund_code_dictionary[row_invoice_ul_ordercheck.fundnm] || 'Unknown Fund';
+            //     console.log(`\nตรวจสอบคำสั่งขาย เลขที่อ้างอิง: ${row_invoice_ul_ordercheck.invovc}, วันที่สั่งซื้อขาย: ${row_invoice_ul_ordercheck.ordrdt}, กองทุน: ${fund_name_ordercheck.code}`);
 
-                // ค้นหา ข้อมูลคำสั่งขาย
-                await investmentOrderCheckPage.searchInvestmentOrderCheck({ date: row_invoice_ul_ordercheck.ordrdt });
-                // เลือกเมนู คำสั่งขาย
-                await menubar_InvestmentOrderCheck(page).investmentordercheck_btnSell.click({ timeout: 10000 });
+            //     // ค้นหา ข้อมูลคำสั่งขาย
+            //     await investmentOrderCheckPage.searchInvestmentOrderCheck({ date: row_invoice_ul_ordercheck.ordrdt });
+            //     // เลือกเมนู คำสั่งขาย
+            //     await menubar_InvestmentOrderCheck(page).investmentordercheck_btnSell.click({ timeout: 10000 });
 
-                // เช็คว่า ปุ่มยืนยันคำสั่งขาย ยังแสดงอยู่หรือไม่ (ถ้าแสดงอยู่แสดงว่ายังไม่ได้ยืนยันคำสั่งขาย)
-                if (await table_InvestmentOrderCheck(page).investmentordercheck_tblCheckbox(row_invoice_ul_ordercheck.invovc).isVisible()) {
-                    // เลือก checkbox ตามเลขที่อ้างอิง จาก database
-                    await investmentOrderCheckPage.clickInvestmentOrderCheckButton({ invoiceno: row_invoice_ul_ordercheck.invovc });
-                    // ยืนยันคำสั่งขาย
-                    await investmentOrderCheckPage.confirmSellInvestmentOrderCheck({ invoiceno: row_invoice_ul_ordercheck.invovc });
-                } else {
-                    console.log(`คำสั่งขาย เลขที่อ้างอิง ${row_invoice_ul_ordercheck.invovc} ยืนยันคำสั่งขายแล้ว`);
-                }
-            }
+            //     // เช็คว่า ปุ่มยืนยันคำสั่งขาย ยังแสดงอยู่หรือไม่ (ถ้าแสดงอยู่แสดงว่ายังไม่ได้ยืนยันคำสั่งขาย)
+            //     if (await table_InvestmentOrderCheck(page).investmentordercheck_tblCheckbox(row_invoice_ul_ordercheck.invovc).isVisible()) {
+            //         // เลือก checkbox ตามเลขที่อ้างอิง จาก database
+            //         await investmentOrderCheckPage.clickInvestmentOrderCheckButton({ invoiceno: row_invoice_ul_ordercheck.invovc });
+            //         // ยืนยันคำสั่งขาย
+            //         await investmentOrderCheckPage.confirmSellInvestmentOrderCheck({ invoiceno: row_invoice_ul_ordercheck.invovc });
+            //     } else {
+            //         console.log(`คำสั่งขาย เลขที่อ้างอิง ${row_invoice_ul_ordercheck.invovc} ยืนยันคำสั่งขายแล้ว`);
+            //     }
+            // }
 
-            /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-            // เช็คราคา NAV ของกองทุน
-            // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Investment" > "อัพเดทราคา NAV ประจำวัน"
-            await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'Investment', 'อัพเดทราคา NAV ประจำวัน');
-            // รอหน้าโหลดเสร็จ
-            await page.waitForLoadState('networkidle');
-            await expect(page.locator('div[class="layout-m-hd"]').locator('text = อัพเดทราคา NAV ประจำวัน')).toBeVisible({ timeout: 60000 });
+            // // เช็คราคา NAV ของกองทุน
+            // // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Investment" > "อัพเดทราคา NAV ประจำวัน"
+            // await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'Investment', 'อัพเดทราคา NAV ประจำวัน');
+            // // รอหน้าโหลดเสร็จ
+            // await page.waitForLoadState('networkidle');
+            // await expect(page.locator('div[class="layout-m-hd"]').locator('text = อัพเดทราคา NAV ประจำวัน')).toBeVisible({ timeout: 60000 });
 
-            // loop ตามจำนวนคำสั่งซื้อขายที่เจอใน database
-            for (const row_invoice_ul_updatenav of result_check_invoice_ul.rows) {
-                const fund_name_updatenav = fund_code_dictionary[row_invoice_ul_updatenav.fundnm] || 'Unknown Fund';
-                console.log(`\nอัพเดทราคา NAV ประจำวัน เลขที่อ้างอิง: ${row_invoice_ul_updatenav.invovc}, วันที่สั่งซื้อขาย: ${row_invoice_ul_updatenav.ordrdt}, กองทุน: ${fund_name_updatenav.code}`);
+            // // loop ตามจำนวนคำสั่งซื้อขายที่เจอใน database
+            // for (const row_invoice_ul_updatenav of result_check_invoice_ul.rows) {
+            //     const fund_name_updatenav = fund_code_dictionary[row_invoice_ul_updatenav.fundnm] || 'Unknown Fund';
+            //     console.log(`\nอัพเดทราคา NAV ประจำวัน เลขที่อ้างอิง: ${row_invoice_ul_updatenav.invovc}, วันที่สั่งซื้อขาย: ${row_invoice_ul_updatenav.ordrdt}, กองทุน: ${fund_name_updatenav.code}`);
 
-                const NetAssetValue = fund_name_updatenav.NetAssetValue;
-                const NAVValue = fund_name_updatenav.NAVValue;
-                const BidPriceValue = fund_name_updatenav.BidPriceValue;
-                const OfferPriceValue = fund_name_updatenav.OfferPriceValue;
+            //     const NetAssetValue = fund_name_updatenav.NetAssetValue;
+            //     const NAVValue = fund_name_updatenav.NAVValue;
+            //     const BidPriceValue = fund_name_updatenav.BidPriceValue;
+            //     const OfferPriceValue = fund_name_updatenav.OfferPriceValue;
 
-                // ค้นหา ข้อมูล NAV ของกองทุน
-                await dailyNavUpdatePage.searchDailyNavUpdate({ date: row_invoice_ul_updatenav.ordrdt });
-                await page.waitForTimeout(2000); // เพิ่ม delay 2 วินาที เพื่อรอข้อมูลโหลด
-                // เช็คว่ากองทุนมีการอัพเดท NAV หรือยัง ถ้ายังให้ทำการอัพเดท
-                if (await table_DailyNavUpdate(page).dailynavupdate_btnSave(fund_name_updatenav.code).isVisible()) {
-                    await dailyNavUpdatePage.saveDailyNavUpdate({ fundname: fund_name_updatenav.code, NetAssetValue, NAVValue, BidPriceValue, OfferPriceValue });
-                } else {
-                    console.log(`กองทุน ${fund_name_updatenav.code} มีการอัพเดท NAV แล้ว`);
-                }
-                // เช็คว่ากองทุนมีการอนุมัติ NAV หรือยัง ถ้ายังให้ทำการอนุมัติ
-                if (await table_DailyNavUpdate(page).dailynavupdate_btnApprove(fund_name_updatenav.code).isVisible()) {
-                    await dailyNavUpdatePage.approveDailyNavUpdate({ fundname: fund_name_updatenav.code });
-                } else {
-                    console.log(`กองทุน ${fund_name_updatenav.code} มีการอนุมัติ NAV แล้ว`);
-                }
-            }
+            //     // ค้นหา ข้อมูล NAV ของกองทุน
+            //     await dailyNavUpdatePage.searchDailyNavUpdate({ date: row_invoice_ul_updatenav.ordrdt });
+            //     await page.waitForTimeout(2000); // เพิ่ม delay 2 วินาที เพื่อรอข้อมูลโหลด
+            //     // เช็คว่ากองทุนมีการอัพเดท NAV หรือยัง ถ้ายังให้ทำการอัพเดท
+            //     if (await table_DailyNavUpdate(page).dailynavupdate_btnSave(fund_name_updatenav.code).isVisible()) {
+            //         await dailyNavUpdatePage.saveDailyNavUpdate({ fundname: fund_name_updatenav.code, NetAssetValue, NAVValue, BidPriceValue, OfferPriceValue });
+            //     } else {
+            //         console.log(`กองทุน ${fund_name_updatenav.code} มีการอัพเดท NAV แล้ว`);
+            //     }
+            //     // เช็คว่ากองทุนมีการอนุมัติ NAV หรือยัง ถ้ายังให้ทำการอนุมัติ
+            //     if (await table_DailyNavUpdate(page).dailynavupdate_btnApprove(fund_name_updatenav.code).isVisible()) {
+            //         await dailyNavUpdatePage.approveDailyNavUpdate({ fundname: fund_name_updatenav.code });
+            //     } else {
+            //         console.log(`กองทุน ${fund_name_updatenav.code} มีการอนุมัติ NAV แล้ว`);
+            //     }
+            // }
 
-            /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-            // รับผลการซื้อขาย หน่วยลงทุน
-            // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Investment" > "รับผลการซื้อ-ขายหน่วยลงทุน"
-            await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'Investment', 'รับผลการซื้อ-ขายหน่วยลงทุน');
-            // รอหน้าโหลดเสร็จ
-            await page.waitForLoadState('networkidle');
-            await expect(page.locator('text = ยืนยันผลคำสั่งซื้อ-ขาย')).toBeVisible({ timeout: 60000 });
+            // // รับผลการซื้อขาย หน่วยลงทุน
+            // // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Investment" > "รับผลการซื้อ-ขายหน่วยลงทุน"
+            // await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'Investment', 'รับผลการซื้อ-ขายหน่วยลงทุน');
+            // // รอหน้าโหลดเสร็จ
+            // await page.waitForLoadState('networkidle');
+            // await expect(page.locator('text = ยืนยันผลคำสั่งซื้อ-ขาย')).toBeVisible({ timeout: 60000 });
 
-            // loop ตามจำนวนคำสั่งซื้อขายที่เจอใน database
-            for (const row_invoice_ul_orderresult of result_check_invoice_ul.rows) {
-                const fund_name_orderresult = fund_code_dictionary[row_invoice_ul_orderresult.fundnm] || 'Unknown Fund';
-                console.log(`\nรับผลการขายหน่วยลงทุน เลขที่อ้างอิง: ${row_invoice_ul_orderresult.invovc}, วันที่สั่งซื้อขาย: ${row_invoice_ul_orderresult.ordrdt}, กองทุน: ${fund_name_orderresult.code}`);
+            // // loop ตามจำนวนคำสั่งซื้อขายที่เจอใน database
+            // for (const row_invoice_ul_orderresult of result_check_invoice_ul.rows) {
+            //     const fund_name_orderresult = fund_code_dictionary[row_invoice_ul_orderresult.fundnm] || 'Unknown Fund';
+            //     console.log(`\nรับผลการขายหน่วยลงทุน เลขที่อ้างอิง: ${row_invoice_ul_orderresult.invovc}, วันที่สั่งซื้อขาย: ${row_invoice_ul_orderresult.ordrdt}, กองทุน: ${fund_name_orderresult.code}`);
 
-                // ค้นหา ข้อมูลคำสั่งซื้อขาย
-                await investmentOrderResultPage.searchInvestmentOrderResult({ date: row_invoice_ul_orderresult.ordrdt });
-                // เลือกเมนู คำสั่งขาย
-                await menubar_InvestmentOrderResult(page).investmentorderresult_btnSell.click({ timeout: 10000 });
+            //     // ค้นหา ข้อมูลคำสั่งซื้อขาย
+            //     await investmentOrderResultPage.searchInvestmentOrderResult({ date: row_invoice_ul_orderresult.ordrdt });
+            //     // เลือกเมนู คำสั่งขาย
+            //     await menubar_InvestmentOrderResult(page).investmentorderresult_btnSell.click({ timeout: 10000 });
 
-                // เช็คว่า ยืนยันคำสั่งซื้อขาย ปุ่มสีฟ้า ยังแสดงอยู่หรือไม่ (ถ้าแสดงอยู่แสดงว่ายังไม่ได้ยืนยันผลการขาย)
-                if (await table_InvestmentOrderResult(page).investmentorderresult_tblCheckbox(row_invoice_ul_orderresult.invovc).isVisible()) {
-                    // ยืนยันผลการขาย หน่วยลงทุน ตามเลขที่อ้างอิง จาก database
-                    await investmentOrderResultPage.clickInvestmentOrderResultConfirmButton({ invoiceno: row_invoice_ul_orderresult.invovc });
-                } else {
-                    console.log(`คำสั่งขาย เลขที่อ้างอิง ${row_invoice_ul_orderresult.invovc} ได้รับผลการขายหน่วยลงทุนแล้ว`);
-                }
-            }
+            //     // เช็คว่า ยืนยันคำสั่งซื้อขาย ปุ่มสีฟ้า ยังแสดงอยู่หรือไม่ (ถ้าแสดงอยู่แสดงว่ายังไม่ได้ยืนยันผลการขาย)
+            //     if (await table_InvestmentOrderResult(page).investmentorderresult_tblCheckbox(row_invoice_ul_orderresult.invovc).isVisible()) {
+            //         // ยืนยันผลการขาย หน่วยลงทุน ตามเลขที่อ้างอิง จาก database
+            //         await investmentOrderResultPage.clickInvestmentOrderResultConfirmButton({ invoiceno: row_invoice_ul_orderresult.invovc });
+            //     } else {
+            //         console.log(`คำสั่งขาย เลขที่อ้างอิง ${row_invoice_ul_orderresult.invovc} ได้รับผลการขายหน่วยลงทุนแล้ว`);
+            //     }
+            // }
 
-            /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-            // คำสั่งเช็คข้อมูลในตาราง TIVREQ01 และ TIVINV01 ว่ามีการสร้างรายการคำสั่งซื้อขายหรือไม่
-            const query_check_fundredemptionreceipt = "SELECT distinct tivinv01.invovc,TIVREQ01.ordrdt,TIVREQ01.fundnm from TIVREQ01,tivinv01 where TIVREQ01.invoid = tivinv01.invoid and TIVREQ01.polnvc in ($1) and TIVINV01.iostvc = 'IO05'"
-            const result_check_fundredemptionreceipt = await db.query(query_check_fundredemptionreceipt, [policyno]);
+            // // คำสั่งเช็คข้อมูลในตาราง TIVREQ01 และ TIVINV01 ว่ามีการสร้างรายการคำสั่งซื้อขายหรือไม่
+            // const query_check_fundredemptionreceipt = "SELECT distinct tivinv01.invovc,TIVREQ01.ordrdt,TIVREQ01.fundnm from TIVREQ01,tivinv01 where TIVREQ01.invoid = tivinv01.invoid and TIVREQ01.polnvc in ($1) and TIVINV01.iostvc = 'IO05'"
+            // const result_check_fundredemptionreceipt = await db.query(query_check_fundredemptionreceipt, [policyno]);
 
-            // บันทึกรับเงินจากบลจ. (คำสั่งขาย)
-            // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Investment" > "บันทึกรับเงินจากบลจ. (คำสั่งขาย) V2"
-            await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'Investment', 'บันทึกรับเงินจากบลจ. (คำสั่งขาย) V2');
-            // รอหน้าโหลดเสร็จ
-            await page.waitForLoadState('networkidle');
-            await expect(page.locator('a[role="tab"]').getByText('รายการรอรับชำระเงินจาก บลจ.'), { exact: true }).toBeVisible({ timeout: 60000 });
-            // รอข้อมูลโหลดเสร็จ
-            await page.waitForTimeout(1000); // เพิ่ม delay 1 วินาที เพื่อรอข้อมูลโหลด
-            await expect(page.locator('div[class="busy-dialog yui3-panel-content yui3-widget-stdmod"]', { hasText: 'กำลังค้นหาข้อมูล...' })).not.toBeVisible({ timeout: 60000 });
+            // // บันทึกรับเงินจากบลจ. (คำสั่งขาย)
+            // // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Investment" > "บันทึกรับเงินจากบลจ. (คำสั่งขาย) V2"
+            // await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'Investment', 'บันทึกรับเงินจากบลจ. (คำสั่งขาย) V2');
+            // // รอหน้าโหลดเสร็จ
+            // await page.waitForLoadState('networkidle');
+            // await expect(page.locator('a[role="tab"]').getByText('รายการรอรับชำระเงินจาก บลจ.'), { exact: true }).toBeVisible({ timeout: 60000 });
+            // // รอข้อมูลโหลดเสร็จ
+            // await page.waitForTimeout(1000); // เพิ่ม delay 1 วินาที เพื่อรอข้อมูลโหลด
+            // await expect(page.locator('div[class="busy-dialog yui3-panel-content yui3-widget-stdmod"]', { hasText: 'กำลังค้นหาข้อมูล...' })).not.toBeVisible({ timeout: 60000 });
 
-            // loop ตามจำนวนคำสั่งซื้อขายที่เจอใน database
-            for (const row_fundredemptionreceipt of result_check_fundredemptionreceipt.rows) {
-                const fund_name_fundredemptionreceipt = fund_code_dictionary[row_fundredemptionreceipt.fundnm] || 'Unknown Fund';
-                console.log(`\nบันทึกรับเงินจากบลจ. เลขที่อ้างอิง: ${row_fundredemptionreceipt.invovc}, วันที่สั่งซื้อขาย: ${row_fundredemptionreceipt.ordrdt}, กองทุน: ${fund_name_fundredemptionreceipt.code}`);
+            // // loop ตามจำนวนคำสั่งซื้อขายที่เจอใน database
+            // for (const row_fundredemptionreceipt of result_check_fundredemptionreceipt.rows) {
+            //     const fund_name_fundredemptionreceipt = fund_code_dictionary[row_fundredemptionreceipt.fundnm] || 'Unknown Fund';
+            //     console.log(`\nบันทึกรับเงินจากบลจ. เลขที่อ้างอิง: ${row_fundredemptionreceipt.invovc}, วันที่สั่งซื้อขาย: ${row_fundredemptionreceipt.ordrdt}, กองทุน: ${fund_name_fundredemptionreceipt.code}`);
 
-                // ยืนยัน บันทึกรับเงินจากบลจ. (คำสั่งขาย) ตามเลขที่อ้างอิง จาก database
-                await page.waitForTimeout(1000); // เพิ่ม delay 1 วินาที เพื่อรอข้อมูลโหลด
-                await fundRedemptionReceipt.clickFundRedemptionReceiptConfirmButton({ invoiceno: row_fundredemptionreceipt.invovc, date: row_fundredemptionreceipt.ordrdt });
+            //     // ยืนยัน บันทึกรับเงินจากบลจ. (คำสั่งขาย) ตามเลขที่อ้างอิง จาก database
+            //     await page.waitForTimeout(1000); // เพิ่ม delay 1 วินาที เพื่อรอข้อมูลโหลด
+            //     await fundRedemptionReceipt.clickFundRedemptionReceiptConfirmButton({ invoiceno: row_fundredemptionreceipt.invovc, date: row_fundredemptionreceipt.ordrdt });
 
-            }
+            // }
 
-            /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-            // Update RV if policy year >= 5
-            if (policy_year >= 5) {
-                console.log("\nทำการรันอัพเดท RV เนื่องจาก ปีกรมธรรม์ >= 5");
+            // // Update RV if policy year >= 5
+            // if (policy_year >= 5) {
+            //     console.log("\nทำการรันอัพเดท RV เนื่องจาก ปีกรมธรรม์ >= 5");
 
-                // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "IT Support" > "Batch Manual Support"
-                await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'IT Support', 'Batch Manual Support');
-                // รอหน้าโหลดเสร็จ
-                await page.waitForLoadState('networkidle');
-                await expect(page.locator('div[class="layout-m-hd"]'), { hasText: 'Batch Manual Support' }).toBeVisible({ timeout: 60000 });
+            //     // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "IT Support" > "Batch Manual Support"
+            //     await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'IT Support', 'Batch Manual Support');
+            //     // รอหน้าโหลดเสร็จ
+            //     await page.waitForLoadState('networkidle');
+            //     await expect(page.locator('div[class="layout-m-hd"]'), { hasText: 'Batch Manual Support' }).toBeVisible({ timeout: 60000 });
 
-                // รัน batch สร้าง RV UL
-                await batchManualSupportPage.runBatchINV({ batch: 'UpdateRV', policyno: policyno });
-            }
+            //     // รัน batch สร้าง RV UL
+            //     await batchManualSupportPage.runBatchINV({ batch: 'UpdateRV', policyno: policyno });
+            // }
 
-            /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
             if (fix_endloop !== '') {
                 endloop = fix_endloop;
