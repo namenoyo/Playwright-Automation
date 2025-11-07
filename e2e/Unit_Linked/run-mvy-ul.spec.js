@@ -39,9 +39,9 @@ test('Run MVY UL', async ({ page }) => {
     // ข้อมูลสำหรับทดสอบ
     const username = 'boss';
     const password = '1234';
-    const policyno = 'UL00003022'; // เลขกรมธรรม์ที่ต้องการทดสอบ
+    const policyno = 'UL00003021'; // เลขกรมธรรม์ที่ต้องการทดสอบ
     const env = 'SIT' // SIT / UAT
-    const fix_endloop = ''; // กำหนดจำนวนรอบที่ต้องการให้ทำงาน (ถ้าไม่ต้องการให้ทำงานแบบวนซ้ำ ให้กำหนดเป็นค่าว่าง '')
+    const fix_endloop = '1'; // กำหนดจำนวนรอบที่ต้องการให้ทำงาน (ถ้าไม่ต้องการให้ทำงานแบบวนซ้ำ ให้กำหนดเป็นค่าว่าง '')
     // connection database
     const db_name = 'coreul';
     const db_env = 'SIT_EDIT'; // SIT | SIT_EDIT / UAT | UAT_EDIT
@@ -361,11 +361,14 @@ test('Run MVY UL', async ({ page }) => {
             if (policy_year >= 5) {
 
                 // ตรวจสอบว่ามีการทำ update RV หรือยัง
-                const query_check_update_rv = "SELECT rvbdid,mnrvbd,tprvbd,torvbd,smrvbd FROM TIVSRV01 ORDER BY rvbdid DESC limit 1;";
+                const query_check_update_rv = "SELECT trstdt,rvbdid,mnrvbd,tprvbd,torvbd,smrvbd FROM TIVSRV01 ORDER BY rvbdid DESC limit 1;";
                 const result_check_update_rv = await db.query(query_check_update_rv);
 
-                if (result_check_update_rv.rows[0].mnrvbd !== '0.0000' && result_check_update_rv.rows[0].tprvbd !== '0.0000' && result_check_update_rv.rows[0].torvbd !== '0.0000' && result_check_update_rv.rows[0].smrvbd !== '0.0000') {
-                    console.log('มีการอัพเดท RV ไปแล้ว ข้ามการรันอัพเดท RV');
+                // if (result_check_update_rv.rows[0].mnrvbd !== '0.0000' && result_check_update_rv.rows[0].tprvbd !== '0.0000' && result_check_update_rv.rows[0].torvbd !== '0.0000' && result_check_update_rv.rows[0].smrvbd !== '0.0000') {
+
+                // ตัด field tprvbd ออก เพราะบางกรณีอาจจะไม่มีค่า
+                if (result_check_update_rv.rows[0].mnrvbd !== '0.0000' && result_check_update_rv.rows[0].torvbd !== '0.0000' && result_check_update_rv.rows[0].smrvbd !== '0.0000') {
+                    console.log('\nมีคำสั่งขายคงค้างอยู่ ข้าม step รัน Update RV');
                 } else {
                     // ดึงข้อมูลหลังจาก create rv เสร็จ
                     const query_pull_create_rv_2 = "select * from tivsrv02 where rvbdid = $1;";
@@ -405,7 +408,6 @@ test('Run MVY UL', async ({ page }) => {
                         }
                     }
 
-
                     console.log("\nทำการรันอัพเดท RV เนื่องจาก ปีกรมธรรม์ >= 5");
 
                     // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Policy Service" > "Batch Manual Support"
@@ -415,7 +417,7 @@ test('Run MVY UL', async ({ page }) => {
                     await expect(page.locator('div[class="layout-m-hd"]'), { hasText: 'Batch Manual Support' }).toBeVisible({ timeout: 60000 });
 
                     // รัน batch สร้าง RV UL
-                    await batchManualSupportPage.runBatchINV({ batch: 'UpdateRV', policyno: policyno, date: mvy_date });
+                    await batchManualSupportPage.runBatchINV({ batch: 'UpdateRV', policyno: policyno, date: result_check_update_rv.rows[0].trstdt });
                 }
             }
 
