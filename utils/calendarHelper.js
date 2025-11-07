@@ -6,7 +6,7 @@
  * @param {string} yyyymmdd - วันที่ในรูปแบบ yyyyMMdd เช่น "20251203"
  * @param {import('@playwright/test').Locator|string} dateInputSelector - selector ของ input หรือ Locator ที่เปิด calendar
  */
-async function selectDate(page, yyyymmdd, dateInputSelector) {
+async function selectDate(page, yyyymmdd, dateInputSelector, RV = null) {
   // 🔹 แยกวัน เดือน ปี (ค.ศ.)
   const year = parseInt(yyyymmdd.substring(0, 4), 10);
   const month = parseInt(yyyymmdd.substring(4, 6), 10);
@@ -59,11 +59,23 @@ async function selectDate(page, yyyymmdd, dateInputSelector) {
   }
 
   // 3️⃣ เลือกวัน (exact match เท่านั้น)
-  await page
-    .locator('.calendar[style*="display: block"] td.day.null')
-    .filter({ hasText: new RegExp(`^${day}$`) })
-    .first()
-    .click();
+  if (RV) {
+    await page
+      .locator('.calendar[style*="display: block"] td.day.false')
+      .filter({ hasText: new RegExp(`^${day}$`) })
+      .first({ timeout: 5000 })
+      .click({ timeout: 5000 });
+  } else {
+    await page
+      .locator('.calendar[style*="display: block"] td.day.null')
+      .filter({ hasText: new RegExp(`^${day}$`) })
+      .first({ timeout: 5000 })
+      .click({ timeout: 5000 });
+  }
+  
+
+    
+
 }
 
 module.exports = { selectDate };
