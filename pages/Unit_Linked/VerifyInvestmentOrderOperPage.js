@@ -24,7 +24,7 @@ class VerifyInvestmentOrderOperPage {
         await this.search_verify_investmentorderoper.verify_investmentorderoper_btnSearch.click({ timeout: 10000 });
         // รอโหลดตาราง
         await this.page.waitForLoadState('networkidle');
-    } 
+    }
 
     async click_verify_VerifyInvestmentOrderOperCheckButton(data) {
         // รอให้ตารางแสดงผล
@@ -57,8 +57,16 @@ class VerifyInvestmentOrderOperPage {
             await this.expect(this.dialog_verify_investmentorderoper.verify_investmentorderoper_comment_cutoff).toBeVisible({ timeout: 60000 });
             // คลิ๊กช่อง เหตุผล cutoff
             await this.dialog_verify_investmentorderoper.verify_investmentorderoper_comment_cutoff.click({ timeout: 10000 });
+
             // กรอกเหตุผล cutoff
-            await this.dialog_verify_investmentorderoper.verify_investmentorderoper_comment_cutoff_txtreason.type('ทดสอบ', { delay: 100 });
+            await this.dialog_verify_investmentorderoper.verify_investmentorderoper_comment_cutoff_txtreason.evaluate((el, value) => {
+                el.value = value; // ตั้งค่าข้อความใน textarea
+                // ยิง event เหมือนผู้ใช้พิมพ์จริง
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+                el.dispatchEvent(new Event('keyup', { bubbles: true }));
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+            }, 'ทดสอบ');
+
             // กดปุ่ม ส่งคำสั่งวันนี้
             await this.dialog_verify_investmentorderoper.verify_investmentorderoper_comment_cutoff.getByText('ส่งคำสั่งวันนี้', { exact: true }).click({ timeout: 10000 });
         }

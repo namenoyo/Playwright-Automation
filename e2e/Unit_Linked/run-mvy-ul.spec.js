@@ -39,9 +39,9 @@ test('Run MVY UL', async ({ page }) => {
     // ข้อมูลสำหรับทดสอบ
     const username = 'boss';
     const password = '1234';
-    const policyno = 'UL00003021'; // เลขกรมธรรม์ที่ต้องการทดสอบ
+    const policyno = 'UL00003022'; // เลขกรมธรรม์ที่ต้องการทดสอบ
     const env = 'SIT' // SIT / UAT
-    const fix_endloop = '1'; // กำหนดจำนวนรอบที่ต้องการให้ทำงาน (ถ้าไม่ต้องการให้ทำงานแบบวนซ้ำ ให้กำหนดเป็นค่าว่าง '')
+    const fix_endloop = ''; // กำหนดจำนวนรอบที่ต้องการให้ทำงาน (ถ้าไม่ต้องการให้ทำงานแบบวนซ้ำ ให้กำหนดเป็นค่าว่าง '')
     // connection database
     const db_name = 'coreul';
     const db_env = 'SIT_EDIT'; // SIT | SIT_EDIT / UAT | UAT_EDIT
@@ -170,11 +170,7 @@ test('Run MVY UL', async ({ page }) => {
         console.log('วันที่ทำการสร้างบิล (Bill) (วันที่กำหนดชำระถัดไป (Next Due) - 30 days): ' + gen_bill_date);
 
         // เปรียบเทียบ
-        if (nextDueDate <= mvyDateObj) {
-            console.log("\nหยุดทำงาน: วันที่กำหนดชำระถัดไป (Next Due) <= วันที่หักค่าธรรมเนียมรายเดือนงวดถัดไป (MVY)");
-            console.log('\n-------------------------------------------- End of Process --------------------------------------------');
-            return endloop = 'Y';
-        } else if (mvyDateObj >= genbillDate && check_genbill === false) {
+        if (mvyDateObj >= genbillDate && check_genbill === false) {
             if (check_genbill_after === false) {
                 // Check ว่า Gen bill สำเร็จหรือไม่
                 const query_check_date_ref2 = 'select p.egrpdt from tpsplc01 p where p.polnvc = $1;';
@@ -239,31 +235,67 @@ test('Run MVY UL', async ({ page }) => {
                     console.log('สร้างบิลเรียบร้อยแล้ว');
                 }
             }
+        } else if (nextDueDate <= mvyDateObj) {
+            console.log("\nหยุดทำงาน: วันที่กำหนดชำระถัดไป (Next Due) <= วันที่หักค่าธรรมเนียมรายเดือนงวดถัดไป (MVY)");
+            console.log('\n-------------------------------------------- End of Process --------------------------------------------');
+            return endloop = 'Y';
         } else {
 
-            // Create RV if policy year >= 5
-            if (policy_year >= 5) {
-                console.log("\nทำการรันสร้าง RV เนื่องจาก ปีกรมธรรม์ >= 5");
-
-                // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "IT Support" > "Batch Manual Support"
-                await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'IT Support', 'Batch Manual Support');
-                // รอหน้าโหลดเสร็จ
-                await page.waitForLoadState('networkidle');
-                await expect(page.locator('div[class="layout-m-hd"]'), { hasText: 'Batch Manual Support' }).toBeVisible({ timeout: 60000 });
-
-                // รัน batch สร้าง RV UL
-                await batchManualSupportPage.runBatchINV({ batch: 'CreateRV', policyno: policyno });
-
-                // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "IT Support" > "Monitor batch"
-                await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'IT Support', 'Monitor batch');
-                // รอหน้าโหลดเสร็จ
-                await page.waitForLoadState('networkidle');
-                await expect(page.locator('text = Monitor / Run batch')).toBeVisible({ timeout: 60000 });
-            }
+            console.log("\nทำงานต่อ: วันที่กำหนดชำระถัดไป (Next Due) >= วันที่หักค่าธรรมเนียมรายเดือนงวดถัดไป (MVY)");
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-            console.log("\nทำงานต่อ: วันที่กำหนดชำระถัดไป (Next Due) >= วันที่หักค่าธรรมเนียมรายเดือนงวดถัดไป (MVY)");
+            // Create RV if policy year >= 5
+            if (policy_year >= 5) {
+                // เช็คว่ามีคำสั่งขายคงค้าง
+                const query_check_invoice_create_rv = "select distinct ordrdt,vrstvc,altnvc,invoid from tivreq01 t where t.polnvc in ($1) and irstvc = 'IR01'"
+                const result_check_invoice_create_rv = await db.query(query_check_invoice_create_rv, [policyno]);
+
+                if (result_check_invoice_create_rv.rows.length > 0) {
+                    console.log('\nมีคำสั่งขายคงค้างอยู่ ข้าม step รัน Create RV');
+                } else {
+
+                    console.log("\nทำการรันสร้าง RV เนื่องจาก ปีกรมธรรม์ >= 5");
+
+                    let check_create_rv_success = false;
+
+                    while (!check_create_rv_success) {
+                        // ตรวจสอบว่ามีการทำ Create RV หรือยัง
+                        const query_check_create_rv = "SELECT * FROM TIVSRV01 WHERE polnvc IN ($1) and trstdt = $2 ORDER BY rvbdid asc ;";
+                        const result_check_create_rv = await db.query(query_check_create_rv, [policyno, mvy_date]);
+                        if (result_check_create_rv.rows.length > 0) {
+                            console.log('มีการสร้าง RV ไปแล้ว ข้ามการรันสร้าง RV');
+
+                            // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "IT Support" > "Monitor batch"
+                            await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'IT Support', 'Monitor batch');
+                            // รอหน้าโหลดเสร็จ
+                            await page.waitForLoadState('networkidle');
+                            await expect(page.locator('text = Monitor / Run batch')).toBeVisible({ timeout: 60000 });
+
+                            check_create_rv_success = true;
+                        } else {
+                            // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Policy Service" > "Batch Manual Support"
+                            await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'Policy Service', 'Batch Manual Support');
+                            // รอหน้าโหลดเสร็จ
+                            await page.waitForLoadState('networkidle');
+                            await expect(page.locator('div[class="layout-m-hd"]'), { hasText: 'Batch Manual Support' }).toBeVisible({ timeout: 60000 });
+
+                            // รัน batch สร้าง RV UL
+                            await batchManualSupportPage.runBatchINV({ batch: 'CreateRV', policyno: policyno, date: mvy_date });
+
+                            // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "IT Support" > "Monitor batch"
+                            await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'IT Support', 'Monitor batch');
+                            // รอหน้าโหลดเสร็จ
+                            await page.waitForLoadState('networkidle');
+                            await expect(page.locator('text = Monitor / Run batch')).toBeVisible({ timeout: 60000 });
+
+                            check_create_rv_success = true;
+                        }
+                    }
+                }
+            }
+
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
             // เช็คคำสั่งขายคงค้าง
             // const query_check_invoice = "SELECT distinct tivinv01.invovc,TIVREQ01.ordrdt,TIVREQ01.fundnm from TIVREQ01,tivinv01 where TIVREQ01.invoid = tivinv01.invoid and TIVREQ01.polnvc in ($1) and TIVREQ01.irstvc = 'IR01' and TIVREQ01.iotcvc = 'R'"
@@ -325,6 +357,70 @@ test('Run MVY UL', async ({ page }) => {
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+            // Update RV if policy year >= 5
+            if (policy_year >= 5) {
+
+                // ตรวจสอบว่ามีการทำ update RV หรือยัง
+                const query_check_update_rv = "SELECT rvbdid,mnrvbd,tprvbd,torvbd,smrvbd FROM TIVSRV01 ORDER BY rvbdid DESC limit 1;";
+                const result_check_update_rv = await db.query(query_check_update_rv);
+
+                if (result_check_update_rv.rows[0].mnrvbd !== '0.0000' && result_check_update_rv.rows[0].tprvbd !== '0.0000' && result_check_update_rv.rows[0].torvbd !== '0.0000' && result_check_update_rv.rows[0].smrvbd !== '0.0000') {
+                    console.log('มีการอัพเดท RV ไปแล้ว ข้ามการรันอัพเดท RV');
+                } else {
+                    // ดึงข้อมูลหลังจาก create rv เสร็จ
+                    const query_pull_create_rv_2 = "select * from tivsrv02 where rvbdid = $1;";
+                    const result_pull_create_rv_2 = await db.query(query_pull_create_rv_2, [result_check_update_rv.rows[0].rvbdid]);
+
+                    // เช็คราคา NAV ของกองทุน
+                    // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Investment" > "อัพเดทราคา NAV ประจำวัน"
+                    await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'Investment', 'อัพเดทราคา NAV ประจำวัน');
+                    // รอหน้าโหลดเสร็จ
+                    await page.waitForLoadState('networkidle');
+                    await expect(page.locator('div[class="layout-m-hd"]').locator('text = อัพเดทราคา NAV ประจำวัน')).toBeVisible({ timeout: 60000 });
+
+                    // loop ตามจำนวนคำสั่งซื้อขายที่เจอใน database
+                    for (const row_pull_create_rv of result_pull_create_rv_2.rows) {
+                        const fund_name_updatenav = fund_code_dictionary[row_pull_create_rv.fundnm] || 'Unknown Fund';
+                        console.log(`\nอัพเดทราคา NAV ประจำวัน วันที่สั่งซื้อขาย: ${row_pull_create_rv.boprdt}, กองทุน: ${fund_name_updatenav.code}`);
+
+                        const NetAssetValue = fund_name_updatenav.NetAssetValue;
+                        const NAVValue = fund_name_updatenav.NAVValue;
+                        const BidPriceValue = fund_name_updatenav.BidPriceValue;
+                        const OfferPriceValue = fund_name_updatenav.OfferPriceValue;
+
+                        // ค้นหา ข้อมูล NAV ของกองทุน
+                        await dailyNavUpdatePage.searchDailyNavUpdate({ date: row_pull_create_rv.boprdt });
+                        await page.waitForTimeout(2000); // เพิ่ม delay 2 วินาที เพื่อรอข้อมูลโหลด
+                        // เช็คว่ากองทุนมีการอัพเดท NAV หรือยัง ถ้ายังให้ทำการอัพเดท
+                        if (await table_DailyNavUpdate(page).dailynavupdate_btnSave(fund_name_updatenav.code).isVisible()) {
+                            await dailyNavUpdatePage.saveDailyNavUpdate({ fundname: fund_name_updatenav.code, NetAssetValue, NAVValue, BidPriceValue, OfferPriceValue });
+                        } else {
+                            console.log(`กองทุน ${fund_name_updatenav.code} มีการอัพเดท NAV แล้ว`);
+                        }
+                        // เช็คว่ากองทุนมีการอนุมัติ NAV หรือยัง ถ้ายังให้ทำการอนุมัติ
+                        if (await table_DailyNavUpdate(page).dailynavupdate_btnApprove(fund_name_updatenav.code).isVisible()) {
+                            await dailyNavUpdatePage.approveDailyNavUpdate({ fundname: fund_name_updatenav.code });
+                        } else {
+                            console.log(`กองทุน ${fund_name_updatenav.code} มีการอนุมัติ NAV แล้ว`);
+                        }
+                    }
+
+
+                    console.log("\nทำการรันอัพเดท RV เนื่องจาก ปีกรมธรรม์ >= 5");
+
+                    // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Policy Service" > "Batch Manual Support"
+                    await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'Policy Service', 'Batch Manual Support');
+                    // รอหน้าโหลดเสร็จ
+                    await page.waitForLoadState('networkidle');
+                    await expect(page.locator('div[class="layout-m-hd"]'), { hasText: 'Batch Manual Support' }).toBeVisible({ timeout: 60000 });
+
+                    // รัน batch สร้าง RV UL
+                    await batchManualSupportPage.runBatchINV({ batch: 'UpdateRV', policyno: policyno, date: mvy_date });
+                }
+            }
+
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
             // เช็คเลขธุรกรรม และ สถานะตรวจสอบคำสั่งซื้อ-ขาย สำหรับฝ่ายปฏิบัติการ
             const query_check_transactionstatus = "select distinct ordrdt,vrstvc,altnvc,invoid from tivreq01 t where t.polnvc in ($1) and irstvc = 'IR01'"
             const result_check_transactionstatus = await db.query(query_check_transactionstatus, [policyno]);
@@ -334,11 +430,11 @@ test('Run MVY UL', async ({ page }) => {
 
             while ((status_transaction === 'VR01' || status_transaction === 'VR02') && invoiceid_transaction === '0') {
                 // เช็คเลขธุรกรรม และ สถานะตรวจสอบคำสั่งซื้อ-ขาย สำหรับฝ่ายปฏิบัติการ
-                
+
                 if (result_check_transactionstatus.rows[0].vrstvc === 'VR01' && result_check_transactionstatus.rows[0].invoid === '0') {
                     // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Policy Service" > "ตรวจสอบคำสั่งขายประจำวัน"
                     await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'Policy Service', 'ตรวจสอบคำสั่งขายประจำวัน');
-                    
+
 
                 } else if (result_check_transactionstatus.rows[0].vrstvc === 'VR02' && result_check_transactionstatus.rows[0].invoid === '0') {
                     // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Policy Service" > "ตรวจสอบคำสั่งขายประจำวัน"
@@ -362,7 +458,6 @@ test('Run MVY UL', async ({ page }) => {
                 invoiceid_transaction = result_check_transactionstatus_new.rows[0].invoid;
 
             }
-
 
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -487,22 +582,6 @@ test('Run MVY UL', async ({ page }) => {
                 await page.waitForTimeout(1000); // เพิ่ม delay 1 วินาที เพื่อรอข้อมูลโหลด
                 await fundRedemptionReceipt.clickFundRedemptionReceiptConfirmButton({ invoiceno: row_fundredemptionreceipt.invovc, date: row_fundredemptionreceipt.ordrdt });
 
-            }
-
-            /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-            // Update RV if policy year >= 5
-            if (policy_year >= 5) {
-                console.log("\nทำการรันอัพเดท RV เนื่องจาก ปีกรมธรรม์ >= 5");
-
-                // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "IT Support" > "Batch Manual Support"
-                await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'IT Support', 'Batch Manual Support');
-                // รอหน้าโหลดเสร็จ
-                await page.waitForLoadState('networkidle');
-                await expect(page.locator('div[class="layout-m-hd"]'), { hasText: 'Batch Manual Support' }).toBeVisible({ timeout: 60000 });
-
-                // รัน batch สร้าง RV UL
-                await batchManualSupportPage.runBatchINV({ batch: 'UpdateRV', policyno: policyno });
             }
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
