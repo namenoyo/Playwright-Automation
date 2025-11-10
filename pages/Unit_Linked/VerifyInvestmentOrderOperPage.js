@@ -35,7 +35,7 @@ class VerifyInvestmentOrderOperPage {
 
         for (let i = 0; i < count; i++) {
             // เลือก checkbox ตาม transaction no
-            await row.nth(i).locator('input[type="checkbox"]').check();
+            await row.nth(i).locator('input[type="checkbox"]').check({ timeout: 10000 });
         }
     }
 
