@@ -16,10 +16,10 @@ const { mapsdataArray, mapsdataObject } = require('../../utils/maps-data.js');
 // data 1:1
 // const { data_matrix_save_endorse } = require('../../data/Alteration/data_save_endorse.data.js');
 // const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc_retest_v1.data.js'); // สำหรับ Retest Test Data 
-// const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc_v1.data.js'); // P'Name
+const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc_v1.data.js'); // P'Name
 
 // data package
-const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc_package_v1.data.js'); // P'Name
+// const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc_package_v1.data.js'); // P'Name
 // const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc_package_v1_test.data.js'); // test
 
 // data dictionary
@@ -44,7 +44,7 @@ test.describe.configure({ mode: 'parallel' }); // ให้เคสในไฟ
 // จำนวนข้อมูลที่ได้ = endIdx - startIdx
 
 const startIdx = 0;
-const endIdx = 2184; //2185-10000
+const endIdx = 3340; // ทั้งหมด 6681 เคส 
 const testData = data_matrix_save_endorse.slice(startIdx, endIdx); // ตัดข้อมูลตามช่วงที่กำหนด
 
 for (const data_save_endorse of testData) {
@@ -218,7 +218,7 @@ for (const data_save_endorse of testData) {
                     await expect(newPage.getByText('3265258')).toBeVisible({ timeout: 60000 });
                     await newPage.getByText('3265258').click({ timeout: 60000 });
                 } else if (contact_code === 'BRP') { // เงื่อนไขพิเศษ กรณี contact_code = BRP (เจ้าหน้าที่สาขา)
-                    if (username === '6600' || username === 'hub1' || username === 'crm1') {
+                    if (username === '1200' || username === 'hub1' || username === 'crm1') {
                         // คลิ๊กที่ช่อง เจ้าหน้าที่สาขา * และกรอกข้อมูล
                         await newPage.getByRole('textbox', { name: 'username' }).click({ force: true, timeout: 60000 });
                         await newPage.getByRole('textbox', { name: 'username' }).type('prasit.ku', { delay: 100 }); // พิมพ์ช้าๆ ทีละตัวอักษร
