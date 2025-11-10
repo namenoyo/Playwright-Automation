@@ -68,8 +68,10 @@ test('Run MVY UL', async ({ page }) => {
     let check_genbill_after = false; // ตัวแปรเช็คว่ามีการสร้างบิลหรือยัง หลังจากรัน batch
 
     let endloop;
-
-    while (endloop !== 'Y' && endloop !== fix_endloop) { // หลังจากเสร็จแล้วต้องเอา endloop !== '1' ออก เพราะจะแค่ทดสอบ 1 รอบ
+    let loopCount = 0;
+    const maxLoop = fix_endloop !== '' ? Number(fix_endloop) : Infinity;
+    
+    while (endloop !== 'Y' && loopCount < maxLoop) { // หลังจากเสร็จแล้วต้องเอา endloop !== '1' ออก เพราะจะแค่ทดสอบ 1 รอบ
 
         console.log('\n-------------------------------------------- Start of Process --------------------------------------------');
 
@@ -424,23 +426,22 @@ test('Run MVY UL', async ({ page }) => {
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
             // เช็คเลขธุรกรรม และ สถานะตรวจสอบคำสั่งซื้อ-ขาย สำหรับฝ่ายปฏิบัติการ
-            const query_check_transactionstatus = "select distinct ordrdt,vrstvc,altnvc,invoid from tivreq01 t where t.polnvc in ($1) and irstvc = 'IR01'"
+            const query_check_transactionstatus = "select distinct ordrdt,vrstvc,altnvc,invoid from tivreq01 t where t.polnvc in ($1) and irstvc = 'IR01' and iotcvc = 'R'"
             const result_check_transactionstatus = await db.query(query_check_transactionstatus, [policyno]);
 
             let status_transaction = result_check_transactionstatus.rows[0].vrstvc;
             let invoiceid_transaction = result_check_transactionstatus.rows[0].invoid;
 
             while ((status_transaction === 'VR01' || status_transaction === 'VR02') && invoiceid_transaction === '0') {
-                // เช็คเลขธุรกรรม และ สถานะตรวจสอบคำสั่งซื้อ-ขาย สำหรับฝ่ายปฏิบัติการ
 
+                // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Policy Service" > "ตรวจสอบคำสั่งขายประจำวัน"
+                await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'Policy Service', 'ตรวจสอบคำสั่งขายประจำวัน');
+
+                // เช็คเลขธุรกรรม และ สถานะตรวจสอบคำสั่งซื้อ-ขาย สำหรับฝ่ายปฏิบัติการ
                 if (result_check_transactionstatus.rows[0].vrstvc === 'VR01' && result_check_transactionstatus.rows[0].invoid === '0') {
-                    // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Policy Service" > "ตรวจสอบคำสั่งขายประจำวัน"
-                    await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'Policy Service', 'ตรวจสอบคำสั่งขายประจำวัน');
 
 
                 } else if (result_check_transactionstatus.rows[0].vrstvc === 'VR02' && result_check_transactionstatus.rows[0].invoid === '0') {
-                    // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Policy Service" > "ตรวจสอบคำสั่งขายประจำวัน"
-                    await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'Policy Service', 'ตรวจสอบคำสั่งขายประจำวัน');
 
                     console.log(`\nตรวจสอบคำสั่งขาย oper เลขที่อ้างอิง: ${result_check_transactionstatus.rows[0].invoid}, วันที่สั่งซื้อขาย: ${result_check_transactionstatus.rows[0].ordrdt}, Transaction No: ${result_check_transactionstatus.rows[0].altnvc}`);
 
@@ -588,13 +589,15 @@ test('Run MVY UL', async ({ page }) => {
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-            if (fix_endloop !== '') {
-                endloop = fix_endloop;
-            }
+            // if (fix_endloop !== '') {
+            //     endloop = fix_endloop;
+            // }
         }
 
         // ปิด database
         await db.close();
+
+        loopCount++;
 
         console.log('\n-------------------------------------------- End of Process --------------------------------------------');
     }
