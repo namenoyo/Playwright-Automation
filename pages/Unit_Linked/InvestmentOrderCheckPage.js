@@ -40,6 +40,19 @@ export class InvestmentOrderCheckPage {
         // รอ dialog หายไป
         await this.expect(this.dialog_investmentordercheck.investmentordercheck_popupSellSuccess).not.toBeVisible({ timeout: 60000 });
     }
+
+    async confirmBuyInvestmentOrderCheck() {
+        // กดปุ่ม ยืนยันคำสั่งขาย
+        await this.table_investmentordercheck.investmentordercheck_btnConfirmBuy.click({ timeout: 10000 });
+        // รอ dialog ยืนยันคำสั่งขายขึ้นมา
+        await this.expect(this.dialog_investmentordercheck.investmentordercheck_next_dialogConfirmSell).toBeVisible({ timeout: 60000 });
+        await this.dialog_investmentordercheck.investmentordercheck_next_dialogConfirmSell.getByText('ใช่', { exact: true }).click({ timeout: 10000 });
+        // รอ dialog ขึ้นมาว่า "บันทึก ยืนยันคำสั่งขาย เรียบร้อยแล้ว"
+        await this.expect(this.dialog_investmentordercheck.investmentordercheck_popupBuySuccess).toBeVisible({ timeout: 60000 });
+        await this.dialog_investmentordercheck.investmentordercheck_popupBuySuccess.getByText('ปิด', { exact: true }).click({ timeout: 10000 });
+        // รอ dialog หายไป
+        await this.expect(this.dialog_investmentordercheck.investmentordercheck_popupBuySuccess).not.toBeVisible({ timeout: 60000 });
+    }
 }
 
 module.exports = { InvestmentOrderCheckPage };

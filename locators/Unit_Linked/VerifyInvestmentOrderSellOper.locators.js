@@ -1,5 +1,3 @@
-import { verify } from "crypto";
-
 export const menubar_InvestmentOrderOper = (page) => ({
     investmentorderoper_btnWaitingforCreateOrder: page.locator('a[role="tab"]', { hasText: 'รอสร้างคำสั่งขาย' }),
     investmentorderoper_btnVerifyInvestmentOrder: page.locator('a[role="tab"]', { hasText: 'ตรวจสอบและยืนยันคำสั่งขายประจำวัน' }),
