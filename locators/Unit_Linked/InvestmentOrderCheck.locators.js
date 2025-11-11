@@ -9,6 +9,7 @@ export const menubar_InvestmentOrderCheck = (page) => ({
 })
 
 export const table_InvestmentOrderCheck = (page) => ({
+    investmentordercheck_btnConfirmBuy: page.locator('input[value="ยืนยันคำสั่งซื้อ"]'),
     investmentordercheck_btnConfirmSell: page.locator('input[value="ยืนยันคำสั่งขาย"]'),
     investmentordercheck_tblCheckbox: (invoiceno) => page.getByRole('row', { name: invoiceno }).locator('#selectFund'),
 })
@@ -17,4 +18,5 @@ export const dialog_InvestmentOrderCheck = (page) => ({
     investmentordercheck_dialogConfirmSell: page.locator('div[class="confirm-dialog yui3-panel-content yui3-widget-stdmod"]', { hasText: 'มีรายการรอการพิจารณา AML/CFT-WMD' }),
     investmentordercheck_next_dialogConfirmSell: page.locator('div[class="confirm-dialog yui3-panel-content yui3-widget-stdmod"]', { hasText: 'ยืนยันคำสั่งซื้อขาย ใช่หรือไม่?'}),
     investmentordercheck_popupSellSuccess: page.locator('#trading-form-content', { hasText: 'บันทึก ยืนยันคำสั่งขาย เรียบร้อยแล้ว' }),
+    investmentordercheck_popupBuySuccess: page.locator('#trading-form-content', { hasText: 'บันทึก ยืนยันคำสั่งซื้อ เรียบร้อยแล้ว' }),
 })

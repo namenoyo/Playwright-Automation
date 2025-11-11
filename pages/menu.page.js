@@ -28,10 +28,17 @@ export class gotoMenu {
             await this.page.getByRole('menuitem', { name: submenu2, exact: true }).click({ timeout: 100000 });
             // ตรวจสอบเมนูย่อยถัดไปอีก
             if (submenu3 != undefined) {
-                // รอให้เมนูย่อยถัดไปปรากฏ
-                await this.expect(this.page.getByRole('menuitem', { name: submenu3, exact: true })).toBeVisible({ timeout: 120000 });
-                // คลิกที่เมนูย่อยถัดไป
-                await this.page.getByRole('menuitem', { name: submenu3, exact: true }).click({ timeout: 100000 });
+                if (submenu3 == 'นำเข้าไฟล์การชำระเงิน') {
+                    // รอให้เมนูย่อยถัดไปปรากฏ
+                    await this.expect(this.page.locator('a[class="yui3-menuitem-content"]', { hasText: 'นำเข้าไฟล์การชำระเงิน' })).toBeVisible({ timeout: 120000 });
+                    // คลิกที่เมนูย่อยถัดไป
+                    await this.page.locator('a[class="yui3-menuitem-content"]', { hasText: 'นำเข้าไฟล์การชำระเงิน' }).click({ timeout: 100000 });
+                } else {
+                    // รอให้เมนูย่อยถัดไปปรากฏ
+                    await this.expect(this.page.getByRole('menuitem', { name: submenu3, exact: true })).toBeVisible({ timeout: 120000 });
+                    // คลิกที่เมนูย่อยถัดไป
+                    await this.page.getByRole('menuitem', { name: submenu3, exact: true }).click({ timeout: 100000 });
+                }
                 // ตรวจสอบเมนูย่อยถัดไปอีก
                 if (submenu4 != undefined) {
                     // รอให้เมนูย่อยถัดไปปรากฏ

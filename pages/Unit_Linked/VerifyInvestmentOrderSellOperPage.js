@@ -2,9 +2,9 @@
 const { selectDate } = require('../../utils/calendarHelper.js');
 
 // locators
-const { search_verify_InvestmentOrderOper, table_verify_InvestmentOrderOper, dialog_verify_InvestmentOrderOper } = require('../../locators/Unit_Linked/VerifyInvestmentOrderOper.locators.js');
+const { search_verify_InvestmentOrderOper, table_verify_InvestmentOrderOper, dialog_verify_InvestmentOrderOper } = require('../../locators/Unit_Linked/VerifyInvestmentOrderSellOper.locators.js');
 
-class VerifyInvestmentOrderOperPage {
+class VerifyInvestmentOrderSellOperPage {
     constructor(page, expect) {
         this.page = page;
         this.expect = expect;
@@ -79,4 +79,4 @@ class VerifyInvestmentOrderOperPage {
     }
 }
 
-module.exports = { VerifyInvestmentOrderOperPage };
+module.exports = { VerifyInvestmentOrderSellOperPage };

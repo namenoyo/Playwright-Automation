@@ -40,7 +40,6 @@ class BatchManualSupportPage {
             batchStatus = batchStatus.trim();
             console.log(`Current Batch Status: ${batchStatus}`);
         }
-        
     }
 }
 
