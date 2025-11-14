@@ -3,9 +3,15 @@ const { fund_code_dictionary } = require('../../data/Unit_Linked/fund_code_dict.
 
 const { test, expect } = require('@playwright/test');
 
+const { calculateYearsOnly } = require('../../utils/common.js');
+
 test('test investment order check', async ({ page }) => {
     const fund_name_ordercheck = fund_code_dictionary['9'] || 'Unknown Fund';
 
     console.log(fund_name_ordercheck.code, fund_name_ordercheck.NetAssetValue, fund_name_ordercheck.NAVValue, fund_name_ordercheck.BidPriceValue, fund_name_ordercheck.OfferPriceValue);
+
+    console.log(calculateYearsOnly('20251107', '20281107'));
+
+
 });
 

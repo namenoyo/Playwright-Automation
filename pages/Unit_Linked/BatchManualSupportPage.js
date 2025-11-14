@@ -34,7 +34,7 @@ class BatchManualSupportPage {
 
         let batchStatus = '';
         while (batchStatus !== 'Complete') {
-            await this.page.waitForTimeout(5000); // รอ 5 วินาที ก่อนตรวจสอบสถานะอีกครั้ง
+            await this.page.waitForTimeout(1000); // รอ 1 วินาที ก่อนตรวจสอบสถานะอีกครั้ง
             // ตรวจสอบสถานะผลลัพธ์
             batchStatus = await locator_table_runbatch_manual_support.batchmanualsupport_tableResultStatus.textContent();
             batchStatus = batchStatus.trim();
