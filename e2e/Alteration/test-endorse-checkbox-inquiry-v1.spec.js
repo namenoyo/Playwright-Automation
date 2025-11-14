@@ -1,3 +1,6 @@
+// ใช้สำหรับทดสอบหน้า รับเรื่องสลักหลัง (Alteration Request) หัวข้อเรื่อง Checkbox 
+
+
 const { test, expect } = require('@playwright/test');
 const { popupAlert, getMaxWorkers } = require('../../utils/common.js');
 const { chunkRange } = require('../../utils/common.js');
