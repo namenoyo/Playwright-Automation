@@ -1,6 +1,5 @@
 // ใช้สำหรับทดสอบหน้า สอบถามสลักหลัง (Alteration Inquiry) หัวข้อเรื่อง Checkbox 
 
-
 const { test, expect } = require('@playwright/test');
 const { popupAlert, getMaxWorkers } = require('../../utils/common.js');
 const { chunkRange } = require('../../utils/common.js');
@@ -39,7 +38,7 @@ test.describe.configure({ mode: 'parallel' }); // ให้เคสในไฟ
 // จำนวนข้อมูลที่ได้ = endIdx - startIdx
 
 const startIdx = 0;
-const endIdx = 8000;
+const endIdx = 1;
 const testData = data_matrix_endorse.slice(startIdx, endIdx); // ตัดข้อมูลตามช่วงที่กำหนด
 
 for (const data_endorse of testData) {
@@ -141,7 +140,7 @@ for (const data_endorse of testData) {
                 // รอเมนู เลือกธุรกรรม ปรากฏ
                 await expect(page.locator('div[role="dialog"]', { hasText: `${data_endorse.policy_no}` })).toBeVisible();
                 // คลิ๊กเมนู สอบถามสลักหลัง (Alteration Inquiry)
-                await page.locator('div[role="dialog"]').getByText('สอบถามสลักหลัง').click();
+                await page.locator('div[role="dialog"]').getByText('รับเรื่องสลักหลัง').click();
 
                 // จับข้อความ popup inquiry form
                 const popup_inquiryform = page.locator('div[role="dialog"]').locator('p[class="MuiTypography-root MuiTypography-body1"]').nth(1);
@@ -170,7 +169,7 @@ for (const data_endorse of testData) {
                     // รอเมนู เลือกธุรกรรม ปรากฏ
                     await expect(page.locator('div[role="dialog"]', { hasText: `${data_endorse.policy_no}` })).toBeVisible();
                     // คลิ๊กเมนู สอบถามสลักหลัง (Alteration Inquiry)
-                    await page.locator('div[role="dialog"]').getByText('สอบถามสลักหลัง').click();
+                    await page.locator('div[role="dialog"]').getByText('รับเรื่องสลักหลัง').click();
 
                     await page.waitForTimeout(2000); // รอ 2 วินาที เพื่อให้ popup แสดง
 
@@ -190,36 +189,14 @@ for (const data_endorse of testData) {
                 await newPage.waitForLoadState();
                 // รอเปิด tab ใหม่
                 await newPage.waitForTimeout(5000); // รอ 5 วินาทีเพื่อให้ tab เปิด
-                await expect(newPage.locator('text=สอบถามสลักหลัง')).toBeVisible({ timeout: 60000 }); // รอไม่เกิน 60 วินาที
+                await expect(newPage.locator('text=รับเรื่องสลักหลัง')).toBeVisible({ timeout: 60000 }); // รอไม่เกิน 60 วินาที
 
                 // ดึงค่าจาก contact_code_dictionary
                 const data_dict_contact_code = contact_code_dictionary[data_endorse.contact_code];
                 // คลิ๊กที่ช่อง ประเภทติดต่อ (ผู้ติดต่อ) *
-                await newPage.getByRole('textbox', { name: 'ประเภทติดต่อ (ผู้ติดต่อ) *' }).click({ timeout: 60000 });
+                await newPage.locator('div[validates="required"]', { hasText: 'ประเภทติดต่อ (ผู้ติดต่อ) *' }).locator('div', { hasText: 'กรุณาเลือก' }).first().click({ timeout: 60000 });
                 // เลือกค่าจาก contact_code_dictionary
                 await newPage.getByText(data_dict_contact_code, { exact: true }).click({ timeout: 60000 });
-
-                // // กรณีเลือก ประเภทติดต่อ (ผู้ติดต่อ) * ที่มีเงื่อนไขพิเศษ
-                // if (data_endorse.contact_code === 'AGT') { // เงื่อนไขพิเศษ กรณี contact_code = AGT (ตัวแทนยื่นคำขอแทนผู้เอาประกันภัย)
-                //     // คลิ๊กที่ช่อง ประเภทติดต่อ (ผู้ติดต่อ) *
-                //     await newPage.getByRole('textbox', { name: 'สาขาต้นสังกัด *' }).click();
-                //     // ดึงค่าจาก username มาใช้เป็นสาขาต้นสังกัด
-                //     await newPage.locator('label', { hasText: data_endorse.username }).click();
-                //     // กรอกช่อง ตัวแทนบริษัท *
-
-                //     // เลือก ตัวแทนบริษัท
-
-                // } else if (data_dict_contact_code === 'BRP') { // เงื่อนไขพิเศษ กรณี contact_code = BRP (เจ้าหน้าที่สาขา)
-                //     // คลิ๊กที่ช่อง เจ้าหน้าที่สาขา * และกรอกข้อมูล
-                //     await newPage.getByRole('textbox', { name: 'เจ้าหน้าที่สาขา' }).click().type('กรุณาระบุเจ้าหน้าที่สาขา');
-                // } else if (data_dict_contact_code === 'BNF') { // เงื่อนไขพิเศษ กรณี contact_code = BNF (ผู้รับประโยชน์)
-                //     // คลิ๊กที่ช่อง ชื่อ - นามสกุล * และกรอกข้อมูล
-                //     await newPage.getByRole('textbox', { name: 'ชื่อ - นามสกุล *' }).click().type('กรุณาระบุชื่อ - นามสกุล');
-                //     // คลิ๊กที่ช่อง ความสัมพันธ์ *
-                //     await newPage.getByRole('textbox', { name: 'ความสัมพันธ์ *' }).click();
-                //     // เลือก ความสัมพันธ์ *
-                //     await newPage.getByText('บุตร', { exact: true }).click();
-                // }
 
                 // สร้าง instance ของ inquiryendorseformLocator
                 const inquiryendorseformlocator = inquiryendorseformLocator(newPage);
@@ -293,11 +270,6 @@ for (const data_endorse of testData) {
 
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-                // // นำข้อมูลขึ้น google sheet (รายละเอียดเอกสาร)
-                // await uploadgooglesheet.uploadResultTestDataToGoogleSheet_all(result_endorsecheckdata_alteration.status_result_array, result_endorsecheckdata_alteration.assertion_result_array, testinfo);
-
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////
-
                 // ตรวจสอบสถานะการทดสอบ แบบง่ายๆ ว่ามี Failed หรือไม่
                 const statusResult = result_endorsecheckdata_alteration.status_result_array.includes('Failed') ? 'Failed' : 'Passed';
                 // รวมทุกค่า assertion เป็น string เดียว
@@ -324,6 +296,7 @@ for (const data_endorse of testData) {
                 await googlesheet.appendRows(auth, spreadsheetId_write, range_write, googleDataBatch);
 
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
             } catch (error) {
                 const endtimestamp = getTimestamp(); // เวลาสิ้นสุด
                 const endTime = Date.now();    // จบจับเวลา
