@@ -2,9 +2,9 @@
 const { selectDate } = require('../../utils/calendarHelper.js');
 
 // locators
-const { search_verify_InvestmentOrderOper, table_verify_InvestmentOrderOper, dialog_verify_InvestmentOrderOper } = require('../../locators/Unit_Linked/VerifyInvestmentOrderOper.locators.js');
+const { search_verify_InvestmentOrderOper, table_verify_InvestmentOrderOper, dialog_verify_InvestmentOrderOper } = require('../../locators/Unit_Linked/VerifyInvestmentOrderSellOper.locators.js');
 
-class VerifyInvestmentOrderOperPage {
+class VerifyInvestmentOrderSellOperPage {
     constructor(page, expect) {
         this.page = page;
         this.expect = expect;
@@ -24,7 +24,7 @@ class VerifyInvestmentOrderOperPage {
         await this.search_verify_investmentorderoper.verify_investmentorderoper_btnSearch.click({ timeout: 10000 });
         // รอโหลดตาราง
         await this.page.waitForLoadState('networkidle');
-    } 
+    }
 
     async click_verify_VerifyInvestmentOrderOperCheckButton(data) {
         // รอให้ตารางแสดงผล
@@ -35,7 +35,7 @@ class VerifyInvestmentOrderOperPage {
 
         for (let i = 0; i < count; i++) {
             // เลือก checkbox ตาม transaction no
-            await row.nth(i).locator('input[type="checkbox"]').check();
+            await row.nth(i).locator('input[type="checkbox"]').check({ timeout: 10000 });
         }
     }
 
@@ -47,12 +47,30 @@ class VerifyInvestmentOrderOperPage {
         await this.dialog_verify_investmentorderoper.verify_investmentorderoper_confirmorderinvestment.getByText('ใช่', { exact: true }).click({ timeout: 10000 });
         // รอ dialog หายไป
         await this.expect(this.dialog_verify_investmentorderoper.verify_investmentorderoper_confirmorderinvestment).not.toBeVisible({ timeout: 60000 });
+
         // รอ dialog กรอกเหตุผล cutoff ขึ้นมา
-        await this.expect(this.dialog_verify_investmentorderoper.verify_investmentorderoper_comment_cutoff).toBeVisible({ timeout: 60000 });
-        // กรอกเหตุผล cutoff
-        await this.dialog_verify_investmentorderoper.verify_investmentorderoper_comment_cutoff_txtreason.type('ทดสอบ', { delay : 100 });
-        // กดปุ่ม ส่งคำสั่งวันนี้
-        await this.dialog_verify_investmentorderoper.verify_investmentorderoper_comment_cutoff.getByText('ส่งคำสั่งวันนี้', { exact: true }).click({ timeout: 10000 });
+        await this.page.waitForTimeout(1000);
+
+        const check_cutoff = await this.dialog_verify_investmentorderoper.verify_investmentorderoper_comment_cutoff.isVisible({ timeout: 10000 });
+        if (check_cutoff) {
+            // รอ dialog กรอกเหตุผล cutoff ขึ้นมา
+            await this.expect(this.dialog_verify_investmentorderoper.verify_investmentorderoper_comment_cutoff).toBeVisible({ timeout: 60000 });
+            // คลิ๊กช่อง เหตุผล cutoff
+            await this.dialog_verify_investmentorderoper.verify_investmentorderoper_comment_cutoff.click({ timeout: 10000 });
+
+            // กรอกเหตุผล cutoff
+            await this.dialog_verify_investmentorderoper.verify_investmentorderoper_comment_cutoff_txtreason.evaluate((el, value) => {
+                el.value = value; // ตั้งค่าข้อความใน textarea
+                // ยิง event เหมือนผู้ใช้พิมพ์จริง
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+                el.dispatchEvent(new Event('keyup', { bubbles: true }));
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+            }, 'ทดสอบ');
+
+            // กดปุ่ม ส่งคำสั่งวันนี้
+            await this.dialog_verify_investmentorderoper.verify_investmentorderoper_comment_cutoff.getByText('ส่งคำสั่งวันนี้', { exact: true }).click({ timeout: 10000 });
+        }
+
         // รอ popup ยืนยันรายการคำสั่งขาย เรียบร้อย ขึ้นมา
         await this.expect(this.dialog_verify_investmentorderoper.verify_investmentorderoper_successpopup).toBeVisible({ timeout: 60000 });
         await this.dialog_verify_investmentorderoper.verify_investmentorderoper_successpopup.getByText('ตกลง', { exact: true }).click({ timeout: 10000 });
@@ -61,4 +79,4 @@ class VerifyInvestmentOrderOperPage {
     }
 }
 
-module.exports = { VerifyInvestmentOrderOperPage };
+module.exports = { VerifyInvestmentOrderSellOperPage };

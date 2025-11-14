@@ -121,4 +121,24 @@ const escapeRegex = (text) => {
     return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-module.exports = { popupAlert, normalizeText, changeobjecttoarray, pulldataobjectfromkeys, formatQuery, split_total_unit, chunkRange, getMaxWorkers, sendresultn8nbot, escapeRegex };
+function calculateYearsOnly(startDateStr, endDateStr) {
+    const startYear = parseInt(startDateStr.slice(0, 4));
+    const startMonth = parseInt(startDateStr.slice(4, 6)) - 1;
+    const startDay = parseInt(startDateStr.slice(6, 8));
+
+    const endYear = parseInt(endDateStr.slice(0, 4));
+    const endMonth = parseInt(endDateStr.slice(4, 6)) - 1;
+    const endDay = parseInt(endDateStr.slice(6, 8));
+
+    let years = endYear - startYear;
+
+    // ถ้าเดือนหรือวันยังไม่ครบปี ให้ลด 1
+    if (endMonth < startMonth || (endMonth === startMonth && endDay < startDay)) {
+        years -= 1;
+    }
+
+    return years;
+}
+
+
+module.exports = { popupAlert, normalizeText, changeobjecttoarray, pulldataobjectfromkeys, formatQuery, split_total_unit, chunkRange, getMaxWorkers, sendresultn8nbot, escapeRegex, calculateYearsOnly };
