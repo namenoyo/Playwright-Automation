@@ -50,9 +50,9 @@ test('Run MVY UL', async ({ page }) => {
     // ข้อมูลสำหรับทดสอบ
     const username = 'boss';
     const password = '1234';
-    const policyno = 'UL00003028'; // เลขกรมธรรม์ที่ต้องการทดสอบ
+    const policyno = 'UL00003029'; // เลขกรมธรรม์ที่ต้องการทดสอบ
     const env = 'SIT' // SIT / UAT
-    const fix_endloop = ''; // กำหนดจำนวนรอบที่ต้องการให้ทำงาน (ถ้าไม่ต้องการให้ทำงานแบบวนซ้ำ ให้กำหนดเป็นค่าว่าง '')
+    const fix_endloop = '1'; // กำหนดจำนวนรอบที่ต้องการให้ทำงาน (ถ้าไม่ต้องการให้ทำงานแบบวนซ้ำ ให้กำหนดเป็นค่าว่าง '')
     const auto_buyorder_Loyalty_Bonus = true; // กำหนดให้สร้างคำสั่งซื้ออัตโนมัติ สำหรับ กรณีเงินปันผลสะสม (Loyalty Bonus) เท่านั้น (true / false)
     const auto_pay_bills = true; // กำหนดให้ชำระบิลอัตโนมัติ (true / false)
     const skip_create_update_rv = false; // ข้ามการสร้าง/อัพเดท RV (true / false)
@@ -268,7 +268,7 @@ test('Run MVY UL', async ({ page }) => {
 
                 // ทำการตรวจสอบก่อนว่ามีการชำระบิลอัตโนมัติหรือยัง
                 // เช็ค ref2vc ล่าสุด
-                const query_check_ref2_after_genbill = 'select ref1vc, ref2vc from tbcbil01 where polnvc = $1 order by ref2vc desc limit 1'
+                const query_check_ref2_after_genbill = 'select ref1vc, ref2vc from tbcbil01 where polnvc = $1 order by blpmid desc limit 1'
                 const params_check_ref2_after_genbill = await db.query(query_check_ref2_after_genbill, [policyno]);
 
                 const ref2vc_after_bill_latest = params_check_ref2_after_genbill.rows[0].ref2vc;
@@ -1053,8 +1053,8 @@ test('Run MVY UL', async ({ page }) => {
 
             // //////////////////////////////////////////////////////
 
-            // if (policy_year < 5 || (policy_year >= 5 && auto_buyorder_Loyalty_Bonus === true)) {
             //     // loop ตามจำนวนคำสั่งซื้อขายที่เจอใน database (คำสั่งซื้อ)
+            // if (policy_year < 5 || (policy_year >= 5 && auto_buyorder_Loyalty_Bonus === true)) {
             //     for (const row_invoice_ul_updatenav of result_check_invoice_buy_ul.rows) {
             //         const fund_name_updatenav = fund_code_dictionary[row_invoice_ul_updatenav.fundnm] || 'Unknown Fund';
             //         console.log(`\nอัพเดทราคา NAV ประจำวัน เลขที่อ้างอิง: ${row_invoice_ul_updatenav.invovc}, วันที่สั่งซื้อขาย: ${row_invoice_ul_updatenav.ordrdt}, กองทุน: ${fund_name_updatenav.code}`);
@@ -1124,6 +1124,25 @@ test('Run MVY UL', async ({ page }) => {
             await page.waitForLoadState('networkidle');
             await expect(page.locator('text = ยืนยันผลคำสั่งซื้อ-ขาย')).toBeVisible({ timeout: 60000 });
 
+            // เช็คว่ามีการ update ค่า upnvdt ในตาราง tivreq01 หรือยัง
+            const query_check_upnvdt_tivreq01 = "select distinct ALTYNM,ordrdt,invoid,vrstvc,altnvc, upnvdt, altrid from tivreq01 t where t.polnvc = $1 and irstvc in ('IR01');"
+            const result_check_upnvdt_tivreq01 = await db.query(query_check_upnvdt_tivreq01, [policyno]);
+
+            for (const row_check_upnvdt of result_check_upnvdt_tivreq01.rows) {
+                const orderdate_tivreq01 = `${row_check_upnvdt.ordrdt}000000000`;
+                const upnvdt_tivreq01 = row_check_upnvdt.upnvdt;
+                const altrid_tivreq01 = row_check_upnvdt.altrid;
+
+                if (upnvdt_tivreq01 === '0') {
+                    console.log(`\nไม่มีค่า upnvdt ในตาราง tivreq01 สำหรับกรมธรรม์ ${policyno} วันที่สั่งซื้อขาย: ${orderdate_tivreq01}`);
+                    // update ค่า upnvdt ในตาราง tivreq01
+                    const query_update_upnvdt_tivreq01 = "UPDATE tivreq01 SET upnvdt= $2 where altrid = $1;"
+                    const result_update_upnvdt_tivreq01 = await db.query(query_update_upnvdt_tivreq01, [altrid_tivreq01, Number(orderdate_tivreq01)]);
+                    console.log(`อัพเดทค่า upnvdt ในตาราง tivreq01 สำเร็จ จำนวนแถวที่ถูกอัพเดท: ${result_update_upnvdt_tivreq01.rowCount}`);
+                }
+            }
+
+            
             // loop ตามจำนวนคำสั่งซื้อขายที่เจอใน database (คำสั่งขาย)
             for (const row_invoice_ul_orderresult of result_check_invoice_ul.rows) {
                 const fund_name_orderresult = fund_code_dictionary[row_invoice_ul_orderresult.fundnm] || 'Unknown Fund';
