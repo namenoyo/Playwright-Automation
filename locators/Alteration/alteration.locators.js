@@ -74,6 +74,28 @@ export const detailinquiryformLocator = (page) => ({
     SELECTOR_Alteration_MENU_SUB_7_In_Page_2_Detail_Panel_Data: page.getByRole('dialog').locator('P'),
 })
 
+export const requestissueformLocator = (page) => ({
+    //เข้าสู่หน้าจอระบบ Alteration > หน้าจอ รับเรื่องสลักหลัง > ดูรายละเอียด > Panel สลักหลัง Non Finance
+    // ECN01
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Title: (endorse) => page.locator(`#section-endorsement-${endorse}`).getByRole('textbox', { name: 'คำนำหน้า' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Name: (endorse) => page.locator(`#section-endorsement-${endorse}`).getByRole('textbox', { name: 'ชื่อ' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Surname: (endorse) => page.locator(`#section-endorsement-${endorse}`).getByRole('textbox', { name: 'นามสกุล' }),
+
+    // ECN02
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_House_Number: (endorse) => page.locator(`#section-endorsement-${endorse}`).getByRole('textbox', { name: 'บ้านเลขที่' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Moo: (endorse) => page.locator(`#section-endorsement-${endorse}`).getByRole('textbox', { name: 'หมู่ที่' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Village_Tower: (endorse) => page.locator(`#section-endorsement-${endorse}`).getByRole('textbox', { name: 'หมู่บ้าน/อาคาร' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Soi: (endorse) => page.locator(`#section-endorsement-${endorse}`).getByRole('textbox', { name: 'ตรอก/ซอย' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Road: (endorse) => page.locator(`#section-endorsement-${endorse}`).getByRole('textbox', { name: 'ถนน' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Provice: (endorse) => page.locator(`#section-endorsement-${endorse}`).getByRole('textbox', { name: 'จังหวัด' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_District: (endorse) => page.locator(`#section-endorsement-${endorse}`).getByRole('textbox', { name: 'อำเภอ/เขต' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Subdistrict: (endorse) => page.locator(`#section-endorsement-${endorse}`).getByRole('textbox', { name: 'ตำบล/แขวง' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Postal_Code: (endorse) => page.locator(`#section-endorsement-${endorse}`).getByRole('textbox', { name: 'รหัสไปรษณีย์' }),
+
+    // ECN03
+
+});
+
 export const inquiryendorseformLocator = (page) => ({
     endorse_checkbox_locator: (endorsecode) => page.locator('div.MuiGrid-root.MuiGrid-item', { hasText: 'ประเภทสลักหลัง' }).locator(`label#${endorsecode}`).locator(`input#${endorsecode}`),
     endorse_name_locator: (endorsecode, endorsename) => page.locator('div.MuiGrid-root.MuiGrid-item', { hasText: 'ประเภทสลักหลัง' }).locator(`label#${endorsecode}`).locator('span', { hasText: new RegExp(escapeRegex(endorsename)) }),
