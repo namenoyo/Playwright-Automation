@@ -16,9 +16,8 @@ const { mapsdataArray, mapsdataObject } = require('../../utils/maps-data.js');
 // data 1:1
 // const { data_matrix_save_endorse } = require('../../data/Alteration/data_save_endorse.data.js');
 // const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc_retest_v1.data.js'); // สำหรับ Retest Test Data 
-const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc_v1.data.js'); // P'Name
-//  const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc_v1_test.data.js'); // P'Name
-
+// const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc_v1.data.js'); // P'Name
+const { inquiryformArraykey_receive_issue_label } = require('../../data/Alteration/inquiryform_form_data_mapping_request_issue.data.js'); // Test
 
 // data package
 // const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc_package_v1.data.js'); // P'Name
@@ -46,8 +45,8 @@ test.describe.configure({ mode: 'parallel' }); // ให้เคสในไฟ
 // จำนวนข้อมูลที่ได้ = endIdx - startIdx
 
 const startIdx = 0;
-const endIdx = 2030; // ทั้งหมด 4061 เคส  / ท็อปรัน 2031-10000 
-const testData = data_matrix_save_endorse.slice(startIdx, endIdx); // ตัดข้อมูลตามช่วงที่กำหนด
+const endIdx = 1; // ทั้งหมด 6681 เคส 
+const testData = inquiryformArraykey_receive_issue_label.slice(startIdx, endIdx); // ตัดข้อมูลตามช่วงที่กำหนด
 
 for (const data_save_endorse of testData) {
 
@@ -56,7 +55,8 @@ for (const data_save_endorse of testData) {
 
     const policyNo = data_save_endorse.policy_no; // กรมธรรม์ ตัวอย่างสำหรับทดสอบ
     const contact_code = data_save_endorse.contact_code; // ประเภทติดต่อ (ผู้ติดต่อ) * ตัวอย่างสำหรับทดสอบ
-    const endorse_code = data_save_endorse.endorse_code; // สลักหลังที่ต้องการเลือก ตัวอย่างสำหรับทดสอบ
+    // const endorse_code = data_save_endorse.endorse_code; // สลักหลังที่ต้องการเลือก ตัวอย่างสำหรับทดสอบ
+    const endorse_code = data_save_endorse.endorse; // สลักหลังที่ต้องการเลือก ตัวอย่างสำหรับทดสอบ
 
     test(`Scenario | ${data_save_endorse.channel_code}_${data_save_endorse.policy_type}_${data_save_endorse.policy_line}_${data_save_endorse.policy_status}_${data_save_endorse.contact_code} | ${endorse_code.join(',')}`, async ({ page }, testInfo) => {
         // setting เวลาให้เคสนี้รัน
@@ -263,12 +263,20 @@ for (const data_save_endorse of testData) {
                 // สร้าง instance ของ inquiryendorseformLocator
                 const inquiryendorseformlocator = inquiryendorseformLocator(newPage);
 
-                // วนลูปเลือกสลักหลังตาม endorse_code
+                // // วนลูปเลือกสลักหลังตาม endorse_code
+                // for (const code of endorse_code) {
+                //     // คลิ๊กเลือกสลักหลังตาม code
+                //     await inquiryendorseformlocator.endorse_checkbox_locator(code).click({ timeout: 10000 });
+                //     await newPage.waitForTimeout(500); // รอ 0.5 วินาที
+                // }
+
+                 // วนลูปเลือกสลักหลังตาม endorse_code
                 for (const code of endorse_code) {
                     // คลิ๊กเลือกสลักหลังตาม code
-                    await inquiryendorseformlocator.endorse_checkbox_locator(code).click({ timeout: 10000 });
+                    await inquiryendorseformlocator.endorse_checkbox_locator(code.endorse_code).click({ timeout: 10000 });
                     await newPage.waitForTimeout(500); // รอ 0.5 วินาที
                 }
+
 
                 // คลิ๊กปุ่ม บันทึก
                 await inquiryendorseformlocator.action_button.click({ timeout: 10000 });
@@ -281,77 +289,77 @@ for (const data_save_endorse of testData) {
 
                 await newPage.waitForTimeout(2000); // รอ 2 วินาที เพื่อให้ข้อมูลโหลด
 
-                // นับจำนวนเอกสารใน expecteddata
-                const documentCount = data_save_endorse.expecteddata.SELECTOR_Alteration_MENU_SUB_7_In_Page_1_Detail_Panel_Data[0].data.length;
-                // นับจำนวน tr ในตาราง รายการเอกสาร
-                const documentRows = newPage.locator('table > tbody', { hasText: 'รายการเอกสาร' }).locator('tr');
-                const actualDocumentCount = await documentRows.count();
+                // // นับจำนวนเอกสารใน expecteddata
+                // const documentCount = data_save_endorse.expecteddata.SELECTOR_Alteration_MENU_SUB_7_In_Page_1_Detail_Panel_Data[0].data.length;
+                // // นับจำนวน tr ในตาราง รายการเอกสาร
+                // const documentRows = newPage.locator('table > tbody', { hasText: 'รายการเอกสาร' }).locator('tr');
+                // const actualDocumentCount = await documentRows.count();
 
-                let result_function_maps;
-                let result_function_maps_detail_document;
+                // let result_function_maps;
+                // let result_function_maps_detail_document;
 
-                // เช็คจำนวนเอกสาร ตรงกันหรือไม่
-                if (documentCount !== actualDocumentCount) {
-                    console.log('จำนวนเอกสารใน expecteddata ไม่ตรงกับจำนวนเอกสารในตาราง บนหน้าเว็บ');
-                } else {
-                    // สร้าง instance ของ detailinquiryformLocator
-                    const detailinquiryformlocator = detailinquiryformLocator(newPage);
-                    // Utils
-                    const mapsdataobject = new mapsdataObject(newPage, expect);
-                    // เช็คข้อมูลบนหน้าจอกับ expected - Static Data
-                    result_function_maps = await mapsdataobject.mapsdataarrayfile_checkdata_request_alteration(detailinquiryformlocator, data_save_endorse.expecteddata);
-                    // เช็คข้อมูลบนหน้าจอกับ expected รายละเอียดเอกสาร ... (จากการ mapping ข้อมูล)
-                    result_function_maps_detail_document = await mapsdataobject.mapsdataarrayfile_checkdata_alteration_detaildocument(detailinquiryformlocator, data_save_endorse.expecteddata);
-                }
+                // // เช็คจำนวนเอกสาร ตรงกันหรือไม่
+                // if (documentCount !== actualDocumentCount) {
+                //     console.log('จำนวนเอกสารใน expecteddata ไม่ตรงกับจำนวนเอกสารในตาราง บนหน้าเว็บ');
+                // } else {
+                //     // สร้าง instance ของ detailinquiryformLocator
+                //     const detailinquiryformlocator = detailinquiryformLocator(newPage);
+                //     // Utils
+                //     const mapsdataobject = new mapsdataObject(newPage, expect);
+                //     // เช็คข้อมูลบนหน้าจอกับ expected - Static Data
+                //     result_function_maps = await mapsdataobject.mapsdataarrayfile_checkdata_request_alteration(detailinquiryformlocator, data_save_endorse.expecteddata);
+                //     // เช็คข้อมูลบนหน้าจอกับ expected รายละเอียดเอกสาร ... (จากการ mapping ข้อมูล)
+                //     result_function_maps_detail_document = await mapsdataobject.mapsdataarrayfile_checkdata_alteration_detaildocument(detailinquiryformlocator, data_save_endorse.expecteddata);
+                // }
 
-                // logout ออกจากระบบ
-                await logoutpage.logoutNBSPortal_newPage(newPage);
+                // // logout ออกจากระบบ
+                // await logoutpage.logoutNBSPortal_newPage(newPage);
 
-                const endtimestamp = getTimestamp(); // เวลาสิ้นสุด
-                const endTime = Date.now();    // จบจับเวลา
-                const duration = (endTime - today) / 1000; // วินาที
+                // const endtimestamp = getTimestamp(); // เวลาสิ้นสุด
+                // const endTime = Date.now();    // จบจับเวลา
+                // const duration = (endTime - today) / 1000; // วินาที
 
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-                let merge_result_status
-                let merge_result_assertion
+                // let merge_result_status
+                // let merge_result_assertion
 
-                // เช็คจำนวนเอกสาร ตรงกันหรือไม่
-                if (documentCount !== actualDocumentCount) {
-                    merge_result_status = ['Failed'];
-                    merge_result_assertion = ['จำนวนเอกสารใน expecteddata ไม่ตรงกับจำนวนเอกสารในตาราง บนหน้าเว็บ'];
-                } else {
-                    // อันนี้อัพโหลดขึ้น google แบบรวมอันเดียว
-                    merge_result_status = result_function_maps.status_result_array.concat(result_function_maps_detail_document.status_result_array);
-                    merge_result_assertion = result_function_maps.assertion_result_array.concat(result_function_maps_detail_document.assertion_result_array);
-                }
+                // // เช็คจำนวนเอกสาร ตรงกันหรือไม่
+                // if (documentCount !== actualDocumentCount) {
+                //     merge_result_status = ['Failed'];
+                //     merge_result_assertion = ['จำนวนเอกสารใน expecteddata ไม่ตรงกับจำนวนเอกสารในตาราง บนหน้าเว็บ'];
+                // } else {
+                //     // อันนี้อัพโหลดขึ้น google แบบรวมอันเดียว
+                //     merge_result_status = result_function_maps.status_result_array.concat(result_function_maps_detail_document.status_result_array);
+                //     merge_result_assertion = result_function_maps.assertion_result_array.concat(result_function_maps_detail_document.assertion_result_array);
+                // }
 
-                // ตรวจสอบสถานะการทดสอบ แบบง่ายๆ ว่ามี Failed หรือไม่
-                const statusResult = merge_result_status.includes('Failed') ? 'Failed' : 'Passed';
-                // รวมทุกค่า assertion เป็น string เดียว
-                const assertionResult = merge_result_assertion.join('\n');
-                // เตรียมข้อมูลในรูปแบบ array 2 มิติ สำหรับ Google Sheet
-                const googleDataBatch = [
-                    [
-                        starttimestamp,
-                        'Test Automate',
-                        testInfo.title,
-                        policyNo,
-                        assertionResult,
-                        statusResult,
-                        endtimestamp,
-                        'Testing by Automate Playwright',
-                        `${duration} วินาที`,
-                        ''
-                    ]
-                ];
+                // // ตรวจสอบสถานะการทดสอบ แบบง่ายๆ ว่ามี Failed หรือไม่
+                // const statusResult = merge_result_status.includes('Failed') ? 'Failed' : 'Passed';
+                // // รวมทุกค่า assertion เป็น string เดียว
+                // const assertionResult = merge_result_assertion.join('\n');
+                // // เตรียมข้อมูลในรูปแบบ array 2 มิติ สำหรับ Google Sheet
+                // const googleDataBatch = [
+                //     [
+                //         starttimestamp,
+                //         'Test Automate',
+                //         testInfo.title,
+                //         policyNo,
+                //         assertionResult,
+                //         statusResult,
+                //         endtimestamp,
+                //         'Testing by Automate Playwright',
+                //         `${duration} วินาที`,
+                //         ''
+                //     ]
+                // ];
 
-                // console.log(googleDataBatch);
+                // // console.log(googleDataBatch);
 
-                // อัพโหลดผลลัพธ์ไปยัง Google Sheet เป็นการ append ที่ range ที่กำหนด แบบต่อท้าย โดยจะไม่ลบข้อมูลเก่าใน Google Sheet
-                await googlesheet.appendRows(auth, spreadsheetId_write, range_write, googleDataBatch);
+                // // อัพโหลดผลลัพธ์ไปยัง Google Sheet เป็นการ append ที่ range ที่กำหนด แบบต่อท้าย โดยจะไม่ลบข้อมูลเก่าใน Google Sheet
+                // await googlesheet.appendRows(auth, spreadsheetId_write, range_write, googleDataBatch);
 
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
             } catch (error) {
                 const endtimestamp = getTimestamp(); // เวลาสิ้นสุด
