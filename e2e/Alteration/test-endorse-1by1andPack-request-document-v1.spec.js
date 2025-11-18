@@ -16,8 +16,9 @@ const { mapsdataArray, mapsdataObject } = require('../../utils/maps-data.js');
 // data 1:1
 // const { data_matrix_save_endorse } = require('../../data/Alteration/data_save_endorse.data.js');
 // const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc_retest_v1.data.js'); // สำหรับ Retest Test Data 
-// const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc_v1.data.js'); // P'Name
-const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc_v1_test.data.js'); // Test
+const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc_v1.data.js'); // P'Name
+//  const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc_v1_test.data.js'); // P'Name
+
 
 // data package
 // const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc_package_v1.data.js'); // P'Name
@@ -45,7 +46,7 @@ test.describe.configure({ mode: 'parallel' }); // ให้เคสในไฟ
 // จำนวนข้อมูลที่ได้ = endIdx - startIdx
 
 const startIdx = 0;
-const endIdx = 1; // ทั้งหมด 6681 เคส 
+const endIdx = 2030; // ทั้งหมด 4061 เคส  / ท็อปรัน 2031-10000 
 const testData = data_matrix_save_endorse.slice(startIdx, endIdx); // ตัดข้อมูลตามช่วงที่กำหนด
 
 for (const data_save_endorse of testData) {
