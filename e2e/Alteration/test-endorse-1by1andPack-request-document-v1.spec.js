@@ -16,7 +16,9 @@ const { mapsdataArray, mapsdataObject } = require('../../utils/maps-data.js');
 // data 1:1
 // const { data_matrix_save_endorse } = require('../../data/Alteration/data_save_endorse.data.js');
 // const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc_retest_v1.data.js'); // สำหรับ Retest Test Data 
-const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc_v1.data.js'); // P'Name
+// const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc_v1.data.js'); // แบบเดี่ยว 
+const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc_package_v1.data.js'); // แบบ Pack
+
 //  const { data_matrix_save_endorse } = require('../../data/Alteration/data_endorse_doc_v1_test.data.js'); // P'Name
 
 
