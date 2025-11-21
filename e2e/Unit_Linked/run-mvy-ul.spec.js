@@ -54,8 +54,9 @@ test('Run MVY UL', async ({ page }) => {
     const env = 'SIT' // SIT / UAT
     const fix_endloop = '1'; // กำหนดจำนวนรอบที่ต้องการให้ทำงาน (ถ้าไม่ต้องการให้ทำงานแบบวนซ้ำ ให้กำหนดเป็นค่าว่าง '')
     const auto_buyorder_Loyalty_Bonus = true; // กำหนดให้สร้างคำสั่งซื้ออัตโนมัติ สำหรับ กรณีเงินปันผลสะสม (Loyalty Bonus) เท่านั้น (true / false)
-    const auto_pay_bills = true; // กำหนดให้ชำระบิลอัตโนมัติ (true / false)
+    const auto_pay_bills = false; // กำหนดให้ชำระบิลอัตโนมัติ (true / false)
     const skip_create_update_rv = false; // ข้ามการสร้าง/อัพเดท RV (true / false)
+    const skip_auto_pay_bills = false; // ข้ามการชำระบิลอัตโนมัติ (true / false)
     // connection database
     const db_name = 'coreul';
     const db_env = 'SIT_EDIT'; // SIT | SIT_EDIT / UAT | UAT_EDIT
@@ -260,7 +261,7 @@ test('Run MVY UL', async ({ page }) => {
                     console.log('สร้างบิลเรียบร้อยแล้ว');
                 }
             }
-        } else if (nextDueDate <= mvyDateObj) {
+        } else if (nextDueDate <= mvyDateObj && skip_auto_pay_bills === false) {
             if (auto_pay_bills === true) {
                 // logout NBS
                 await logoutPage.logoutNBSWeb();
