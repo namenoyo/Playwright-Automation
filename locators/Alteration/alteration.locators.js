@@ -93,7 +93,43 @@ export const requestissueformLocator = (page) => ({
     SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Postal_Code: (endorse) => page.locator(`#section-endorsement-${endorse}`).getByRole('textbox', { name: 'รหัสไปรษณีย์' }),
 
     // ECN03
-
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_btn_ManageBenefit: (endorse) => page.locator(`#section-endorsement-${endorse}`).getByRole('button', { name: 'จัดการข้อมูลผู้รับประโยชน์' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_btn_edit_Benefit: page.locator('#section-endorsement-${endorse}').locator('i[title="แก้ไขผู้รับประโยชน์"]'),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_btn_delete_Benefit: page.locator('#section-endorsement-${endorse}').locator('i[title="ลบผู้รับประโยชน์"]'),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_btn_arrowup_Benefit: page.locator('#section-endorsement-${endorse}').locator('i[title="เลื่อนลำดับผู้รับประโยชน์"]').nth(1),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_btn_arrowdown_Benefit: page.locator('#section-endorsement-${endorse}').locator('i[title="เลื่อนลำดับผู้รับประโยชน์"]').nth(0),
+        // ข้อมูลผู้รับประโยชน์
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Relationship: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'ความสัมพันธ์ *' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Relationship_Other: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'อื่น ๆ โปรดระบุ' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Title: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'คำนำหน้า *' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Name: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'ชื่อ *' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Surname: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'นามสกุล *' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Title_Eng: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'คำนำหน้า (ภาษาอังกฤษ)' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Name_Eng: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'ชื่อ (ภาษาอังกฤษ)' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Surname_Eng: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'นามสกุล (ภาษาอังกฤษ)' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Sex: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'เพศ *' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Birthdate: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'วันเดือนปี เกิด *' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_TypeCard: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'ประเภทบัตร *' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_IDCard: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'เลขที่บัตร *' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Percentage: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'สัดส่วนผลประโยชน์ *' }),
+        // ที่อยู่ติดต่อ
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Address_HouseNumber: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'เลขที่ *' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Address_Moo: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'หมู่ที่' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Address_VillageBuilding: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'หมู่บ้าน / อาคาร' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Address_Soi: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'ตรอก / ซอย' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Address_Road: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'ถนน' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Address_Province: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'จังหวัด *' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Address_District: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'อำเภอ / เขต *' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Address_Subdistrict: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'ตำบล / แขวง *' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Address_PostalCode: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'รหัสไปรษณีย์ *' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Address_PhoneNumber: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'โทรศัพท์มือถือ' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Address_PhoneNumber_Home: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'โทรศัพท์บ้าน' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Address_Email: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'อีเมล' }),
+        // ปุ่มการทำงาน
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_btn_Save: page.locator('div[role="dialog"]').getByRole('button', { name: 'ตกลง' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_btn_Cancel: page.locator('div[role="dialog"]').getByRole('button', { name: 'ยกเลิก' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_btn_Cancel_popup_Confirm: page.locator('div[role="dialog"]', { hasText: 'ยืนยันการยกเลิก' }).getByRole('button', { name: 'ยืนยัน' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_btn_Cancel_popup_Confirm_Cancel: page.locator('div[role="dialog"]', { hasText: 'ยืนยันการยกเลิก' }).getByRole('button', { name: 'ยกเลิก' }),
 });
 
 export const inquiryendorseformLocator = (page) => ({
