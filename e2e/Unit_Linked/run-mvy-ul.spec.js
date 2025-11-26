@@ -297,17 +297,22 @@ test('Run MVY UL', async ({ page }) => {
                     return endloop = 'Y';
                 } else {
                     // ดึงข้อมูล Bill
-                    const query_check_date_ref2 = 'select p.egrpdt from tpsplc01 p where p.polnvc = $1;';
+                    const query_check_date_ref2 = 'select p.egrpdt, p.pmnddt from tpsplc01 p where p.polnvc = $1;';
                     const query_check_genbill = 'select ref1vc, ref2vc , spambd from tbcbil01 where polnvc = $1 and ref2vc = $2;';
 
                     // ดึงข้อมูลจาก database มาเช็ค
                     const params_check_date_ref2 = await db.query(query_check_date_ref2, [policyno]);
+
                     const cutText_end_grace_period = params_check_date_ref2.rows[0].egrpdt.substring(0, 8);
                     const convert_cutText_end_grace_period = convertToThaiDate(cutText_end_grace_period);
+                    // const year_grace_period = cutText_end_grace_period.substring(0, 4); // ปี ค.ศ.
+                    // const month_grace_period = cutText_end_grace_period.substring(4, 6); // เดือน
+                    // const day_grace_period = cutText_end_grace_period.substring(6, 8); // วัน
 
-                    const year_grace_period = cutText_end_grace_period.substring(0, 4); // ปี ค.ศ.
-                    const month_grace_period = cutText_end_grace_period.substring(4, 6); // เดือน
-                    const day_grace_period = cutText_end_grace_period.substring(6, 8); // วัน
+                    const cutText_due_period = params_check_date_ref2.rows[0].pmnddt.substring(0, 8);
+                    const year_due_period = cutText_due_period.substring(0, 4); // ปี ค.ศ.
+                    const month_due_period = cutText_due_period.substring(4, 6); // เดือน
+                    const day_due_period = cutText_due_period.substring(6, 8); // วัน
 
                     // เช็คว่ามีการสร้างบิลหรือไม่
                     const params_check_genbill = await db.query(query_check_genbill, [policyno, convert_cutText_end_grace_period]);
@@ -329,7 +334,7 @@ test('Run MVY UL', async ({ page }) => {
                     // คลิ๊กช่องวันที่
                     await page.locator('input#txnDate').click({ timeout: 10000 });
                     // กรอกวันที่
-                    await page.locator('input#txnDate').type(`${month_grace_period}${day_grace_period}${year_grace_period}`, { delay: 200 });
+                    await page.locator('input#txnDate').type(`${month_due_period}${day_due_period}${year_due_period}`, { delay: 200 });
                     await page.waitForTimeout(500); // รอให้ระบบประมวลผล
                     // เคลียร์ค่าช่อง Ref1
                     await page.locator('table#detailTable').locator('tbody > tr > td > input').nth(3).fill('');
@@ -436,6 +441,14 @@ test('Run MVY UL', async ({ page }) => {
                             // เช็คว่ามีการ match bill หรือไม่ใน database
                             const try_result_check_match_bill_count = await db.query(query_check_match_bill, [policyno, ref2vc_latest]);
                             result_check_match_bill_count = try_result_check_match_bill_count.rows.length;
+                        }
+
+                        if (result_check_match_bill_count === 0) {
+                            console.log('\nไม่มีข้อมูลในตาราง tbcpym01 ');
+                            console.log('\nหยุดทำงาน: เนื่องจากไม่มีข้อมูลการชำระบิลในตาราง tbcpym01');
+                            return endloop = 'Y';
+                        } else {
+                            console.log('\nพบข้อมูลในตาราง tbcpym01 แล้ว');
                         }
                     }
 
