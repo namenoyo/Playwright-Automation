@@ -16,6 +16,8 @@ export const table_verify_InvestmentOrderOper = (page) => ({
 export const dialog_verify_InvestmentOrderOper = (page) => ({
     verify_investmentorderoper_confirmorderinvestment: page.locator('div[class="confirm-dialog yui3-panel-content yui3-widget-stdmod"]', { hasText: 'ต้องการยืนยันคำสั่งขาย ใช่หรือไม่?หากกด "ใช่" รายการที่เลือกจะถูกยืนยันคำสั่งขายทันที' }),
     verify_investmentorderoper_comment_cutoff: page.locator('#cutoff_panel_dialog-content', { hasText: 'กรุณาระบุเหตุผลเพิ่มเติม เนื่องจากเกินช่วงเวลา Cut-Off Time ต้องการยืนยันคำสั่งขาย ใช่หรือไม่?' }),
+    verify_investmentorderoper_comment_cutoff_tab1: page.locator('#cutoff_panel_dialog-content', { hasText: 'กรุณาระบุเหตุผลเพิ่มเติม เนื่องจากเกินช่วงเวลา Cut-Off Time ต้องการสร้างคำสั่งซื้อ ใช่หรือไม่?' }),
     verify_investmentorderoper_comment_cutoff_txtreason: page.locator('#cutofftime-content'),
     verify_investmentorderoper_successpopup: page.locator('div[class="alert-dialog yui3-panel-content yui3-widget-stdmod"]', { hasText: 'ยืนยันรายการคำสั่งขาย เรียบร้อย' }),
+    verify_investmentorderoper_confirm_cutoff: page.locator('#cutoff_panel_dialog-content', { hasText: 'เนื่องจากมีรายการเกินเวลา Cut-Off Time ต้องการยืนยันคำสั่งซื้อ ใช่หรือไม่?' })
 });

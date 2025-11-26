@@ -50,13 +50,14 @@ test('Run MVY UL', async ({ page }) => {
     // ข้อมูลสำหรับทดสอบ
     const username = 'boss';
     const password = '1234';
-    const policyno = 'UL00003029'; // เลขกรมธรรม์ที่ต้องการทดสอบ
+    const policyno = 'UL00003034'; // เลขกรมธรรม์ที่ต้องการทดสอบ
     const env = 'SIT' // SIT / UAT
-    const fix_endloop = '1'; // กำหนดจำนวนรอบที่ต้องการให้ทำงาน (ถ้าไม่ต้องการให้ทำงานแบบวนซ้ำ ให้กำหนดเป็นค่าว่าง '')
+    const fix_endloop = ''; // กำหนดจำนวนรอบที่ต้องการให้ทำงาน (ถ้าไม่ต้องการให้ทำงานแบบวนซ้ำ ให้กำหนดเป็นค่าว่าง '')
     const auto_buyorder_Loyalty_Bonus = true; // กำหนดให้สร้างคำสั่งซื้ออัตโนมัติ สำหรับ กรณีเงินปันผลสะสม (Loyalty Bonus) เท่านั้น (true / false)
-    const auto_pay_bills = false; // กำหนดให้ชำระบิลอัตโนมัติ (true / false)
+    const auto_pay_bills = true; // กำหนดให้ชำระบิลอัตโนมัติ (true / false)
     const skip_create_update_rv = false; // ข้ามการสร้าง/อัพเดท RV (true / false)
     const skip_auto_pay_bills = false; // ข้ามการชำระบิลอัตโนมัติ (true / false)
+    const auto_pay_bills_count = 2; // จำนวนครั้งที่ต้องการจ่ายบิลอัตโนมัติ (กรณีทดสอบหลายรอบ)
     // connection database
     const db_name = 'coreul';
     const db_env = 'SIT_EDIT'; // SIT | SIT_EDIT / UAT | UAT_EDIT
@@ -90,6 +91,8 @@ test('Run MVY UL', async ({ page }) => {
     let endloop;
     let loopCount = 0;
     const maxLoop = fix_endloop !== '' ? Number(fix_endloop) : Infinity;
+
+    let stop_auto_pay_bills = 0;
 
     while (endloop !== 'Y' && loopCount < maxLoop) { // หลังจากเสร็จแล้วต้องเอา endloop !== '1' ออก เพราะจะแค่ทดสอบ 1 รอบ
 
@@ -189,8 +192,13 @@ test('Run MVY UL', async ({ page }) => {
         console.log('\nBusiness process date (วันที่หักค่าธรรมเนียมรายเดือนงวดถัดไป (MVY) - 1 day): ' + business_process_date);
         console.log('วันที่ทำการสร้างบิล (Bill) (วันที่กำหนดชำระถัดไป (Next Due) - 30 days): ' + gen_bill_date);
 
+        // เช็คคำสั่งขายคงค้าง ก่อนสร้างบิลและ ชำระบิล
+        const query_first_check_invoice = "select distinct ordrdt,vrstvc,altnvc,invoid from tivreq01 t where t.polnvc in ($1) and irstvc = 'IR01'"
+        const result_first_check_invoice = await db.query(query_first_check_invoice, [policyno]);
+        const first_invoice_count = result_first_check_invoice.rows.length;
+
         // เปรียบเทียบ
-        if (mvyDateObj >= genbillDate && check_genbill === false) {
+        if (mvyDateObj >= genbillDate && check_genbill === false && first_invoice_count === 0) {
             if (check_genbill_after === false) {
                 // Check ว่า Gen bill สำเร็จหรือไม่
                 const query_check_date_ref2 = 'select p.egrpdt from tpsplc01 p where p.polnvc = $1;';
@@ -261,7 +269,7 @@ test('Run MVY UL', async ({ page }) => {
                     console.log('สร้างบิลเรียบร้อยแล้ว');
                 }
             }
-        } else if (nextDueDate <= mvyDateObj && skip_auto_pay_bills === false) {
+        } else if (nextDueDate <= mvyDateObj && skip_auto_pay_bills === false && first_invoice_count === 0) {
             if (auto_pay_bills === true) {
                 // logout NBS
                 await logoutPage.logoutNBSWeb();
@@ -401,7 +409,7 @@ test('Run MVY UL', async ({ page }) => {
                     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
                     // เช็ค ref2vc ล่าสุด
-                    const query_check_ref2_genbill = 'select ref1vc, ref2vc from tbcbil01 where polnvc = $1 order by ref2vc desc limit 1'
+                    const query_check_ref2_genbill = 'select ref1vc, ref2vc from tbcbil01 where polnvc = $1 order by blpmid desc limit 1'
                     const params_check_ref2_genbill = await db.query(query_check_ref2_genbill, [policyno]);
 
                     const ref2vc_latest = params_check_ref2_genbill.rows[0].ref2vc;
@@ -450,10 +458,27 @@ test('Run MVY UL', async ({ page }) => {
                             status_match_bill = try_result_check_match_bill.rows[0].mcstvc;
                         }
 
-                        console.log('\nทำการ matching สำเร็จโดยสถานะการแมทช์บิล (mcstvc): ' + status_match_bill);
+                        if (status_match_bill === 'M') {
+                            console.log('\nทำการ matching สำเร็จโดยสถานะการแมทช์บิล (mcstvc): ' + status_match_bill);
+                        } else {
+                            console.log('\nทำการ matching ไม่สำเร็จโดยสถานะการแมทช์บิล (mcstvc): ' + status_match_bill);
+                            console.log('\nหยุดทำงาน: ไม่สามารถทำการ matching บิลได้');
+                            return endloop = 'Y';
+                        }
                     }
 
-                    return endloop = 'Y';
+                    stop_auto_pay_bills++;
+
+                    console.log('\nจำนวนครั้งที่ชำระบิลอัตโนมัติ: ' + stop_auto_pay_bills + ' ครั้ง');
+
+                    // ตรวจสอบจำนวนครั้งที่ชำระบิลอัตโนมัติ ถ้าถึงจำนวนที่กำหนดให้หยุดทำงาน
+                    if (stop_auto_pay_bills >= auto_pay_bills_count) {
+                        console.log("\nหยุดทำงาน: ชำระบิลอัตโนมัติครบตามจำนวนครั้งที่กำหนด");
+                        return endloop = 'Y';
+                    }
+
+                    check_genbill = false; // รีเซ็ตตัวแปรเพื่อให้กลับไปเช็คการสร้างบิลใหม่ในรอบถัดไป
+                    check_genbill_after = false; // รีเซ็ตตัวแปรเพื่อให้กลับไปเช็คการสร้างบิลใหม่ในรอบถัดไป
                 }
             } else {
                 // logout NBS
