@@ -57,7 +57,7 @@ test('Run MVY UL', async ({ page }) => {
     const auto_pay_bills = true; // กำหนดให้ชำระบิลอัตโนมัติ (true / false)
     const skip_create_update_rv = false; // ข้ามการสร้าง/อัพเดท RV (true / false)
     const skip_auto_pay_bills = false; // ข้ามการชำระบิลอัตโนมัติ (true / false)
-    const auto_pay_bills_count = 2; // จำนวนครั้งที่ต้องการจ่ายบิลอัตโนมัติ (กรณีทดสอบหลายรอบ)
+    const auto_pay_bills_count = 1; // จำนวนครั้งที่ต้องการจ่ายบิลอัตโนมัติ (กรณีทดสอบหลายรอบ)
     // connection database
     const db_name = 'coreul';
     const db_env = 'SIT_EDIT'; // SIT | SIT_EDIT / UAT | UAT_EDIT
@@ -289,6 +289,8 @@ test('Run MVY UL', async ({ page }) => {
                 if (result_check_have_bill.rows.length > 0) {
                     console.log("\nหยุดทำงาน: มีการชำระบิลอัตโนมัติไปแล้ว");
 
+                    console.log(result_check_have_bill.rows[0].mcstvc, result_check_have_bill.rows[0].depovc, result_check_have_bill.rows[0].polnvc, result_check_have_bill.rows[0].ref2vc);
+
                     // ไปยังหน้า NBS
                     await loginPage.gotoNBSENV(env);
                     // เข้าสู่ระบบด้วยชื่อผู้ใช้และรหัสผ่าน
@@ -334,8 +336,16 @@ test('Run MVY UL', async ({ page }) => {
                     // คลิ๊กช่องวันที่
                     await page.locator('input#txnDate').click({ timeout: 10000 });
                     // กรอกวันที่
-                    await page.locator('input#txnDate').type(`${month_due_period}${day_due_period}${year_due_period}`, { delay: 200 });
-                    await page.waitForTimeout(500); // รอให้ระบบประมวลผล
+                    // await page.locator('input#txnDate').type(`${month_due_period}${day_due_period}${year_due_period}`, { delay: 200 });
+                    // await page.waitForTimeout(500); // รอให้ระบบประมวลผล
+                    // เคลียร์ค่าช่อง Effective Date
+                    await page.locator('table#detailTable').locator('tbody > tr > td > input').nth(0).fill('');
+                    // กรอก Effective Date
+                    await page.locator('table#detailTable').locator('tbody > tr > td > input').nth(0).type(`${day_due_period}${month_due_period}${year_due_period}`, { delay: 100 });
+                    // เคลียร์ค่าช่อง Payment Date
+                    await page.locator('table#detailTable').locator('tbody > tr > td > input').nth(1).fill('');
+                    // กรอก Payment Date
+                    await page.locator('table#detailTable').locator('tbody > tr > td > input').nth(1).type(`${day_due_period}${month_due_period}${year_due_period}`, { delay: 100 });
                     // เคลียร์ค่าช่อง Ref1
                     await page.locator('table#detailTable').locator('tbody > tr > td > input').nth(3).fill('');
                     // กรอก Ref1 (เลขที่บิล)
@@ -490,8 +500,8 @@ test('Run MVY UL', async ({ page }) => {
                         return endloop = 'Y';
                     }
 
-                    check_genbill = false; // รีเซ็ตตัวแปรเพื่อให้กลับไปเช็คการสร้างบิลใหม่ในรอบถัดไป
-                    check_genbill_after = false; // รีเซ็ตตัวแปรเพื่อให้กลับไปเช็คการสร้างบิลใหม่ในรอบถัดไป
+                    // check_genbill = false; // รีเซ็ตตัวแปรเพื่อให้กลับไปเช็คการสร้างบิลใหม่ในรอบถัดไป
+                    // check_genbill_after = false; // รีเซ็ตตัวแปรเพื่อให้กลับไปเช็คการสร้างบิลใหม่ในรอบถัดไป
                 }
             } else {
                 // logout NBS
@@ -500,8 +510,7 @@ test('Run MVY UL', async ({ page }) => {
                 console.log("\nหยุดทำงาน: วันที่กำหนดชำระถัดไป (Next Due) <= วันที่หักค่าธรรมเนียมรายเดือนงวดถัดไป (MVY)");
                 console.log('\n-------------------------------------------- End of Process --------------------------------------------');
                 return endloop = 'Y';
-            }
-            
+            }  
         } else {
 
             console.log("\nทำงานต่อ: วันที่กำหนดชำระถัดไป (Next Due) >= วันที่หักค่าธรรมเนียมรายเดือนงวดถัดไป (MVY)");
