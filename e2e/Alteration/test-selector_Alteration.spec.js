@@ -179,5 +179,247 @@ for (const { policyNo } of policyNumbers) {
       // ไม่ throw error ออกไป จะได้ข้ามไป test data ถัดไป
     }
   });
+  
+  SELECTOR_Alteration_MENU_Save_Request_1_In_Page_Request_ECN01_1_Detail_Panel : page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) div:has-text("เปลี่ยนแปลงคำนำหน้าชื่อ ชื่อ - นามสกุล ผู้เอาประกันภัย") div:has-text("ข้อมูลผู้เอาประกันภัยเดิม") div.PanelDetailContentColumn-root:has(.itemLabel p:has-text("ชื่อ - นามสกุล")) div.itemValue p').nth(0)
+
+
+await page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) div:has-text("เปลี่ยนแปลงที่อยู่ตามทะเบียนบ้าน") div[validates="required|กรุณาระบุจังหวัด"]', { hasText: 'จังหวัด *' })
+  
+
+await page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) div:has-text("เปลี่ยนแปลงที่อยู่ตามทะเบียนบ้าน") div[validates="required|กรุณาระบุอำเภอ/เขต"]', { hasText: 'อำเภอ/เขต *' })
+  .locator('div', { hasText: '*' })
+  .nth()
+  .first()
+  .click({ timeout: 60000 });
+
+await page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) div:has-text("เปลี่ยนแปลงที่อยู่ตามทะเบียนบ้าน") div[validates="required|กรุณาระบุตำบล/แขวง"]', { hasText: 'ตำบล/แขวง *' })
+  .locator('div', { hasText: '*' })
+  .nth()
+  .first()
+  .click({ timeout: 60000 });
+
+page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) div:has-text("เปลี่ยนแปลงที่อยู่ตามทะเบียนบ้าน") div:has-text("ที่อยู่ตามทะเบียนบ้านใหม่") div:has(:text("บ้านเลขที่ *"))').locator('input#addrNo')
+page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) div:has-text("เปลี่ยนแปลงที่อยู่ตามทะเบียนบ้าน") div:has-text("ที่อยู่ตามทะเบียนบ้านใหม่") div:has(:text-is("หมู่ที่"))').locator('input#villageNo')
+page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) div:has-text("เปลี่ยนแปลงที่อยู่ตามทะเบียนบ้าน") div:has-text("ที่อยู่ตามทะเบียนบ้านใหม่") div:has(:text-is("หมู่บ้าน/อาคาร"))').locator('input#building')
+page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) div:has-text("เปลี่ยนแปลงที่อยู่ตามทะเบียนบ้าน") div:has-text("ที่อยู่ตามทะเบียนบ้านใหม่") div:has(:text-is("ตรอก/ซอย"))').locator('input#alley')
+page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) div:has-text("เปลี่ยนแปลงที่อยู่ตามทะเบียนบ้าน") div:has-text("ที่อยู่ตามทะเบียนบ้านใหม่") div:has(:text-is("ถนน"))').locator('input#road')
+
+page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) div:has-text("เปลี่ยนแปลงที่อยู่ตามทะเบียนบ้าน") div:has-text("ที่อยู่ตามทะเบียนบ้านใหม่") div[validates="required|กรุณาระบุจังหวัด"]', { hasText: 'จังหวัด *' }).locator('input#provinceCode')
+
+page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) div:has-text("เปลี่ยนแปลงที่อยู่ตามทะเบียนบ้าน") div:has-text("ที่อยู่ตามทะเบียนบ้านใหม่") div[validates="required|กรุณาระบุจังหวัด"]', { hasText: 'จังหวัด *' }).locator('input#provinceCode')
+page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) div:has-text("เปลี่ยนแปลงที่อยู่ตามทะเบียนบ้าน") div:has-text("ที่อยู่ตามทะเบียนบ้านใหม่") div[validates="required|กรุณาระบุอำเภอ/เขต"]', { hasText: 'อำเภอ/เขต *' })
+page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) div:has-text("เปลี่ยนแปลงที่อยู่ตามทะเบียนบ้าน") div:has-text("ที่อยู่ตามทะเบียนบ้านใหม่") div[validates="required|กรุณาระบุตำบล/แขวง"]', { hasText: 'ตำบล/แขวง *' })
+page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) div:has-text("เปลี่ยนแปลงที่อยู่ตามทะเบียนบ้าน") div:has-text("ที่อยู่ตามทะเบียนบ้านใหม่") div:has(:text-is("รหัสไปรษณีย์"))').locator('input#postalCode')
+
+
+
+// Table #1 (ดำเนินการ | ลำดับที่ | ชื่อ - นามสกุล | เลขที่บัตร | ความสัมพันธ์ | สืบความสัมพันธ์ได้ | วัน/เดือน/ปีเกิด | โทรศัพท์มือถือ | สัดส่วนผลประโยชน์ | ห้ามเปลี่ยนผู้รับประโยชน์ | ผู้รับโอนสิทธิ | ผู้ชำระเบี้ย (PB) | ผู้ชำระเบี้ยทั่วไป)
+// Row 1 - 3-430X-XXXX3-79-7 (ปุ่มดูรายละเอียดข้อมูล)
+await page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) table.MUIDataTable-tableRoot-3')
+  .nth(0)
+  // .locator('tbody tr', { hasText: '3-430X-XXXX3-79-7' })
+  .first()
+  .getByTitle('ดูรายละเอียดข้อมูล')
+  .click();
+
+// Table #3 (ดำเนินการ | ปรับปรุงสถานะห้ามเปลี่ยนผู้รับประโยชน์ | ปรับปรุงสถานะโอนสิทธิ | ลำดับที่ | ชื่อ - นามสกุล | เลขที่บัตร | ความสัมพันธ์ | สืบความสัมพันธ์ได้ | วัน/เดือน/ปีเกิด | โทรศัพท์มือถือ | สัดส่วนผลประโยชน์ | ห้ามเปลี่ยนผู้รับประโยชน์ | ผู้รับโอนสิทธิ | ผู้ชำระเบี้ย (PB) | ผู้ชำระเบี้ยทั่วไป)
+// Row 1 - ปรับปรุงสถานะห้ามเปลี่ยนผู้รับประโยชน์ (ปุ่มแก้ไขผู้รับประโยชน์)
+await page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) table.MUIDataTable-tableRoot-3')
+  .nth(2)
+  .locator('tbody tr', { hasText: 'ปรับปรุงสถานะห้ามเปลี่ยนผู้รับประโยชน์' })
+  .first()
+  .getByTitle('แก้ไขผู้รับประโยชน์')
+  .click();
+
+// Table #3 (ดำเนินการ | ปรับปรุงสถานะห้ามเปลี่ยนผู้รับประโยชน์ | ปรับปรุงสถานะโอนสิทธิ | ลำดับที่ | ชื่อ - นามสกุล | เลขที่บัตร | ความสัมพันธ์ | สืบความสัมพันธ์ได้ | วัน/เดือน/ปีเกิด | โทรศัพท์มือถือ | สัดส่วนผลประโยชน์ | ห้ามเปลี่ยนผู้รับประโยชน์ | ผู้รับโอนสิทธิ | ผู้ชำระเบี้ย (PB) | ผู้ชำระเบี้ยทั่วไป)
+// Row 1 - ปรับปรุงสถานะห้ามเปลี่ยนผู้รับประโยชน์ (checkbox #canNotChangeBeneficiaryFlagCleansing-ECN03-1)
+await page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) table.MUIDataTable-tableRoot-3')
+  .nth(2).locator('tbody tr')
+  .first()
+  .locator('input[type="checkbox"]')
+  .first()
+  .check();
+
+// Table #5 (กรรมธรรม์ | ชื่อผู้เอาประกันภัย | ประเภทกรรมธรรม์ | วันเริ่มสัญญา | สถานะกรรมธรรม์)
+// Row 1 - 1257732 (checkbox #MUIDataTableSelectCell-0)
+await page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) table.MUIDataTable-tableRoot-3')
+  .nth(4)
+  .locator('tbody tr', { hasText: '1257732' })
+  .first()
+  .locator('input[type="checkbox"]')
+  .first()
+  .check();
+
+  await page
+  .locator('table.MUIDataTable-tableRoot-3')
+  .nth(1)                         // table ผู้รับประโยชน์ใหม่ (สมมติ index = 1)
+  .locator('tbody tr', { hasText: 'นายวีบีหก สวารักษ์' })
+  .first()
+  .getByTitle('แก้ไขผู้รับประโยชน์')
+  .click();
+
+  
+
+await page.locator('div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("ความสัมพันธ์*"))')
+  .locator('input#relationshipCode')
+  .first()
+  .nth()
+  .fill('...');
+
+await page.locator('div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("อื่น ๆ โปรดระบุ"))').locator('input#relationshipName')
+  .first()
+  .nth()
+  .fill('...');
+
+await page.locator('div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("คำนำหน้า*"))')
+  page.locator('input#beneficiaryTitleCode')
+  .first()
+  .nth()
+  .fill('...');
+
+await page.locator('div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("ชื่อ*"))')
+  page.locator('input#beneficiaryName').first()
+  .nth(0)
+  
+  
+  .fill('...');
+await page.locator('input#beneficiaryTitleCode')
+await page.locator('div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("นามสกุล"))').locator('input#beneficiarySurName')
+  .first()
+  .nth()
+  .fill('...');
+
+await page.locator('div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("คำนำหน้า (ภาษาอังกฤษ)"))').locator('input#beneficiaryTitleCodeEng')
+  .first()
+  .nth()
+  .fill('...');
+
+await page.locator('div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("ชื่อ (ภาษาอังกฤษ)"))').locator('input#beneficiaryNameEng')
+  .first()
+  .nth()
+  .fill('...');
+
+await page.locator('div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("นามสกุล (ภาษาอังกฤษ)"))').locator('input#beneficiarySurNameEng')
+  .first()
+  .nth()
+  .fill('...');
+
+await page.locator('div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("เพศ *"))')
+
+page.locator('input#beneficiaryGender')
+  .first()
+  .nth()
+  .fill('...');
+
+await page.locator('div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("วันเดือนปี เกิด *"))')
+  page.locator('input#beneficiaryBirthDate')
+  .first()
+  .nth()
+  .fill('...');
+
+await page.locator('div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("อายุ"))').locator('input#beneficiaryCurrentAge')
+  .first()
+  .nth()
+  .fill('...');
+
+await page.locator('div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("ประเภทบัตร *"))')
+page.locator('input#beneficiaryCardType')
+  .first()
+  .nth()
+  .fill('...');
+
+await page.locator('div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("เลขที่บัตร *"))')
+  page.locator('input#beneficiaryCardNo')
+  .first()
+  .nth()
+  .fill('...');
+
+await page.locator('div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("สัดส่วนผลประโยชน์ *"))')
+  page.locator('input#beneficiaryPercentage')
+  .first()
+  .nth()
+  .fill('...');
+
+await page.locator('div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("เลขที่ *"))')
+  page.locator('input#addrNo')
+  .first()
+  .nth()
+  .fill('...');
+
+  page.locator('input#beneficiaryPercentage')
+
+await page.locator('div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("หมู่ที่"))')
+  page.locator('input#villageNo')
+  .first()
+  .nth()
+  .fill('...');
+
+await page.locator('div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("หมู่บ้าน / อาคาร"))')
+  page.locator('input#building')
+  .first()
+  .nth()
+  .fill('...');
+
+await page.locator('div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("ตรอก / ซอย"))')
+  page.locator('input#alley')
+  .first()
+  .nth()
+  .fill('...');
+
+await page.locator('div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("ถนน"))')
+  page.locator('input#road')
+  .first()
+  .nth()
+  .fill('...');
+
+await page.locator('div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("จังหวัด *"))')
+  page.locator('input#provinceCode')
+  .first()
+  .nth()
+  .fill('...');
+
+await page.locator('div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("อำเภอ / เขต *"))')
+  page.locator('input#districtCode')
+  .first()
+  .nth()
+  .fill('...');
+
+await page.locator('div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("ตำบล / แขวง *"))')
+  page.locator('input#subdistrictCode')
+  .first()
+  .nth()
+  .fill('...');
+
+await page.locator('div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("รหัสไปรษณีย์ *"))')
+  page.locator('input#postalCode')
+  .first()
+  .nth()
+  .fill('...');
+
+await page.locator('div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("โทรศัพท์มือถือ"))')
+  .locator('input#mobileNo')
+  .first()
+  .nth()
+  .fill('...');
+
+await page.locator('div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("โทรศัพท์บ้าน"))')
+  .locator('input#telephoneNo')
+  .first()
+  .nth()
+  .fill('...');
+
+await page.locator('div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("อีเมล"))').locator('input#email')
+  .first()
+  .nth()
+  .fill('...');
+
+
+await page.locator('div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("ความสัมพันธ์ *"))')
+  .locator('input#relationshipCode')
+
+   await page.locator('input#relationshipCode')
+
+   page.locator('div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("อีเมล"))').locator('input#email')
 }
+
 
