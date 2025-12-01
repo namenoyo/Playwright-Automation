@@ -61,7 +61,7 @@ test('Run MVY UL', async ({ page }) => {
     const db_name = 'coreul';
     const db_env = 'SIT_EDIT'; // SIT | SIT_EDIT / UAT | UAT_EDIT
     
-    const open_browser = true; // กำหนดให้เปิด browser เพื่อดูการทำงาน (true / false)
+    const open_browser = false; // กำหนดให้เปิด browser เพื่อดูการทำงาน (true / false) ถ้าใช้งานบน QA Broker ให้ตั้งค่าเป็น true
 
     // Login
     const loginPage = new LoginPage(page);
@@ -346,12 +346,22 @@ test('Run MVY UL', async ({ page }) => {
                     // เลือก dropdown 002 BBL
                     await page.locator('select#bankCommon').selectOption('002', { timeout: 10000 });
                     await page.waitForTimeout(500);
-                    // คลิ๊กช่องวันที่
-                    // await page.locator('input#txnDate').click({ timeout: 10000 });
-                    // กรอกวันที่
-                    // await page.locator('input#txnDate').type(`${month_business_date}${day_business_date}${year_business_date}`, { delay: 200 });
+
+                    // กรอกวันที่ business
+                    if (open_browser === true) {
+                        // // คลิ๊กช่องวันที่
+                        // await page.locator('input#txnDate').click({ timeout: 10000 });
+                        // กรอกวันที่
+                        await page.locator('input#txnDate').type(`${month_business_date}/${day_business_date}/${year_business_date}`, { delay: 200 });
+                    } else if (open_browser === false) {
+                        // // คลิ๊กช่องวันที่
+                        // await page.locator('input#txnDate').click({ timeout: 10000 });
+                        // กรอกวันที่
+                        await page.locator('input#txnDate').type(`${day_business_date}/${month_business_date}/${year_business_date}`, { delay: 200 });
+                    }
                     await page.locator('h2', { hasText: '📄  Generator Text File - Counter Bank V.1' }).click(); // คลิ๊กนอกช่องวันที่เพื่อให้ระบบลงวันที่
                     await page.waitForTimeout(500); // รอให้ระบบประมวลผล
+
                     // เคลียร์ค่าช่อง Ref1
                     await page.locator('table#detailTable').locator('tbody > tr > td > input').nth(3).fill('');
                     // กรอก Ref1 (เลขที่บิล)
@@ -648,117 +658,6 @@ test('Run MVY UL', async ({ page }) => {
 
             } else {
                 console.log('\nมีคำสั่งซื้อ-ขายคงค้างอยู่ ข้าม step รัน Batch Daily');
-            }
-
-            /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-            // Update RV
-            if (skip_create_update_rv === false) {
-                // Update RV if policy year >= 5
-                if (policy_year >= 5) {
-
-                    // ตรวจสอบว่ามีการทำ update RV หรือยัง
-                    const query_check_update_rv = "SELECT trstdt,rvbdid,mnrvbd,tprvbd,torvbd,smrvbd FROM TIVSRV01 where polnvc in ($1) ORDER BY rvbdid DESC limit 1;";
-                    const result_check_update_rv = await db.query(query_check_update_rv, [policyno]);
-
-                    // if (result_check_update_rv.rows[0].mnrvbd !== '0.0000' && result_check_update_rv.rows[0].tprvbd !== '0.0000' && result_check_update_rv.rows[0].torvbd !== '0.0000' && result_check_update_rv.rows[0].smrvbd !== '0.0000') {
-
-                    // ตัด field tprvbd ออก เพราะบางกรณีอาจจะไม่มีค่า
-                    if (result_check_update_rv.rows[0].mnrvbd !== '0.0000' && result_check_update_rv.rows[0].torvbd !== '0.0000' && result_check_update_rv.rows[0].smrvbd !== '0.0000') {
-                        console.log('\nมีคำสั่งขายคงค้างอยู่ ข้าม step รัน Update RV');
-                    } else {
-                        // ดึงข้อมูลหลังจาก create rv เสร็จ
-                        const query_pull_create_rv_2 = "select * from tivsrv02 where rvbdid = $1;";
-                        const result_pull_create_rv_2 = await db.query(query_pull_create_rv_2, [result_check_update_rv.rows[0].rvbdid]);
-
-                        // ทำการอัพเดท NAV ของกองทุนที่เกี่ยวข้องกับคำสั่งซื้อขาย ก่อนรันอัพเดท RV ใน database
-                        // loop ตามจำนวนคำสั่งซื้อขายที่เจอใน database
-                        for (const row_pull_create_rv of result_pull_create_rv_2.rows) {
-
-                            const fund_name_updatenav = fund_code_dictionary[row_pull_create_rv.fundnm] || 'Unknown Fund';
-                            console.log(`\nอัพเดทราคา NAV ประจำวัน วันที่สั่งซื้อขาย: ${row_pull_create_rv.boprdt}, กองทุน: ${fund_name_updatenav.code}`);
-
-                            const NetAssetValue = fund_name_updatenav.NetAssetValue;
-                            const NAVValue = fund_name_updatenav.NAVValue;
-                            const BidPriceValue = fund_name_updatenav.BidPriceValue;
-                            const OfferPriceValue = fund_name_updatenav.OfferPriceValue;
-
-                            const dateupdate_sell_nav = `${row_pull_create_rv.boprdt}000000000`;
-                            // แปลง dateupdate_nav string เป็น numeric
-                            const numeric_dateupdate_sell_nav = Number(dateupdate_sell_nav);
-
-                            // ค้นหา ข้อมูล NAV ของกองทุน ใน database ว่ามีการอัพเดท NAV หรือยัง
-                            const query_check_nav_update_rv = "select * from tivnav01 t where fundnm = $1 and upnvdt = $2";
-                            const result_check_nav_update_rv = await db.query(query_check_nav_update_rv, [row_pull_create_rv.fundnm, numeric_dateupdate_sell_nav]);
-
-                            if (result_check_nav_update_rv.rows.length === 0) {
-                                console.log(`\nทำการอัพเดท NAV ของกองทุน ${fund_name_updatenav.code} สำหรับคำสั่งซื้อขาย วันที่ ${row_pull_create_rv.boprdt}`);
-
-                                // insert ราคา NAV ลงในตาราง tivnav01
-                                const query_insert_nav_update_sell = `INSERT INTO public.tivnav01 (nav0id, fundnm, upnvdt, navpbd, bidpbd, offebd, cretdt, crbyvc, updadt, upbyvc, assvbd, remkvc, consdt, cobyvc, nvscnm) VALUES (nextval('seq_tivnav01_id'), $1, $2, $3, $4, $5, $2, 'kornkanok.pr', $2, 'saowanee.na', $6, '', $2, 'saowanee.na', 3);`;
-                                const result_insert_nav_update_sell = await db.query(query_insert_nav_update_sell, [row_pull_create_rv.fundnm, numeric_dateupdate_sell_nav, NAVValue, BidPriceValue, OfferPriceValue, NetAssetValue]);
-                                // จำนวนแถวที่ถูก insert
-                                console.log(`Insert NAV update result: ${result_insert_nav_update_sell.rowCount}`);
-                            } else {
-                                console.log(`\nมีการอัพเดท NAV ของกองทุน ${fund_name_updatenav.code} สำหรับคำสั่งซื้อขาย วันที่ ${row_pull_create_rv.boprdt}`);
-                            }
-                        }
-
-                        // // เช็คราคา NAV ของกองทุน
-                        // // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Investment" > "อัพเดทราคา NAV ประจำวัน"
-                        // await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'Investment', 'อัพเดทราคา NAV ประจำวัน');
-                        // // รอหน้าโหลดเสร็จ
-                        // await page.waitForLoadState('networkidle');
-                        // await expect(page.locator('div[class="layout-m-hd"]').locator('text = อัพเดทราคา NAV ประจำวัน')).toBeVisible({ timeout: 60000 });
-
-                        // // loop ตามจำนวนคำสั่งซื้อขายที่เจอใน database
-                        // for (const row_pull_create_rv of result_pull_create_rv_2.rows) {
-                        //     const fund_name_updatenav = fund_code_dictionary[row_pull_create_rv.fundnm] || 'Unknown Fund';
-                        //     console.log(`\nอัพเดทราคา NAV ประจำวัน วันที่สั่งซื้อขาย: ${row_pull_create_rv.boprdt}, กองทุน: ${fund_name_updatenav.code}`);
-
-                        //     const NetAssetValue = fund_name_updatenav.NetAssetValue;
-                        //     const NAVValue = fund_name_updatenav.NAVValue;
-                        //     const BidPriceValue = fund_name_updatenav.BidPriceValue;
-                        //     const OfferPriceValue = fund_name_updatenav.OfferPriceValue;
-
-                        //     // ค้นหา ข้อมูล NAV ของกองทุน
-                        //     await dailyNavUpdatePage.searchDailyNavUpdate({ date: row_pull_create_rv.boprdt });
-                        //     await page.waitForTimeout(2000); // เพิ่ม delay 2 วินาที เพื่อรอข้อมูลโหลด
-                        //     // เช็คว่ากองทุนมีการอัพเดท NAV หรือยัง ถ้ายังให้ทำการอัพเดท
-                        //     if (await table_DailyNavUpdate(page).dailynavupdate_btnSave(fund_name_updatenav.code).isVisible()) {
-                        //         await dailyNavUpdatePage.saveDailyNavUpdate({ fundname: fund_name_updatenav.code, NetAssetValue, NAVValue, BidPriceValue, OfferPriceValue });
-                        //     } else {
-                        //         console.log(`กองทุน ${fund_name_updatenav.code} มีการอัพเดท NAV แล้ว`);
-                        //     }
-                        //     // เช็คว่ากองทุนมีการอนุมัติ NAV หรือยัง ถ้ายังให้ทำการอนุมัติ
-                        //     if (await table_DailyNavUpdate(page).dailynavupdate_btnApprove(fund_name_updatenav.code).isVisible()) {
-                        //         await dailyNavUpdatePage.approveDailyNavUpdate({ fundname: fund_name_updatenav.code });
-                        //     } else {
-                        //         console.log(`กองทุน ${fund_name_updatenav.code} มีการอนุมัติ NAV แล้ว`);
-                        //     }
-                        // }
-
-                        console.log("\nทำการรันอัพเดท RV เนื่องจาก ปีกรมธรรม์ >= 5");
-
-                        // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Policy Service" > "Batch Manual Support"
-                        await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'Policy Service', 'Batch Manual Support');
-                        // รอหน้าโหลดเสร็จ
-                        await page.waitForLoadState('networkidle');
-                        await expect(page.locator('div[class="layout-m-hd"]'), { hasText: 'Batch Manual Support' }).toBeVisible({ timeout: 60000 });
-
-                        // รัน batch สร้าง RV UL
-                        await batchManualSupportPage.runBatchINV({ batch: 'UpdateRV', policyno: policyno, date: result_check_update_rv.rows[0].trstdt });
-
-                        // เช็คว่ามีการอัพเดท RV สำเร็จหรือไม่
-                        const result_check_update_rv_after = await db.query(query_check_update_rv, [policyno]);
-                        if (result_check_update_rv_after.rows[0].mnrvbd === '0.0000' && result_check_update_rv_after.rows[0].torvbd === '0.0000' && result_check_update_rv_after.rows[0].smrvbd === '0.0000') {
-                            // แสดง error
-                            throw new Error('อัพเดท RV ไม่สำเร็จ');
-                        } else {
-                            console.log('\nอัพเดท RV สำเร็จ');
-                        }
-                    }
-                }
             }
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1200,6 +1099,83 @@ test('Run MVY UL', async ({ page }) => {
                     await page.waitForTimeout(1000); // เพิ่ม delay 1 วินาที เพื่อรอข้อมูลโหลด
                     await fundRedemptionReceipt.clickFundRedemptionReceiptConfirmButton({ invoiceno: row_fundredemptionreceipt.invovc, date: row_fundredemptionreceipt.ordrdt });
 
+                }
+            }
+
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            // Update RV
+            if (skip_create_update_rv === false) {
+                // Update RV if policy year >= 5
+                if (policy_year >= 5) {
+
+                    // ตรวจสอบว่ามีการทำ update RV หรือยัง
+                    const query_check_update_rv = "SELECT trstdt,rvbdid,mnrvbd,tprvbd,torvbd,smrvbd FROM TIVSRV01 where polnvc in ($1) ORDER BY rvbdid DESC limit 1;";
+                    const result_check_update_rv = await db.query(query_check_update_rv, [policyno]);
+
+                    // if (result_check_update_rv.rows[0].mnrvbd !== '0.0000' && result_check_update_rv.rows[0].tprvbd !== '0.0000' && result_check_update_rv.rows[0].torvbd !== '0.0000' && result_check_update_rv.rows[0].smrvbd !== '0.0000') {
+
+                    // ตัด field tprvbd ออก เพราะบางกรณีอาจจะไม่มีค่า
+                    if (result_check_update_rv.rows[0].mnrvbd !== '0.0000' && result_check_update_rv.rows[0].torvbd !== '0.0000' && result_check_update_rv.rows[0].smrvbd !== '0.0000') {
+                        console.log('\nมีคำสั่งขายคงค้างอยู่ ข้าม step รัน Update RV');
+                    } else {
+                        // ดึงข้อมูลหลังจาก create rv เสร็จ
+                        const query_pull_create_rv_2 = "select * from tivsrv02 where rvbdid = $1;";
+                        const result_pull_create_rv_2 = await db.query(query_pull_create_rv_2, [result_check_update_rv.rows[0].rvbdid]);
+
+                        // ทำการอัพเดท NAV ของกองทุนที่เกี่ยวข้องกับคำสั่งซื้อขาย ก่อนรันอัพเดท RV ใน database
+                        // loop ตามจำนวนคำสั่งซื้อขายที่เจอใน database
+                        for (const row_pull_create_rv of result_pull_create_rv_2.rows) {
+
+                            const fund_name_updatenav = fund_code_dictionary[row_pull_create_rv.fundnm] || 'Unknown Fund';
+                            console.log(`\nอัพเดทราคา NAV ประจำวัน วันที่สั่งซื้อขาย: ${row_pull_create_rv.boprdt}, กองทุน: ${fund_name_updatenav.code}`);
+
+                            const NetAssetValue = fund_name_updatenav.NetAssetValue;
+                            const NAVValue = fund_name_updatenav.NAVValue;
+                            const BidPriceValue = fund_name_updatenav.BidPriceValue;
+                            const OfferPriceValue = fund_name_updatenav.OfferPriceValue;
+
+                            const dateupdate_sell_nav = `${row_pull_create_rv.boprdt}000000000`;
+                            // แปลง dateupdate_nav string เป็น numeric
+                            const numeric_dateupdate_sell_nav = Number(dateupdate_sell_nav);
+
+                            // ค้นหา ข้อมูล NAV ของกองทุน ใน database ว่ามีการอัพเดท NAV หรือยัง
+                            const query_check_nav_update_rv = "select * from tivnav01 t where fundnm = $1 and upnvdt = $2";
+                            const result_check_nav_update_rv = await db.query(query_check_nav_update_rv, [row_pull_create_rv.fundnm, numeric_dateupdate_sell_nav]);
+
+                            if (result_check_nav_update_rv.rows.length === 0) {
+                                console.log(`\nทำการอัพเดท NAV ของกองทุน ${fund_name_updatenav.code} สำหรับคำสั่งซื้อขาย วันที่ ${row_pull_create_rv.boprdt}`);
+
+                                // insert ราคา NAV ลงในตาราง tivnav01
+                                const query_insert_nav_update_sell = `INSERT INTO public.tivnav01 (nav0id, fundnm, upnvdt, navpbd, bidpbd, offebd, cretdt, crbyvc, updadt, upbyvc, assvbd, remkvc, consdt, cobyvc, nvscnm) VALUES (nextval('seq_tivnav01_id'), $1, $2, $3, $4, $5, $2, 'kornkanok.pr', $2, 'saowanee.na', $6, '', $2, 'saowanee.na', 3);`;
+                                const result_insert_nav_update_sell = await db.query(query_insert_nav_update_sell, [row_pull_create_rv.fundnm, numeric_dateupdate_sell_nav, NAVValue, BidPriceValue, OfferPriceValue, NetAssetValue]);
+                                // จำนวนแถวที่ถูก insert
+                                console.log(`Insert NAV update result: ${result_insert_nav_update_sell.rowCount}`);
+                            } else {
+                                console.log(`\nมีการอัพเดท NAV ของกองทุน ${fund_name_updatenav.code} สำหรับคำสั่งซื้อขาย วันที่ ${row_pull_create_rv.boprdt}`);
+                            }
+                        }
+
+                        console.log("\nทำการรันอัพเดท RV เนื่องจาก ปีกรมธรรม์ >= 5");
+
+                        // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Policy Service" > "Batch Manual Support"
+                        await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'Policy Service', 'Batch Manual Support');
+                        // รอหน้าโหลดเสร็จ
+                        await page.waitForLoadState('networkidle');
+                        await expect(page.locator('div[class="layout-m-hd"]'), { hasText: 'Batch Manual Support' }).toBeVisible({ timeout: 60000 });
+
+                        // รัน batch สร้าง RV UL
+                        await batchManualSupportPage.runBatchINV({ batch: 'UpdateRV', policyno: policyno, date: result_check_update_rv.rows[0].trstdt });
+
+                        // เช็คว่ามีการอัพเดท RV สำเร็จหรือไม่
+                        const result_check_update_rv_after = await db.query(query_check_update_rv, [policyno]);
+                        if (result_check_update_rv_after.rows[0].mnrvbd === '0.0000' && result_check_update_rv_after.rows[0].torvbd === '0.0000' && result_check_update_rv_after.rows[0].smrvbd === '0.0000') {
+                            // แสดง error
+                            throw new Error('อัพเดท RV ไม่สำเร็จ');
+                        } else {
+                            console.log('\nอัพเดท RV สำเร็จ');
+                        }
+                    }
                 }
             }
 
