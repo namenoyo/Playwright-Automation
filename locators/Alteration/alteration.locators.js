@@ -217,6 +217,26 @@ export const requestissueformLocator = (page) => ({
     SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_txt_If_Nature_of_Work: page.locator('#extraOccupationType'),
     SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_txt_If_Nature_of_business: page.locator('#extraOccupationBusiness'),
     SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_txt_If_Annual_Income: page.locator('#extraAnnualRevenue'),
+    
+    // ECN09
+    // ไม่มีข้อมูลที่ต้องกรอก
+
+    // ECN11
+    // ข้อมูลที่เปลี่ยนแปลง
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_sel_ChangedData: page.locator('#editType'),
+    // รายละเอียด
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_txt_Detail: page.locator('#editText'),
+
+    // ECN13
+    // ไม่มีข้อมูลที่ต้องกรอก
+
+    // ECN14
+    // สาเหตุ
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_sel_Cause: page.locator('#cause'),
+    // ผู้ออกกรมธรรม์ฉบับใบเทน
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_sel_RequesterType: page.locator('#requesterType'),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_chk_Feewaived: page.locator('input#serviceFeeWaived'),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_txt_ReasonFeeWaived: page.locator('#serviceFeeWaivedReason'),
 
 });
 
