@@ -78,6 +78,17 @@ class VerifyInvestmentOrderBuyOperPage {
             await this.dialog_verify_investmentorderoper.verify_investmentorderoper_comment_cutoff.getByText('ส่งคำสั่งวันนี้', { exact: true }).click({ timeout: 10000 });
         }
 
+        // รอ dialog กรอกเหตุผล cutoff ขึ้นมา
+        await this.page.waitForTimeout(1000);
+
+        const confirm_cutoff = await this.dialog_verify_investmentorderoper.verify_investmentorderoper_confirm_cutoff.isVisible({ timeout: 10000 });
+        if (confirm_cutoff) {
+            await this.expect(this.dialog_verify_investmentorderoper.verify_investmentorderoper_confirm_cutoff).toBeVisible({ timeout: 60000 });
+            // กดปุ่ม ส่งคำสั่งวันนี้
+            await this.dialog_verify_investmentorderoper.verify_investmentorderoper_confirm_cutoff.getByText('ส่งคำสั่งวันนี้', { exact: true }).click({ timeout: 10000 });
+            await this.expect(this.dialog_verify_investmentorderoper.verify_investmentorderoper_confirm_cutoff).not.toBeVisible({ timeout: 60000 });
+        }
+
         // รอ popup ยืนยันรายการคำสั่งขาย เรียบร้อย ขึ้นมา
         await this.expect(this.dialog_verify_investmentorderoper.verify_investmentorderoper_successpopup).toBeVisible({ timeout: 60000 });
         await this.dialog_verify_investmentorderoper.verify_investmentorderoper_successpopup.getByText('ตกลง', { exact: true }).click({ timeout: 10000 });
@@ -97,12 +108,12 @@ class VerifyInvestmentOrderBuyOperPage {
         // รอ dialog กรอกเหตุผล cutoff ขึ้นมา
         await this.page.waitForTimeout(1000);
 
-        const check_cutoff = await this.dialog_verify_investmentorderoper.verify_investmentorderoper_comment_cutoff.isVisible({ timeout: 10000 });
+        const check_cutoff = await this.dialog_verify_investmentorderoper.verify_investmentorderoper_comment_cutoff_tab1.isVisible({ timeout: 10000 });
         if (check_cutoff) {
             // รอ dialog กรอกเหตุผล cutoff ขึ้นมา
-            await this.expect(this.dialog_verify_investmentorderoper.verify_investmentorderoper_comment_cutoff).toBeVisible({ timeout: 60000 });
+            await this.expect(this.dialog_verify_investmentorderoper.verify_investmentorderoper_comment_cutoff_tab1).toBeVisible({ timeout: 60000 });
             // คลิ๊กช่อง เหตุผล cutoff
-            await this.dialog_verify_investmentorderoper.verify_investmentorderoper_comment_cutoff.click({ timeout: 10000 });
+            await this.dialog_verify_investmentorderoper.verify_investmentorderoper_comment_cutoff_tab1.click({ timeout: 10000 });
 
             // กรอกเหตุผล cutoff
             await this.dialog_verify_investmentorderoper.verify_investmentorderoper_comment_cutoff_txtreason.evaluate((el, value) => {
@@ -114,7 +125,7 @@ class VerifyInvestmentOrderBuyOperPage {
             }, 'ทดสอบ');
 
             // กดปุ่ม ส่งคำสั่งวันนี้
-            await this.dialog_verify_investmentorderoper.verify_investmentorderoper_comment_cutoff.getByText('ส่งคำสั่งวันนี้', { exact: true }).click({ timeout: 10000 });
+            await this.dialog_verify_investmentorderoper.verify_investmentorderoper_comment_cutoff_tab1.getByText('ส่งคำสั่งวันนี้', { exact: true }).click({ timeout: 10000 });
         }
 
         // รอ popup ยืนยันรายการคำสั่งขาย เรียบร้อย ขึ้นมา

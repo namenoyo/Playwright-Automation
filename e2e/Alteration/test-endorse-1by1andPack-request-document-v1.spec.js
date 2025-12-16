@@ -47,8 +47,8 @@ test.describe.configure({ mode: 'parallel' }); // ให้เคสในไฟ
 // endIdx = จุดสิ้นสุด (ไม่รวม)
 // จำนวนข้อมูลที่ได้ = endIdx - startIdx
 
-const startIdx = 0;
-const endIdx = 341; // ทั้งหมด 682 เคส  / ท็อปรัน 342-10000 
+const startIdx = 341;
+const endIdx = 10000; // ทั้งหมด 682 เคส  / ท็อปรัน 342-10000 
 const testData = data_matrix_save_endorse.slice(startIdx, endIdx); // ตัดข้อมูลตามช่วงที่กำหนด
 
 for (const data_save_endorse of testData) {

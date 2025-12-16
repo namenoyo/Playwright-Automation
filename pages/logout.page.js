@@ -9,9 +9,8 @@ export class LogoutPage {
 
     async logoutNBSWeb() {
         await this.expect(this.logoutlocators.logoutNBSWebButton).toBeVisible({ timeout: 60000 });
-        this.page.on('dialog', async (dialog) => {
-            // console.log(`Dialog message: ${dialog.message()}`)
-            await dialog.accept(); // หรือ dialog.dismiss() ถ้าต้องการยกเลิก
+        this.page.once('dialog', async (dialog) => {
+            await dialog.accept();
         });
         await this.logoutlocators.logoutNBSWebButton.click({ timeout: 10000 });
         await this.page.waitForLoadState('networkidle');

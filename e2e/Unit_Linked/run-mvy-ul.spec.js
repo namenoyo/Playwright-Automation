@@ -43,22 +43,25 @@ const { toDashed, toPlain } = require('../../utils/formatDate.js');
 
 
 test('Run MVY UL', async ({ page }) => {
-
     // ตั้งค่า timeout สำหรับการทดสอบ
-    test.setTimeout(7200000); // 2 ชั่วโมง
+    test.setTimeout(86400000); // 24 ชั่วโมง
 
     // ข้อมูลสำหรับทดสอบ
     const username = 'boss';
     const password = '1234';
-    const policyno = 'UL00003029'; // เลขกรมธรรม์ที่ต้องการทดสอบ
+    const policyno = 'UL00003036'; // เลขกรมธรรม์ที่ต้องการทดสอบ
     const env = 'SIT' // SIT / UAT
-    const fix_endloop = '1'; // กำหนดจำนวนรอบที่ต้องการให้ทำงาน (ถ้าไม่ต้องการให้ทำงานแบบวนซ้ำ ให้กำหนดเป็นค่าว่าง '')
+    const fix_endloop = ''; // กำหนดจำนวนรอบที่ต้องการให้ทำงาน (ถ้าไม่ต้องการให้ทำงานแบบวนซ้ำ ให้กำหนดเป็นค่าว่าง '')
     const auto_buyorder_Loyalty_Bonus = true; // กำหนดให้สร้างคำสั่งซื้ออัตโนมัติ สำหรับ กรณีเงินปันผลสะสม (Loyalty Bonus) เท่านั้น (true / false)
     const auto_pay_bills = true; // กำหนดให้ชำระบิลอัตโนมัติ (true / false)
     const skip_create_update_rv = false; // ข้ามการสร้าง/อัพเดท RV (true / false)
+    const skip_auto_pay_bills = false; // ข้ามการชำระบิลอัตโนมัติ (true / false)
+    const auto_pay_bills_count = 1; // จำนวนครั้งที่ต้องการจ่ายบิลอัตโนมัติ (กรณีทดสอบหลายรอบ)
     // connection database
     const db_name = 'coreul';
     const db_env = 'SIT_EDIT'; // SIT | SIT_EDIT / UAT | UAT_EDIT
+
+    const open_browser = false; // กำหนดให้เปิด browser เพื่อดูการทำงาน (true / false) ถ้าใช้งานบน QA Broker ให้ตั้งค่าเป็น true
 
     // Login
     const loginPage = new LoginPage(page);
@@ -85,14 +88,17 @@ test('Run MVY UL', async ({ page }) => {
 
     let check_genbill = false; // ตัวแปรเช็คว่ามีการสร้างบิลหรือยัง
     let check_genbill_after = false; // ตัวแปรเช็คว่ามีการสร้างบิลหรือยัง หลังจากรัน batch
+    let check_paybill_after = false; // ตัวแปรเช็คว่ามีการชำระบิลอัตโนมัติหรือยัง
 
     let endloop;
     let loopCount = 0;
     const maxLoop = fix_endloop !== '' ? Number(fix_endloop) : Infinity;
 
+    let stop_auto_pay_bills = 0;
+
     while (endloop !== 'Y' && loopCount < maxLoop) { // หลังจากเสร็จแล้วต้องเอา endloop !== '1' ออก เพราะจะแค่ทดสอบ 1 รอบ
 
-        console.log('\n-------------------------------------------- Start of Process --------------------------------------------');
+        console.log('\n-------------------------------------------- Start of Process ------------------------------------------');
 
         let db;
 
@@ -188,8 +194,16 @@ test('Run MVY UL', async ({ page }) => {
         console.log('\nBusiness process date (วันที่หักค่าธรรมเนียมรายเดือนงวดถัดไป (MVY) - 1 day): ' + business_process_date);
         console.log('วันที่ทำการสร้างบิล (Bill) (วันที่กำหนดชำระถัดไป (Next Due) - 30 days): ' + gen_bill_date);
 
+        // เช็คคำสั่งคงค้าง ก่อนสร้างบิลและ ชำระบิล
+        const query_first_check_invoice = "select distinct ordrdt,vrstvc,altnvc,invoid from tivreq01 t where t.polnvc in ($1) and irstvc = 'IR01'"
+        const result_first_check_invoice = await db.query(query_first_check_invoice, [policyno]);
+        const first_invoice_count = result_first_check_invoice.rows.length;
+
+        // console.log(`\nเงื่อนไขที่ 1 ${mvyDateObj} => ${genbillDate} and ${check_genbill} and ${first_invoice_count}`);
+        // console.log(`เงื่อนไขที่ 2 ${nextDueDate} < ${mvyDateObj} and ${skip_auto_pay_bills} and ${first_invoice_count}`);
+
         // เปรียบเทียบ
-        if (mvyDateObj >= genbillDate && check_genbill === false) {
+        if (mvyDateObj >= genbillDate && check_genbill === false && first_invoice_count === 0) {
             if (check_genbill_after === false) {
                 // Check ว่า Gen bill สำเร็จหรือไม่
                 const query_check_date_ref2 = 'select p.egrpdt from tpsplc01 p where p.polnvc = $1;';
@@ -260,212 +274,272 @@ test('Run MVY UL', async ({ page }) => {
                     console.log('สร้างบิลเรียบร้อยแล้ว');
                 }
             }
-        } else if (nextDueDate <= mvyDateObj) {
-            if (auto_pay_bills === true) {
-                // logout NBS
-                await logoutPage.logoutNBSWeb();
-                await page.waitForTimeout(1000); // รอหน้า logout เสร็จ
+        } else if (nextDueDate < mvyDateObj && skip_auto_pay_bills === false && first_invoice_count === 0) {
+            if (check_paybill_after === false) {
+                if (auto_pay_bills === true) {
+                    // logout NBS
+                    await logoutPage.logoutNBSWeb();
+                    await page.waitForTimeout(1000); // รอหน้า logout เสร็จ
 
-                // ทำการตรวจสอบก่อนว่ามีการชำระบิลอัตโนมัติหรือยัง
-                // เช็ค ref2vc ล่าสุด
-                const query_check_ref2_after_genbill = 'select ref1vc, ref2vc from tbcbil01 where polnvc = $1 order by blpmid desc limit 1'
-                const params_check_ref2_after_genbill = await db.query(query_check_ref2_after_genbill, [policyno]);
-
-                const ref2vc_after_bill_latest = params_check_ref2_after_genbill.rows[0].ref2vc;
-
-                // เช็คว่ามีการ match bill หรือไม่ใน database
-                const query_check_have_bill = 'select mcstvc,depovc,polnvc,ref2vc from tbcpym01 where polnvc = $1 and ref2vc = $2;';
-                const result_check_have_bill = await db.query(query_check_have_bill, [policyno, ref2vc_after_bill_latest]);
-
-                if (result_check_have_bill.rows.length > 0) {
-                    console.log("\nหยุดทำงาน: มีการชำระบิลอัตโนมัติไปแล้ว");
-
-                    // ไปยังหน้า NBS
-                    await loginPage.gotoNBSENV(env);
-                    // เข้าสู่ระบบด้วยชื่อผู้ใช้และรหัสผ่าน
-                    await loginPage.login(username, password);
-
-                    return endloop = 'Y';
-                } else {
-                    // ดึงข้อมูล Bill
-                    const query_check_date_ref2 = 'select p.egrpdt from tpsplc01 p where p.polnvc = $1;';
-                    const query_check_genbill = 'select ref1vc, ref2vc , spambd from tbcbil01 where polnvc = $1 and ref2vc = $2;';
-
-                    // ดึงข้อมูลจาก database มาเช็ค
-                    const params_check_date_ref2 = await db.query(query_check_date_ref2, [policyno]);
-                    const cutText_end_grace_period = params_check_date_ref2.rows[0].egrpdt.substring(0, 8);
-                    const convert_cutText_end_grace_period = convertToThaiDate(cutText_end_grace_period);
-
-                    const year_grace_period = cutText_end_grace_period.substring(0, 4); // ปี ค.ศ.
-                    const month_grace_period = cutText_end_grace_period.substring(4, 6); // เดือน
-                    const day_grace_period = cutText_end_grace_period.substring(6, 8); // วัน
-
-                    // เช็คว่ามีการสร้างบิลหรือไม่
-                    const params_check_genbill = await db.query(query_check_genbill, [policyno, convert_cutText_end_grace_period]);
-
-                    console.log("\nทำการชำระบิลอัตโนมัติ");
-
-                    /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-                    // ไปที่ เว็ปไซต์ QA generate file ชำระบิลอัตโนมัติ
-                    await page.goto('https://qatool.ochi.link/#');
-                    // รอหน้าโหลดเสร็จ
-                    await page.waitForLoadState('networkidle');
-                    // กดเมนู Gen Text File Counter Bank
-                    await page.locator("a[onclick=\"switchTab('dline')\"]").click({ timeout: 10000 });
-                    // รอหน้าโหลดเสร็จ
-                    await expect(page.locator('text=📄  Generator Text File - Counter Bank V.1')).toBeVisible({ timeout: 60000 });
-                    // เลือก dropdown 002 BBL
-                    await page.locator('select#bankCommon').selectOption('002', { timeout: 10000 });
-                    // คลิ๊กช่องวันที่
-                    await page.locator('input#txnDate').click({ timeout: 10000 });
-                    // กรอกวันที่
-                    await page.locator('input#txnDate').type(`${month_grace_period}${day_grace_period}${year_grace_period}`, { delay: 200 });
-                    await page.waitForTimeout(500); // รอให้ระบบประมวลผล
-                    // เคลียร์ค่าช่อง Ref1
-                    await page.locator('table#detailTable').locator('tbody > tr > td > input').nth(3).fill('');
-                    // กรอก Ref1 (เลขที่บิล)
-                    await page.locator('table#detailTable').locator('tbody > tr > td > input').nth(3).type(params_check_genbill.rows[0].ref1vc, { delay: 100 });
-                    // เคลียร์ค่าช่อง Ref2
-                    await page.locator('table#detailTable').locator('tbody > tr > td > input').nth(4).fill('');
-                    // กรอก Ref2 (วันสิ้นสุดระยะเวลาผ่อนผัน)
-                    await page.locator('table#detailTable').locator('tbody > tr > td > input').nth(4).type(params_check_genbill.rows[0].ref2vc, { delay: 100 });
-                    // เคลียร์ค่าช่อง Amount
-                    await page.locator('table#detailTable').locator('tbody > tr > td > input').nth(5).fill('');
-                    // กรอก Amount (จำนวนเงินบิล)
-                    const amount = `${params_check_genbill.rows[0].spambd.replace(',', '')}`;
-                    // ลบ หลัง . ให้เหลือแค่ 2 ตำแหน่ง
-                    const decimalIndex = amount.indexOf('.');
-                    let formattedAmount = amount;
-                    if (decimalIndex !== -1) {
-                        formattedAmount = amount.substring(0, decimalIndex + 3);
-                    }
-                    console.log('จำนวนเงินบิลที่ต้องชำระ: ' + formattedAmount);
-                    await page.locator('table#detailTable').locator('tbody > tr > td > input').nth(5).type(formattedAmount, { delay: 100 });
-                    // กดปุ่ม Generate
-                    await page.locator('button[onclick="generateText()"]').click({ timeout: 10000 });
-                    // เช็คว่ามีข้อมูลขึ้นใน textarea หรือไม่
-                    await expect(page.locator('textarea#outputArea')).toHaveText(/./, { timeout: 60000 });
-
-                    // 🧭 สร้าง path ของโฟลเดอร์ปลายทาง (อยู่ในโฟลเดอร์ Playwright)
-                    const downloadDir = path.resolve(__dirname, '../../generate_file_bill_counter_bank');
-
-                    // 🧹 เคลียร์ไฟล์เก่าทั้งหมดในโฟลเดอร์ก่อนดาวน์โหลดใหม่
-                    const files = fs.readdirSync(downloadDir);
-                    for (const file of files) {
-                        const filePath = path.join(downloadDir, file);
-                        if (fs.lstatSync(filePath).isFile()) {
-                            fs.unlinkSync(filePath);
-                        }
-                    }
-                    console.log(`🧹 เคลียร์ไฟล์เก่าในโฟลเดอร์: ${downloadDir}`);
-
-                    // 🕹️ คลิกปุ่มที่ทำให้เกิดการดาวน์โหลด
-                    const [download] = await Promise.all([
-                        page.waitForEvent('download'),
-                        // กดปุ่ม Export
-                        await page.locator('button[onclick="downloadTxt()"]').click({ timeout: 10000 }), // 👈 เปลี่ยน selector ตามจริง
-                    ]);
-                    const now = new Date();
-                    const thaiTime = new Date(now.getTime() + 7 * 60 * 60 * 1000); // บวก 7 ชั่วโมง
-                    const datetime = thaiTime
-                        .toISOString()
-                        .replace(/[-:]/g, '')
-                        .replace('T', '_')
-                        .split('.')[0]; // เช่น 20251110_162045
-
-                    const customFilename = `BBL_${datetime}.txt`; // 👈 เปลี่ยนนามสกุลตามไฟล์จริง (csv, xlsx, etc.)
-
-                    // 💾 เซฟไฟล์ตามชื่อที่เรากำหนด
-                    const savePath = path.join(downloadDir, customFilename);
-                    await download.saveAs(savePath);
-
-                    console.log('✅ บันทึกไฟล์แล้วที่:', savePath);
-
-                    /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-                    // ไปยังหน้า NBS
-                    await loginPage.gotoNBSENV(env);
-                    // เข้าสู่ระบบด้วยชื่อผู้ใช้และรหัสผ่าน
-                    await loginPage.login(username, password);
-
-                    /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-                    // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Policy Service" > "Batch Manual Support"
-                    await gotomenu.menuAll('ระบบงาน Back Office', 'ใบเสร็จส่วนกลาง', 'นำเข้าไฟล์การชำระเงิน', 'นำเข้าไฟล์การชำระเงิน');
-
-                    // นำเข้าไฟล์ชำระบิล
-                    await importPayBillsPage.importfilePayBills({ filename: customFilename });
-
-                    /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+                    // ทำการตรวจสอบก่อนว่ามีการชำระบิลอัตโนมัติหรือยัง
                     // เช็ค ref2vc ล่าสุด
-                    const query_check_ref2_genbill = 'select ref1vc, ref2vc from tbcbil01 where polnvc = $1 order by ref2vc desc limit 1'
-                    const params_check_ref2_genbill = await db.query(query_check_ref2_genbill, [policyno]);
+                    const query_check_ref2_after_genbill = 'select ref1vc, ref2vc from tbcbil01 where polnvc = $1 order by blpmid desc limit 1'
+                    const params_check_ref2_after_genbill = await db.query(query_check_ref2_after_genbill, [policyno]);
 
-                    const ref2vc_latest = params_check_ref2_genbill.rows[0].ref2vc;
+                    const ref2vc_after_bill_latest = params_check_ref2_after_genbill.rows[0].ref2vc;
 
                     // เช็คว่ามีการ match bill หรือไม่ใน database
-                    const query_check_match_bill = 'select mcstvc,depovc,polnvc,ref2vc from tbcpym01 where polnvc = $1 and ref2vc = $2;';
-                    const result_check_match_bill = await db.query(query_check_match_bill, [policyno, ref2vc_latest]);
+                    const query_check_have_bill = 'select mcstvc,depovc,polnvc,ref2vc from tbcpym01 where polnvc = $1 and ref2vc = $2;';
+                    const result_check_have_bill = await db.query(query_check_have_bill, [policyno, ref2vc_after_bill_latest]);
 
-                    const retry_loop_count = 12;
-                    let retry_loopcount = 0;
-                    let status_match_bill = '';
-                    let check_loop_count = 0;
+                    if (result_check_have_bill.rows.length > 0) {
+                        console.log("\nหยุดทำงาน: มีการชำระบิลอัตโนมัติไปแล้ว กรุณาตรวจสอบการชำระเงินในระบบ");
 
-                    // เช็คว่ามีข้อมูลในตาราง tbcpym01 หรือไม่ ถ้ายังไม่มีให้ loop เช็คจนกว่าจะเจอหรือครบจำนวนรอบที่กำหนด
-                    if (result_check_match_bill.rows.length === 0) {
+                        // ไปยังหน้า NBS
+                        await loginPage.gotoNBSENV(env);
+                        // เข้าสู่ระบบด้วยชื่อผู้ใช้และรหัสผ่าน
+                        await loginPage.login(username, password);
 
-                        let result_check_match_bill_count = result_check_match_bill.rows.length;
-
-                        while (result_check_match_bill_count === 0 && check_loop_count < retry_loop_count) {
-                            console.log('\nยังไม่มีข้อมูลในตาราง tbcpym01 รอ 10 วินาที แล้วเช็คใหม่อีกครั้ง');
-                            await page.waitForTimeout(10000);
-                            check_loop_count++;
-
-                            // เช็คว่ามีการ match bill หรือไม่ใน database
-                            const try_result_check_match_bill_count = await db.query(query_check_match_bill, [policyno, ref2vc_latest]);
-                            result_check_match_bill_count = try_result_check_match_bill_count.rows.length;
-                        }
-                    }
-
-                    // recheck ข้อมูลในตาราง tbcpym01 อีกครั้ง
-                    const result_check_match_bill_retry = await db.query(query_check_match_bill, [policyno, ref2vc_latest]);
-
-                    // เช็คว่า สถานะการแมทช์บิล (mcstvc) เป็น Match (M) หรือไม่
-                    if (result_check_match_bill_retry.rows.length === 0) {
-                        console.log('\nไม่มีข้อมูลในตาราง tbcpym01 ');
+                        return endloop = 'Y';
                     } else {
-                        status_match_bill = result_check_match_bill_retry.rows[0].mcstvc;
-                        // เช็คว่ามีการ match bill โดยสถานะเป็น mcstvc = 'M' หรือไม่ หรือไม่เกินจำนวนรอบที่กำหนด
-                        while (status_match_bill !== 'M' && retry_loopcount < retry_loop_count) {
-                            console.log('\nยังไม่มีการแมทช์บิล รอ 10 วินาที แล้วเช็คใหม่อีกครั้ง');
-                            await page.waitForTimeout(10000); // รอ 10 วินาที
-                            retry_loopcount++;
+                        // ดึงข้อมูล Bill
+                        const query_check_date_ref2 = 'select p.egrpdt, p.pmnddt from tpsplc01 p where p.polnvc = $1;';
+                        const query_check_genbill = 'select ref1vc, ref2vc , spambd from tbcbil01 where polnvc = $1 and ref2vc = $2;';
 
-                            // เช็คว่ามีการ match bill หรือไม่ใน database
-                            const try_result_check_match_bill = await db.query(query_check_match_bill, [policyno, ref2vc_latest]);
-                            status_match_bill = try_result_check_match_bill.rows[0].mcstvc;
+                        // ดึงข้อมูลจาก database มาเช็ค
+                        const params_check_date_ref2 = await db.query(query_check_date_ref2, [policyno]);
+
+                        const cutText_end_grace_period = params_check_date_ref2.rows[0].egrpdt.substring(0, 8);
+                        const convert_cutText_end_grace_period = convertToThaiDate(cutText_end_grace_period);
+
+                        // const year_grace_period = cutText_end_grace_period.substring(0, 4); // ปี ค.ศ.
+                        // const month_grace_period = cutText_end_grace_period.substring(4, 6); // เดือน
+                        // const day_grace_period = cutText_end_grace_period.substring(6, 8); // วัน
+
+                        // const cutText_due_period = params_check_date_ref2.rows[0].pmnddt.substring(0, 8);
+                        // const year_due_period = cutText_due_period.substring(0, 4); // ปี ค.ศ.
+                        // const month_due_period = cutText_due_period.substring(4, 6); // เดือน
+                        // const day_due_period = cutText_due_period.substring(6, 8); // วัน
+
+                        //  ดึงวันที่ business
+                        const query_check_business_date = 'select p.busndt from tpsplc01 p where p.polnvc = $1;'
+                        const result_check_business_date = await db.query(query_check_business_date, [policyno]);
+
+                        const year_business_date = result_check_business_date.rows[0].busndt.substring(0, 4);
+                        const month_business_date = result_check_business_date.rows[0].busndt.substring(4, 6);
+                        const day_business_date = result_check_business_date.rows[0].busndt.substring(6, 8);
+
+
+                        // เช็คว่ามีการสร้างบิลหรือไม่
+                        const params_check_genbill = await db.query(query_check_genbill, [policyno, convert_cutText_end_grace_period]);
+
+                        console.log("\nทำการชำระบิลอัตโนมัติ");
+
+                        /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+                        // ไปที่ เว็ปไซต์ QA generate file ชำระบิลอัตโนมัติ
+                        await page.goto('https://qatool.ochi.link/#');
+                        // รอหน้าโหลดเสร็จ
+                        await page.waitForLoadState('networkidle');
+                        // กดเมนู Gen Text File Counter Bank
+                        await page.locator("a[onclick=\"switchTab('dline')\"]").click({ timeout: 10000 });
+                        // รอหน้าโหลดเสร็จ
+                        await expect(page.locator('text=📄  Generator Text File - Counter Bank V.1')).toBeVisible({ timeout: 60000 });
+                        // เลือก dropdown 002 BBL
+                        await page.locator('select#bankCommon').selectOption('002', { timeout: 10000 });
+                        await page.waitForTimeout(500);
+
+                        // กรอกวันที่ business
+                        if (open_browser === true) {
+                            // // คลิ๊กช่องวันที่
+                            // await page.locator('input#txnDate').click({ timeout: 10000 });
+                            // กรอกวันที่
+                            await page.locator('input#txnDate').type(`${month_business_date}/${day_business_date}/${year_business_date}`, { delay: 200 });
+                        } else if (open_browser === false) {
+                            // // คลิ๊กช่องวันที่
+                            // await page.locator('input#txnDate').click({ timeout: 10000 });
+                            // กรอกวันที่
+                            await page.locator('input#txnDate').type(`${day_business_date}/${month_business_date}/${year_business_date}`, { delay: 200 });
+                        }
+                        await page.locator('h2', { hasText: '📄  Generator Text File - Counter Bank V.1' }).click(); // คลิ๊กนอกช่องวันที่เพื่อให้ระบบลงวันที่
+                        await page.waitForTimeout(500); // รอให้ระบบประมวลผล
+
+                        // เคลียร์ค่าช่อง Ref1
+                        await page.locator('table#detailTable').locator('tbody > tr > td > input').nth(3).fill('');
+                        // กรอก Ref1 (เลขที่บิล)
+                        await page.locator('table#detailTable').locator('tbody > tr > td > input').nth(3).type(params_check_genbill.rows[0].ref1vc, { delay: 100 });
+                        // เคลียร์ค่าช่อง Ref2
+                        await page.locator('table#detailTable').locator('tbody > tr > td > input').nth(4).fill('');
+                        // กรอก Ref2 (วันสิ้นสุดระยะเวลาผ่อนผัน)
+                        await page.locator('table#detailTable').locator('tbody > tr > td > input').nth(4).type(params_check_genbill.rows[0].ref2vc, { delay: 100 });
+                        // เคลียร์ค่าช่อง Amount
+                        await page.locator('table#detailTable').locator('tbody > tr > td > input').nth(5).fill('');
+                        // กรอก Amount (จำนวนเงินบิล)
+                        const amount = `${params_check_genbill.rows[0].spambd.replace(',', '')}`;
+                        // ลบ หลัง . ให้เหลือแค่ 2 ตำแหน่ง
+                        const decimalIndex = amount.indexOf('.');
+                        let formattedAmount = amount;
+                        if (decimalIndex !== -1) {
+                            formattedAmount = amount.substring(0, decimalIndex + 3);
+                        }
+                        console.log('จำนวนเงินบิลที่ต้องชำระ: ' + formattedAmount);
+                        await page.locator('table#detailTable').locator('tbody > tr > td > input').nth(5).type(formattedAmount, { delay: 100 });
+                        // กดปุ่ม Generate
+                        await page.locator('button[onclick="generateText()"]').click({ timeout: 10000 });
+                        // เช็คว่ามีข้อมูลขึ้นใน textarea หรือไม่
+                        await expect(page.locator('textarea#outputArea')).toHaveText(/./, { timeout: 60000 });
+
+                        // 🧭 สร้าง path ของโฟลเดอร์ปลายทาง (อยู่ในโฟลเดอร์ Playwright)
+                        const downloadDir = path.resolve(__dirname, '../../generate_file_bill_counter_bank');
+
+                        // 🧹 เคลียร์ไฟล์เก่าทั้งหมดในโฟลเดอร์ก่อนดาวน์โหลดใหม่
+                        const files = fs.readdirSync(downloadDir);
+                        for (const file of files) {
+                            const filePath = path.join(downloadDir, file);
+                            if (fs.lstatSync(filePath).isFile()) {
+                                fs.unlinkSync(filePath);
+                            }
+                        }
+                        console.log(`🧹 เคลียร์ไฟล์เก่าในโฟลเดอร์: ${downloadDir}`);
+
+                        // 🕹️ คลิกปุ่มที่ทำให้เกิดการดาวน์โหลด
+                        const [download] = await Promise.all([
+                            page.waitForEvent('download'),
+                            // กดปุ่ม Export
+                            await page.locator('button[onclick="downloadTxt()"]').click({ timeout: 10000 }), // 👈 เปลี่ยน selector ตามจริง
+                        ]);
+                        const now = new Date();
+                        const thaiTime = new Date(now.getTime() + 7 * 60 * 60 * 1000); // บวก 7 ชั่วโมง
+                        const datetime = thaiTime
+                            .toISOString()
+                            .replace(/[-:]/g, '')
+                            .replace('T', '_')
+                            .split('.')[0]; // เช่น 20251110_162045
+
+                        const customFilename = `BBL_${datetime}.txt`; // 👈 เปลี่ยนนามสกุลตามไฟล์จริง (csv, xlsx, etc.)
+
+                        // 💾 เซฟไฟล์ตามชื่อที่เรากำหนด
+                        const savePath = path.join(downloadDir, customFilename);
+                        await download.saveAs(savePath);
+
+                        console.log('✅ บันทึกไฟล์แล้วที่:', savePath);
+
+                        /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+                        // ไปยังหน้า NBS
+                        await loginPage.gotoNBSENV(env);
+                        // เข้าสู่ระบบด้วยชื่อผู้ใช้และรหัสผ่าน
+                        await loginPage.login(username, password);
+
+                        /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+                        // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Policy Service" > "Batch Manual Support"
+                        await gotomenu.menuAll('ระบบงาน Back Office', 'ใบเสร็จส่วนกลาง', 'นำเข้าไฟล์การชำระเงิน', 'นำเข้าไฟล์การชำระเงิน');
+
+                        // นำเข้าไฟล์ชำระบิล
+                        await importPayBillsPage.importfilePayBills({ filename: customFilename });
+
+                        /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+                        // เช็ค ref2vc ล่าสุด
+                        const query_check_ref2_genbill = 'select ref1vc, ref2vc from tbcbil01 where polnvc = $1 order by blpmid desc limit 1'
+                        const params_check_ref2_genbill = await db.query(query_check_ref2_genbill, [policyno]);
+
+                        const ref2vc_latest = params_check_ref2_genbill.rows[0].ref2vc;
+
+                        // เช็คว่ามีการ match bill หรือไม่ใน database
+                        const query_check_match_bill = 'select mcstvc,depovc,polnvc,ref2vc from tbcpym01 where polnvc = $1 and ref2vc = $2;';
+                        const result_check_match_bill = await db.query(query_check_match_bill, [policyno, ref2vc_latest]);
+
+                        const retry_loop_count = 12;
+                        let retry_loopcount = 0;
+                        let status_match_bill = '';
+                        let check_loop_count = 0;
+
+                        // เช็คว่ามีข้อมูลในตาราง tbcpym01 หรือไม่ ถ้ายังไม่มีให้ loop เช็คจนกว่าจะเจอหรือครบจำนวนรอบที่กำหนด
+                        if (result_check_match_bill.rows.length === 0) {
+
+                            let result_check_match_bill_count = result_check_match_bill.rows.length;
+
+                            while (result_check_match_bill_count === 0 && check_loop_count < retry_loop_count) {
+                                console.log('\nยังไม่มีข้อมูลในตาราง tbcpym01 รอ 10 วินาที แล้วเช็คใหม่อีกครั้ง');
+                                await page.waitForTimeout(10000);
+                                check_loop_count++;
+
+                                // เช็คว่ามีการ match bill หรือไม่ใน database
+                                const try_result_check_match_bill_count = await db.query(query_check_match_bill, [policyno, ref2vc_latest]);
+                                result_check_match_bill_count = try_result_check_match_bill_count.rows.length;
+                            }
+
+                            if (result_check_match_bill_count === 0) {
+                                console.log('\nไม่มีข้อมูลในตาราง tbcpym01 ');
+                                console.log('\nหยุดทำงาน: เนื่องจากไม่มีข้อมูลการชำระบิลในตาราง tbcpym01');
+                                return endloop = 'Y';
+                            } else {
+                                console.log('\nพบข้อมูลในตาราง tbcpym01 แล้ว');
+                            }
                         }
 
-                        console.log('\nทำการ matching สำเร็จโดยสถานะการแมทช์บิล (mcstvc): ' + status_match_bill);
-                    }
+                        // recheck ข้อมูลในตาราง tbcpym01 อีกครั้ง
+                        const result_check_match_bill_retry = await db.query(query_check_match_bill, [policyno, ref2vc_latest]);
 
+                        // เช็คว่า สถานะการแมทช์บิล (mcstvc) เป็น Match (M) หรือไม่
+                        if (result_check_match_bill_retry.rows.length === 0) {
+                            console.log('\nไม่มีข้อมูลในตาราง tbcpym01 ');
+                        } else {
+                            status_match_bill = result_check_match_bill_retry.rows[0].mcstvc;
+                            // เช็คว่ามีการ match bill โดยสถานะเป็น mcstvc = 'M' หรือไม่ หรือไม่เกินจำนวนรอบที่กำหนด
+                            while (status_match_bill !== 'M' && retry_loopcount < retry_loop_count) {
+                                console.log('\nยังไม่มีการแมทช์บิล รอ 10 วินาที แล้วเช็คใหม่อีกครั้ง');
+                                await page.waitForTimeout(10000); // รอ 10 วินาที
+                                retry_loopcount++;
+
+                                // เช็คว่ามีการ match bill หรือไม่ใน database
+                                const try_result_check_match_bill = await db.query(query_check_match_bill, [policyno, ref2vc_latest]);
+                                status_match_bill = try_result_check_match_bill.rows[0].mcstvc;
+                            }
+
+                            if (status_match_bill === 'M') {
+                                console.log('\nทำการ matching สำเร็จโดยสถานะการแมทช์บิล (mcstvc): ' + status_match_bill);
+                            } else {
+                                console.log('\nทำการ matching ไม่สำเร็จโดยสถานะการแมทช์บิล (mcstvc): ' + status_match_bill);
+                                console.log('\nหยุดทำงาน: ไม่สามารถทำการ matching บิลได้');
+                                return endloop = 'Y';
+                            }
+                        }
+
+                        stop_auto_pay_bills++;
+
+                        console.log('\nจำนวนครั้งที่ชำระบิลอัตโนมัติ: ' + stop_auto_pay_bills + ' ครั้ง');
+
+                        // // ตรวจสอบจำนวนครั้งที่ชำระบิลอัตโนมัติ ถ้าถึงจำนวนที่กำหนดให้หยุดทำงาน
+                        // if (stop_auto_pay_bills >= auto_pay_bills_count) {
+                        //     console.log("\nหยุดทำงาน: ชำระบิลอัตโนมัติครบตามจำนวนครั้งที่กำหนด");
+                        //     return endloop = 'Y';
+                        // }
+
+                        // check_genbill = false; // รีเซ็ตตัวแปรเพื่อให้กลับไปเช็คการสร้างบิลใหม่ในรอบถัดไป
+                        // check_genbill_after = false; // รีเซ็ตตัวแปรเพื่อให้กลับไปเช็คการสร้างบิลใหม่ในรอบถัดไป
+
+                        check_paybill_after = true; // อัพเดทค่าหลังจากชำระบิลอัตโนมัติสำเร็จ
+                    }
+                } else {
+                    // logout NBS
+                    await logoutPage.logoutNBSWeb();
+
+                    console.log("\nหยุดทำงาน: วันที่กำหนดชำระถัดไป (Next Due) <= วันที่หักค่าธรรมเนียมรายเดือนงวดถัดไป (MVY)");
+                    console.log('\n-------------------------------------------- End of Process --------------------------------------------');
                     return endloop = 'Y';
                 }
             } else {
-                // logout NBS
-                await logoutPage.logoutNBSWeb();
-
-                console.log("\nหยุดทำงาน: วันที่กำหนดชำระถัดไป (Next Due) <= วันที่หักค่าธรรมเนียมรายเดือนงวดถัดไป (MVY)");
-                console.log('\n-------------------------------------------- End of Process --------------------------------------------');
-                return endloop = 'Y';
+                console.log('\nชำระบิลอัตโนมัติเรียบร้อยแล้ว จะไม่ทำการชำระบิลซ้ำ หรือข้ามไปชำระงวดถัดไป ก่อนทำ Process คำสั่งซื้อและ คำสั่งขาย');
+                check_paybill_after = true; // รีเซ็ตตัวแปรเพื่อให้กลับไปเช็คการชำระบิลใหม่ในรอบถัดไป
+                await page.waitForTimeout(5000); // รอ 5 วินาที เพื่อให้ระบบทำการ insert ข้อมูลให้ครบก่อนจะไปเช็คคำสั่งซื้อ-ขายคงค้าง
             }
-            
+
         } else {
 
-            console.log("\nทำงานต่อ: วันที่กำหนดชำระถัดไป (Next Due) >= วันที่หักค่าธรรมเนียมรายเดือนงวดถัดไป (MVY)");
+            console.log("\nทำงานต่อ: วันที่กำหนดชำระถัดไป (Next Due) > วันที่หักค่าธรรมเนียมรายเดือนงวดถัดไป (MVY)");
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -598,121 +672,10 @@ test('Run MVY UL', async ({ page }) => {
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-            // Update RV
-            if (skip_create_update_rv === false) {
-                // Update RV if policy year >= 5
-                if (policy_year >= 5) {
-
-                    // ตรวจสอบว่ามีการทำ update RV หรือยัง
-                    const query_check_update_rv = "SELECT trstdt,rvbdid,mnrvbd,tprvbd,torvbd,smrvbd FROM TIVSRV01 where polnvc in ($1) ORDER BY rvbdid DESC limit 1;";
-                    const result_check_update_rv = await db.query(query_check_update_rv, [policyno]);
-
-                    // if (result_check_update_rv.rows[0].mnrvbd !== '0.0000' && result_check_update_rv.rows[0].tprvbd !== '0.0000' && result_check_update_rv.rows[0].torvbd !== '0.0000' && result_check_update_rv.rows[0].smrvbd !== '0.0000') {
-
-                    // ตัด field tprvbd ออก เพราะบางกรณีอาจจะไม่มีค่า
-                    if (result_check_update_rv.rows[0].mnrvbd !== '0.0000' && result_check_update_rv.rows[0].torvbd !== '0.0000' && result_check_update_rv.rows[0].smrvbd !== '0.0000') {
-                        console.log('\nมีคำสั่งขายคงค้างอยู่ ข้าม step รัน Update RV');
-                    } else {
-                        // ดึงข้อมูลหลังจาก create rv เสร็จ
-                        const query_pull_create_rv_2 = "select * from tivsrv02 where rvbdid = $1;";
-                        const result_pull_create_rv_2 = await db.query(query_pull_create_rv_2, [result_check_update_rv.rows[0].rvbdid]);
-
-                        // ทำการอัพเดท NAV ของกองทุนที่เกี่ยวข้องกับคำสั่งซื้อขาย ก่อนรันอัพเดท RV ใน database
-                        // loop ตามจำนวนคำสั่งซื้อขายที่เจอใน database
-                        for (const row_pull_create_rv of result_pull_create_rv_2.rows) {
-
-                            const fund_name_updatenav = fund_code_dictionary[row_pull_create_rv.fundnm] || 'Unknown Fund';
-                            console.log(`\nอัพเดทราคา NAV ประจำวัน วันที่สั่งซื้อขาย: ${row_pull_create_rv.boprdt}, กองทุน: ${fund_name_updatenav.code}`);
-
-                            const NetAssetValue = fund_name_updatenav.NetAssetValue;
-                            const NAVValue = fund_name_updatenav.NAVValue;
-                            const BidPriceValue = fund_name_updatenav.BidPriceValue;
-                            const OfferPriceValue = fund_name_updatenav.OfferPriceValue;
-
-                            const dateupdate_sell_nav = `${row_pull_create_rv.boprdt}000000000`;
-                            // แปลง dateupdate_nav string เป็น numeric
-                            const numeric_dateupdate_sell_nav = Number(dateupdate_sell_nav);
-
-                            // ค้นหา ข้อมูล NAV ของกองทุน ใน database ว่ามีการอัพเดท NAV หรือยัง
-                            const query_check_nav_update_rv = "select * from tivnav01 t where fundnm = $1 and upnvdt = $2";
-                            const result_check_nav_update_rv = await db.query(query_check_nav_update_rv, [row_pull_create_rv.fundnm, numeric_dateupdate_sell_nav]);
-
-                            if (result_check_nav_update_rv.rows.length === 0) {
-                                console.log(`\nทำการอัพเดท NAV ของกองทุน ${fund_name_updatenav.code} สำหรับคำสั่งซื้อขาย วันที่ ${row_pull_create_rv.boprdt}`);
-
-                                // insert ราคา NAV ลงในตาราง tivnav01
-                                const query_insert_nav_update_sell = `INSERT INTO public.tivnav01 (nav0id, fundnm, upnvdt, navpbd, bidpbd, offebd, cretdt, crbyvc, updadt, upbyvc, assvbd, remkvc, consdt, cobyvc, nvscnm) VALUES (nextval('seq_tivnav01_id'), $1, $2, $3, $4, $5, $2, 'kornkanok.pr', $2, 'saowanee.na', $6, '', $2, 'saowanee.na', 3);`;
-                                const result_insert_nav_update_sell = await db.query(query_insert_nav_update_sell, [row_pull_create_rv.fundnm, numeric_dateupdate_sell_nav, NAVValue, BidPriceValue, OfferPriceValue, NetAssetValue]);
-                                // จำนวนแถวที่ถูก insert
-                                console.log(`Insert NAV update result: ${result_insert_nav_update_sell.rowCount}`);
-                            } else {
-                                console.log(`\nมีการอัพเดท NAV ของกองทุน ${fund_name_updatenav.code} สำหรับคำสั่งซื้อขาย วันที่ ${row_pull_create_rv.boprdt}`);
-                            }
-                        }
-
-                        // // เช็คราคา NAV ของกองทุน
-                        // // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Investment" > "อัพเดทราคา NAV ประจำวัน"
-                        // await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'Investment', 'อัพเดทราคา NAV ประจำวัน');
-                        // // รอหน้าโหลดเสร็จ
-                        // await page.waitForLoadState('networkidle');
-                        // await expect(page.locator('div[class="layout-m-hd"]').locator('text = อัพเดทราคา NAV ประจำวัน')).toBeVisible({ timeout: 60000 });
-
-                        // // loop ตามจำนวนคำสั่งซื้อขายที่เจอใน database
-                        // for (const row_pull_create_rv of result_pull_create_rv_2.rows) {
-                        //     const fund_name_updatenav = fund_code_dictionary[row_pull_create_rv.fundnm] || 'Unknown Fund';
-                        //     console.log(`\nอัพเดทราคา NAV ประจำวัน วันที่สั่งซื้อขาย: ${row_pull_create_rv.boprdt}, กองทุน: ${fund_name_updatenav.code}`);
-
-                        //     const NetAssetValue = fund_name_updatenav.NetAssetValue;
-                        //     const NAVValue = fund_name_updatenav.NAVValue;
-                        //     const BidPriceValue = fund_name_updatenav.BidPriceValue;
-                        //     const OfferPriceValue = fund_name_updatenav.OfferPriceValue;
-
-                        //     // ค้นหา ข้อมูล NAV ของกองทุน
-                        //     await dailyNavUpdatePage.searchDailyNavUpdate({ date: row_pull_create_rv.boprdt });
-                        //     await page.waitForTimeout(2000); // เพิ่ม delay 2 วินาที เพื่อรอข้อมูลโหลด
-                        //     // เช็คว่ากองทุนมีการอัพเดท NAV หรือยัง ถ้ายังให้ทำการอัพเดท
-                        //     if (await table_DailyNavUpdate(page).dailynavupdate_btnSave(fund_name_updatenav.code).isVisible()) {
-                        //         await dailyNavUpdatePage.saveDailyNavUpdate({ fundname: fund_name_updatenav.code, NetAssetValue, NAVValue, BidPriceValue, OfferPriceValue });
-                        //     } else {
-                        //         console.log(`กองทุน ${fund_name_updatenav.code} มีการอัพเดท NAV แล้ว`);
-                        //     }
-                        //     // เช็คว่ากองทุนมีการอนุมัติ NAV หรือยัง ถ้ายังให้ทำการอนุมัติ
-                        //     if (await table_DailyNavUpdate(page).dailynavupdate_btnApprove(fund_name_updatenav.code).isVisible()) {
-                        //         await dailyNavUpdatePage.approveDailyNavUpdate({ fundname: fund_name_updatenav.code });
-                        //     } else {
-                        //         console.log(`กองทุน ${fund_name_updatenav.code} มีการอนุมัติ NAV แล้ว`);
-                        //     }
-                        // }
-
-                        console.log("\nทำการรันอัพเดท RV เนื่องจาก ปีกรมธรรม์ >= 5");
-
-                        // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Policy Service" > "Batch Manual Support"
-                        await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'Policy Service', 'Batch Manual Support');
-                        // รอหน้าโหลดเสร็จ
-                        await page.waitForLoadState('networkidle');
-                        await expect(page.locator('div[class="layout-m-hd"]'), { hasText: 'Batch Manual Support' }).toBeVisible({ timeout: 60000 });
-
-                        // รัน batch สร้าง RV UL
-                        await batchManualSupportPage.runBatchINV({ batch: 'UpdateRV', policyno: policyno, date: result_check_update_rv.rows[0].trstdt });
-
-                        // เช็คว่ามีการอัพเดท RV สำเร็จหรือไม่
-                        const result_check_update_rv_after = await db.query(query_check_update_rv, [policyno]);
-                        if (result_check_update_rv_after.rows[0].mnrvbd === '0.0000' && result_check_update_rv_after.rows[0].torvbd === '0.0000' && result_check_update_rv_after.rows[0].smrvbd === '0.0000') {
-                            // แสดง error
-                            throw new Error('อัพเดท RV ไม่สำเร็จ');
-                        } else {
-                            console.log('\nอัพเดท RV สำเร็จ');
-                        }
-                    }
-                }
-            }
-
-            /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
             // เช็คเลขธุรกรรม และ สถานะตรวจสอบคำสั่งซื้อ-ขาย สำหรับฝ่ายปฏิบัติการ (คำสั่งขาย)
             const query_check_transactionstatus = "select distinct ordrdt,vrstvc,altnvc,invoid from tivreq01 t where t.polnvc in ($1) and irstvc = 'IR01' and iotcvc = 'R'"
             const result_check_transactionstatus = await db.query(query_check_transactionstatus, [policyno]);
-            
+
             if (result_check_transactionstatus.rows.length === 0) {
                 console.log('\nไม่มีคำสั่งขายที่ต้องตรวจสอบจากฝ่ายปฏิบัติการ');
             } else {
@@ -754,7 +717,7 @@ test('Run MVY UL', async ({ page }) => {
                     }
                 }
             }
-            
+
             //////////////////////////////////////////////////////
 
             // เช็คเลขธุรกรรม และ สถานะตรวจสอบคำสั่งซื้อ-ขาย สำหรับฝ่ายปฏิบัติการ (คำสั่งซื้อ)
@@ -884,7 +847,7 @@ test('Run MVY UL', async ({ page }) => {
 
                 }
             }
-            
+
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
             // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Investment" > "ตรวจสอบคำสั่ง ซื้อ-ขาย V2"
@@ -1000,12 +963,12 @@ test('Run MVY UL', async ({ page }) => {
                     // ค้นหา ข้อมูล NAV ของกองทุน ใน database ว่ามีการอัพเดท NAV หรือยัง
                     const query_check_nav_update_buy = "select * from tivnav01 t where fundnm = $1 and upnvdt = $2";
                     const result_check_nav_update_buy = await db.query(query_check_nav_update_buy, [row_invoice_ul_updatenav.fundnm, numeric_dateupdate_buy_nav]);
-                    
+
                     if (result_check_nav_update_buy.rows.length === 0) {
                         console.log(`\nทำการอัพเดท NAV ของกองทุน ${fund_name_updatenav.code} สำหรับคำสั่งซื้อ เลขที่อ้างอิง: ${row_invoice_ul_updatenav.invovc} วันที่ ${row_invoice_ul_updatenav.ordrdt}`);
                         // insert ราคา NAV ลงในตาราง tivnav01
                         const query_insert_nav_update_buy = `INSERT INTO public.tivnav01 (nav0id, fundnm, upnvdt, navpbd, bidpbd, offebd, cretdt, crbyvc, updadt, upbyvc, assvbd, remkvc, consdt, cobyvc, nvscnm) VALUES (nextval('seq_tivnav01_id'), $1, $2, $3, $4, $5, $2, 'kornkanok.pr', $2, 'saowanee.na', $6, '', $2, 'saowanee.na', 3);`;
-                        const result_insert_nav_update_buy = await db.query(query_insert_nav_update_buy, [row_invoice_ul_updatenav.fundnm,numeric_dateupdate_buy_nav,NAVValue,BidPriceValue,OfferPriceValue,NetAssetValue]);
+                        const result_insert_nav_update_buy = await db.query(query_insert_nav_update_buy, [row_invoice_ul_updatenav.fundnm, numeric_dateupdate_buy_nav, NAVValue, BidPriceValue, OfferPriceValue, NetAssetValue]);
                         // จำนวนแถวที่ถูก insert
                         console.log(`Insert NAV update result: ${result_insert_nav_update_buy.rowCount}`);
                     } else {
@@ -1014,73 +977,6 @@ test('Run MVY UL', async ({ page }) => {
 
                 }
             }
-
-            //////////////////////////////////////////////////////
-
-            // // เช็คราคา NAV ของกองทุน
-            // // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Investment" > "อัพเดทราคา NAV ประจำวัน"
-            // await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'Investment', 'อัพเดทราคา NAV ประจำวัน');
-            // // รอหน้าโหลดเสร็จ
-            // await page.waitForLoadState('networkidle');
-            // await expect(page.locator('div[class="layout-m-hd"]').locator('text = อัพเดทราคา NAV ประจำวัน')).toBeVisible({ timeout: 60000 });
-
-            // // loop ตามจำนวนคำสั่งซื้อขายที่เจอใน database (คำสั่งขาย)
-            // for (const row_invoice_ul_updatenav of result_check_invoice_ul.rows) {
-            //     const fund_name_updatenav = fund_code_dictionary[row_invoice_ul_updatenav.fundnm] || 'Unknown Fund';
-            //     console.log(`\nอัพเดทราคา NAV ประจำวัน เลขที่อ้างอิง: ${row_invoice_ul_updatenav.invovc}, วันที่สั่งซื้อขาย: ${row_invoice_ul_updatenav.ordrdt}, กองทุน: ${fund_name_updatenav.code}`);
-
-            //     const NetAssetValue = fund_name_updatenav.NetAssetValue;
-            //     const NAVValue = fund_name_updatenav.NAVValue;
-            //     const BidPriceValue = fund_name_updatenav.BidPriceValue;
-            //     const OfferPriceValue = fund_name_updatenav.OfferPriceValue;
-
-            //     // ค้นหา ข้อมูล NAV ของกองทุน
-            //     await dailyNavUpdatePage.searchDailyNavUpdate({ date: row_invoice_ul_updatenav.ordrdt });
-            //     await page.waitForTimeout(2000); // เพิ่ม delay 2 วินาที เพื่อรอข้อมูลโหลด
-            //     // เช็คว่ากองทุนมีการอัพเดท NAV หรือยัง ถ้ายังให้ทำการอัพเดท
-            //     if (await table_DailyNavUpdate(page).dailynavupdate_btnSave(fund_name_updatenav.code).isVisible()) {
-            //         await dailyNavUpdatePage.saveDailyNavUpdate({ fundname: fund_name_updatenav.code, NetAssetValue, NAVValue, BidPriceValue, OfferPriceValue });
-            //     } else {
-            //         console.log(`กองทุน ${fund_name_updatenav.code} มีการอัพเดท NAV แล้ว`);
-            //     }
-            //     // เช็คว่ากองทุนมีการอนุมัติ NAV หรือยัง ถ้ายังให้ทำการอนุมัติ
-            //     if (await table_DailyNavUpdate(page).dailynavupdate_btnApprove(fund_name_updatenav.code).isVisible()) {
-            //         await dailyNavUpdatePage.approveDailyNavUpdate({ fundname: fund_name_updatenav.code });
-            //     } else {
-            //         console.log(`กองทุน ${fund_name_updatenav.code} มีการอนุมัติ NAV แล้ว`);
-            //     }
-            // }
-
-            // //////////////////////////////////////////////////////
-
-            //     // loop ตามจำนวนคำสั่งซื้อขายที่เจอใน database (คำสั่งซื้อ)
-            // if (policy_year < 5 || (policy_year >= 5 && auto_buyorder_Loyalty_Bonus === true)) {
-            //     for (const row_invoice_ul_updatenav of result_check_invoice_buy_ul.rows) {
-            //         const fund_name_updatenav = fund_code_dictionary[row_invoice_ul_updatenav.fundnm] || 'Unknown Fund';
-            //         console.log(`\nอัพเดทราคา NAV ประจำวัน เลขที่อ้างอิง: ${row_invoice_ul_updatenav.invovc}, วันที่สั่งซื้อขาย: ${row_invoice_ul_updatenav.ordrdt}, กองทุน: ${fund_name_updatenav.code}`);
-
-            //         const NetAssetValue = fund_name_updatenav.NetAssetValue;
-            //         const NAVValue = fund_name_updatenav.NAVValue;
-            //         const BidPriceValue = fund_name_updatenav.BidPriceValue;
-            //         const OfferPriceValue = fund_name_updatenav.OfferPriceValue;
-
-            //         // ค้นหา ข้อมูล NAV ของกองทุน
-            //         await dailyNavUpdatePage.searchDailyNavUpdate({ date: row_invoice_ul_updatenav.ordrdt });
-            //         await page.waitForTimeout(2000); // เพิ่ม delay 2 วินาที เพื่อรอข้อมูลโหลด
-            //         // เช็คว่ากองทุนมีการอัพเดท NAV หรือยัง ถ้ายังให้ทำการอัพเดท
-            //         if (await table_DailyNavUpdate(page).dailynavupdate_btnSave(fund_name_updatenav.code).isVisible()) {
-            //             await dailyNavUpdatePage.saveDailyNavUpdate({ fundname: fund_name_updatenav.code, NetAssetValue, NAVValue, BidPriceValue, OfferPriceValue });
-            //         } else {
-            //             console.log(`กองทุน ${fund_name_updatenav.code} มีการอัพเดท NAV แล้ว`);
-            //         }
-            //         // เช็คว่ากองทุนมีการอนุมัติ NAV หรือยัง ถ้ายังให้ทำการอนุมัติ
-            //         if (await table_DailyNavUpdate(page).dailynavupdate_btnApprove(fund_name_updatenav.code).isVisible()) {
-            //             await dailyNavUpdatePage.approveDailyNavUpdate({ fundname: fund_name_updatenav.code });
-            //         } else {
-            //             console.log(`กองทุน ${fund_name_updatenav.code} มีการอนุมัติ NAV แล้ว`);
-            //         }
-            //     }
-            // }
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1142,7 +1038,7 @@ test('Run MVY UL', async ({ page }) => {
                 }
             }
 
-            
+
             // loop ตามจำนวนคำสั่งซื้อขายที่เจอใน database (คำสั่งขาย)
             for (const row_invoice_ul_orderresult of result_check_invoice_ul.rows) {
                 const fund_name_orderresult = fund_code_dictionary[row_invoice_ul_orderresult.fundnm] || 'Unknown Fund';
@@ -1218,6 +1114,98 @@ test('Run MVY UL', async ({ page }) => {
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+            // Update RV
+            if (skip_create_update_rv === false) {
+                // Update RV if policy year >= 5
+                if (policy_year >= 5) {
+
+                    // ตรวจสอบว่ามีการทำ update RV หรือยัง
+                    const query_check_update_rv = "SELECT trstdt,rvbdid,mnrvbd,tprvbd,torvbd,smrvbd FROM TIVSRV01 where polnvc in ($1) ORDER BY rvbdid DESC limit 1;";
+                    const result_check_update_rv = await db.query(query_check_update_rv, [policyno]);
+
+                    // if (result_check_update_rv.rows[0].mnrvbd !== '0.0000' && result_check_update_rv.rows[0].tprvbd !== '0.0000' && result_check_update_rv.rows[0].torvbd !== '0.0000' && result_check_update_rv.rows[0].smrvbd !== '0.0000') {
+
+                    if (result_check_update_rv.rows.length === 0) {
+                        console.log('\มีคำสั่งขายคงค้างอยู่ ข้าม step รัน Update RV');
+                    } else {
+                        // ตัด field tprvbd ออก เพราะบางกรณีอาจจะไม่มีค่า
+                        if (result_check_update_rv.rows[0].mnrvbd !== '0.0000' && result_check_update_rv.rows[0].torvbd !== '0.0000' && result_check_update_rv.rows[0].smrvbd !== '0.0000') {
+                            console.log('\nยังไม่มีการทำ Update RV มาก่อน');
+                        } else {
+                            // ดึงข้อมูลหลังจาก create rv เสร็จ
+                            const query_pull_create_rv_2 = "select * from tivsrv02 where rvbdid = $1;";
+                            const result_pull_create_rv_2 = await db.query(query_pull_create_rv_2, [result_check_update_rv.rows[0].rvbdid]);
+
+                            // ทำการอัพเดท NAV ของกองทุนที่เกี่ยวข้องกับคำสั่งซื้อขาย ก่อนรันอัพเดท RV ใน database
+                            // loop ตามจำนวนคำสั่งซื้อขายที่เจอใน database
+                            for (const row_pull_create_rv of result_pull_create_rv_2.rows) {
+
+                                const fund_name_updatenav = fund_code_dictionary[row_pull_create_rv.fundnm] || 'Unknown Fund';
+                                console.log(`\nอัพเดทราคา NAV ประจำวัน วันที่สั่งซื้อขาย: ${row_pull_create_rv.boprdt}, กองทุน: ${fund_name_updatenav.code}`);
+
+                                const NetAssetValue = fund_name_updatenav.NetAssetValue;
+                                const NAVValue = fund_name_updatenav.NAVValue;
+                                const BidPriceValue = fund_name_updatenav.BidPriceValue;
+                                const OfferPriceValue = fund_name_updatenav.OfferPriceValue;
+
+                                const dateupdate_sell_nav = `${row_pull_create_rv.boprdt}000000000`;
+                                // แปลง dateupdate_nav string เป็น numeric
+                                const numeric_dateupdate_sell_nav = Number(dateupdate_sell_nav);
+
+                                // ค้นหา ข้อมูล NAV ของกองทุน ใน database ว่ามีการอัพเดท NAV หรือยัง
+                                const query_check_nav_update_rv = "select * from tivnav01 t where fundnm = $1 and upnvdt = $2";
+                                const result_check_nav_update_rv = await db.query(query_check_nav_update_rv, [row_pull_create_rv.fundnm, numeric_dateupdate_sell_nav]);
+
+                                if (result_check_nav_update_rv.rows.length === 0) {
+                                    console.log(`\nทำการอัพเดท NAV ของกองทุน ${fund_name_updatenav.code} สำหรับคำสั่งซื้อขาย วันที่ ${row_pull_create_rv.boprdt}`);
+
+                                    // insert ราคา NAV ลงในตาราง tivnav01
+                                    const query_insert_nav_update_sell = `INSERT INTO public.tivnav01 (nav0id, fundnm, upnvdt, navpbd, bidpbd, offebd, cretdt, crbyvc, updadt, upbyvc, assvbd, remkvc, consdt, cobyvc, nvscnm) VALUES (nextval('seq_tivnav01_id'), $1, $2, $3, $4, $5, $2, 'kornkanok.pr', $2, 'saowanee.na', $6, '', $2, 'saowanee.na', 3);`;
+                                    const result_insert_nav_update_sell = await db.query(query_insert_nav_update_sell, [row_pull_create_rv.fundnm, numeric_dateupdate_sell_nav, NAVValue, BidPriceValue, OfferPriceValue, NetAssetValue]);
+                                    // จำนวนแถวที่ถูก insert
+                                    console.log(`Insert NAV update result: ${result_insert_nav_update_sell.rowCount}`);
+                                } else {
+                                    console.log(`\nมีการอัพเดท NAV ของกองทุน ${fund_name_updatenav.code} สำหรับคำสั่งซื้อขาย วันที่ ${row_pull_create_rv.boprdt}`);
+                                }
+                            }
+
+                            console.log("\nทำการรันอัพเดท RV เนื่องจาก ปีกรมธรรม์ >= 5");
+
+                            // ไปยังเมนู "ระบบงานให้บริการ" > "ระบบ Unit Linked" > "Policy Service" > "Batch Manual Support"
+                            await gotomenu.menuAll('ระบบงานให้บริการ', 'ระบบ Unit Linked', 'Policy Service', 'Batch Manual Support');
+                            // รอหน้าโหลดเสร็จ
+                            await page.waitForLoadState('networkidle');
+                            await expect(page.locator('div[class="layout-m-hd"]'), { hasText: 'Batch Manual Support' }).toBeVisible({ timeout: 60000 });
+
+                            // รัน batch สร้าง RV UL
+                            await batchManualSupportPage.runBatchINV({ batch: 'UpdateRV', policyno: policyno, date: result_check_update_rv.rows[0].trstdt });
+
+                            // เช็คว่ามีการอัพเดท RV สำเร็จหรือไม่
+                            const result_check_update_rv_after = await db.query(query_check_update_rv, [policyno]);
+                            if (result_check_update_rv_after.rows[0].mnrvbd === '0.0000' && result_check_update_rv_after.rows[0].torvbd === '0.0000' && result_check_update_rv_after.rows[0].smrvbd === '0.0000') {
+                                // แสดง error
+                                throw new Error('อัพเดท RV ไม่สำเร็จ');
+                            } else {
+                                console.log('\nอัพเดท RV สำเร็จ');
+                            }
+                        }
+                    }
+
+                }
+            }
+
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            // ตรวจสอบจำนวนครั้งที่ชำระบิลอัตโนมัติ ถ้าถึงจำนวนที่กำหนดให้หยุดทำงาน
+            if (stop_auto_pay_bills >= auto_pay_bills_count) {
+                console.log("\nหยุดทำงาน: ชำระบิลอัตโนมัติครบตามจำนวนครั้งที่กำหนด");
+                return endloop = 'Y';
+            }
+
+            check_genbill = false; // รีเซ็ตตัวแปรเพื่อให้กลับไปเช็คการสร้างบิลใหม่ในรอบถัดไป
+            check_genbill_after = false; // รีเซ็ตตัวแปรเพื่อให้กลับไปเช็คการสร้างบิลใหม่ในรอบถัดไป
+            check_paybill_after = false; // รีเซ็ตตัวแปรเพื่อให้กลับไปเช็คการชำระบิลใหม่ในรอบถัดไป
+
         }
 
         // ปิด database
@@ -1226,6 +1214,7 @@ test('Run MVY UL', async ({ page }) => {
         loopCount++;
 
         console.log('\n-------------------------------------------- End of Process --------------------------------------------');
+
     }
 
 });

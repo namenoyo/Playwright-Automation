@@ -12,6 +12,20 @@ test('test investment order check', async ({ page }) => {
 
     console.log(calculateYearsOnly('20251107', '20281107'));
 
+    // ไปที่ เว็ปไซต์ QA generate file ชำระบิลอัตโนมัติ
+    await page.goto('https://qatool.ochi.link/#');
+    // รอหน้าโหลดเสร็จ
+    await page.waitForLoadState('networkidle');
+    // กดเมนู Gen Text File Counter Bank
+    await page.locator("a[onclick=\"switchTab('dline')\"]").click({ timeout: 10000 });
+    // รอหน้าโหลดเสร็จ
+    await expect(page.locator('text=📄  Generator Text File - Counter Bank V.1')).toBeVisible({ timeout: 60000 });
+    // เลือก dropdown 002 BBL
+    await page.locator('select#bankCommon').selectOption('002', { timeout: 10000 });
+    await page.waitForTimeout(500);
+    await page.locator('#txnDate').type('02/12/2026', { delay: 100 });
+
+
 
 });
 
