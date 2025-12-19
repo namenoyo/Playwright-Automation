@@ -1,5 +1,8 @@
 const { test, expect } = require('@playwright/test');
 
+// Pages
+const { ReceiveIssueRequestAlteration } = require('../../pages/Alteration/receive_issue_request_alteration.js');
+
 // Locators
 const { inquiryendorseformLocator } = require('../../locators/Alteration/alteration.locators.js');
 const { detailinquiryformLocator } = require('../../locators/Alteration/alteration.locators.js');
@@ -31,102 +34,64 @@ const { GoogleSheet } = require('../../utils/google-sheet-OAuth.helper.js');
 
 test.describe.configure({ mode: 'parallel' }); // ให้เคสในไฟล์นี้รันขนานได้
 
-// startIdx คือ index เริ่มต้น (รวม index นี้)
-// endIdx คือ index สุดท้าย (แต่ "ไม่รวม" index นี้)
+test(`Scenario | สร้างรับเรื่องสลักหลัง`, async ({ page }, testInfo) => {
+    // setting เวลาให้เคสนี้รัน
+    test.setTimeout(180000); // 3 นาที
 
-// ตัวอย่าง:
-// ถ้า startIdx = 0, endIdx = 3 → ได้ข้อมูล index 0, 1, 2 (3 ตัวแรก)
-// ถ้า startIdx = 3, endIdx = 6 → ได้ข้อมูล index 3, 4, 5 (3 ตัวถัดไป)
-// ถ้า startIdx = 4, endIdx = 5 → ได้ข้อมูล index 4 (แค่ตัวเดียว)
+    // ส่วนของการเข้าหน้า CIS
+    // Page
+    const loginPage = new LoginPage(page);
+    const gotomenu = new gotoMenu(page, expect);
+    const searchcustomercis = new searchCustomerCIS(page, expect);
+    const logoutpage = new LogoutPage(page, expect);
 
-// สรุป:
-// startIdx = จุดเริ่มต้น (รวม)
-// endIdx = จุดสิ้นสุด (ไม่รวม)
-// จำนวนข้อมูลที่ได้ = endIdx - startIdx
+    let testData = [];
 
-const startIdx = 0;
-const endIdx = 1; // ทั้งหมด 6681 เคส 
-const testData = inquiryformArraykey_receive_issue_label.slice(startIdx, endIdx); // ตัดข้อมูลตามช่วงที่กำหนด
+    // Fetch data from Google Sheets before all tests
+    const googlesheet = new GoogleSheet();
+    const auth = await googlesheet.initAuth();
+    const spreadsheetId = '1anVVVH2lHAZ5VxqZZlp0XrIft5uW3SkfzxWSpSpqRjQ';
+    const readrange = `Data_Mapping_Service!A7:BT1000000`;
+    testData = await googlesheet.fetchSheetData_key(auth, spreadsheetId, readrange);
 
-for (const data_save_endorse of testData) {
+    const sheetnamewrite = `Data_Mapping_Service`;
+    const range_write = `A7:BT`;
 
-    const username = data_save_endorse.username; // ชื่อผู้ใช้สำหรับทดสอบ
-    const password = '123'; // รหัสผ่านสำหรับทดสอบ
+    for (const [index, data_save_endorse] of testData.entries()) {
 
-    const policyNo = data_save_endorse.policy_no; // กรมธรรม์ ตัวอย่างสำหรับทดสอบ
-    const contact_code = data_save_endorse.contact_code; // ประเภทติดต่อ (ผู้ติดต่อ) * ตัวอย่างสำหรับทดสอบ
-    // const endorse_code = data_save_endorse.endorse_code; // สลักหลังที่ต้องการเลือก ตัวอย่างสำหรับทดสอบ
-    const endorse_code = data_save_endorse.endorse; // สลักหลังที่ต้องการเลือก ตัวอย่างสำหรับทดสอบ
+        // เตรียมตัวแปรเก็บผลลัพธ์
+        let data_create = [];
 
-    test(`Scenario | ${data_save_endorse.channel_code}_${data_save_endorse.policy_type}_${data_save_endorse.policy_line}_${data_save_endorse.policy_status}_${data_save_endorse.contact_code} | ${endorse_code.join(',')}`, async ({ page }, testInfo) => {
-        // setting เวลาให้เคสนี้รัน
-        test.setTimeout(180000); // 3 นาที
+        // ชื่อ header key สำหรับการอ้างอิงข้อมูล
+        const uniquekey = 'unique_key';
+        const row_header = 7; // บวก 4 เพราะข้อมูลเริ่มที่แถวที่ 4 ใน Google Sheet
 
-        // ส่วนของการเข้าหน้า CIS
-        // Page
-        const loginPage = new LoginPage(page);
-        const gotomenu = new gotoMenu(page, expect);
-        const searchcustomercis = new searchCustomerCIS(page, expect);
-        const logoutpage = new LogoutPage(page, expect);
+        const row_uniquekey = data_save_endorse['unique_key'];
+        const username = data_save_endorse['Username']; // ชื่อผู้ใช้สำหรับทดสอบ
+        const password = data_save_endorse['Password']; // รหัสผ่านสำหรับทดสอบ
+        const process = data_save_endorse['Process']; // สถานะของการทำงาน
 
-        // นำข้อมูลเข้า google sheet (สรุปผล)
-        const googlesheet = new GoogleSheet();
-        // spreadsheetId สำหรับการอัพโหลดผลลัพธ์ (สำหรับ write)
-        const spreadsheetId_write = '1KHpF_qzfREFI4AwznWX9u6rEwNFPZ9niPm0kZ9Hb5Mg';
-        const range_write = `Playwright_Raw_Result_Save_Endorse!A:Z`;
-        // เริ่มต้น Auth
-        const auth = await googlesheet.initAuth();
+        const policyNo = data_save_endorse['Policy_No']; // กรมธรรม์ ตัวอย่างสำหรับทดสอบ
+        const contact_code = data_save_endorse['contact_code']; // ประเภทติดต่อ (ผู้ติดต่อ) * ตัวอย่างสำหรับทดสอบ
+        const endorse_code = data_save_endorse['Endorse_code']; // ข้อมูลสลักหลังที่ต้องการเลือก ตัวอย่างสำหรับทดสอบ
+        // เอา endorse_code ที่เป็น string มาแปลงเป็น array
+        const endorse_code_array = endorse_code.split(',').map(code => code.trim());
 
-        // กำหนดวันที่ปัจจุบัน
-        const today = new Date();
+        // ECN01
+        const ecn01_title = data_save_endorse['ECN01_01'];
+        const ecn01_firstname = data_save_endorse['ECN01_02'];
+        const ecn01_lastname = data_save_endorse['ECN01_03'];
 
-        // function ดึงวันที่และเวลาปัจจุบัน time stamp ในรูปแบบ dd/mm/yyyy hh:mm:ss แบบ พ.ศ.
-        const getTimestamp = () => {
-            const now = new Date();
-
-            const dd = String(now.getDate()).padStart(2, "0");
-            const mm = String(now.getMonth() + 1).padStart(2, "0");
-            const yyyy = now.getFullYear() + 543; // แปลงเป็น พ.ศ.
-
-            const hh = String(now.getHours()).padStart(2, "0");
-            const min = String(now.getMinutes()).padStart(2, "0");
-            const ss = String(now.getSeconds()).padStart(2, "0");
-
-            return `${dd}/${mm}/${yyyy} ${hh}:${min}:${ss}`;
-        };
-
-        const starttimestamp = getTimestamp(); // เวลาที่เริ่มต้น
-
-        if (policyNo === 'NO_POLICY_FOR_TEST') {
-            const endtimestamp = getTimestamp(); // เวลาสิ้นสุด
-            const endTime = Date.now();    // จบจับเวลา
-            const duration = (endTime - today) / 1000; // วินาที
-
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-            // เตรียมข้อมูลในรูปแบบ array 2 มิติ สำหรับ Google Sheet
-            const googleDataBatch = [
-                [
-                    starttimestamp,
-                    'Test Automate',
-                    testInfo.title,
-                    policyNo,
-                    'ไม่มีข้อมูลเลขที่กรมธรรม์สำหรับทดสอบ',
-                    'Cancel',
-                    endtimestamp,
-                    'Testing by Automate Playwright',
-                    `${duration} วินาที`,
-                    'Test Error'
-                ]
-            ];
-
-            // console.log(googleDataBatch);
-
-            // อัพโหลดผลลัพธ์ไปยัง Google Sheet เป็นการ append ที่ range ที่กำหนด แบบต่อท้าย โดยจะไม่ลบข้อมูลเก่าใน Google Sheet
-            await googlesheet.appendRows(auth, spreadsheetId_write, range_write, googleDataBatch);
-
-        } else {
+        if (process === 'Waiting for Create Data') {
             try {
+
+                // อัพเดท Process เป็น 'In Progress'
+                data_create.push({ [uniquekey]: row_uniquekey, Process: 'In Progress' });
+                // อัพโหลดผลลัพธ์ไปยัง Google Sheet เป็นการ update ที่ range ที่กำหนด
+                await googlesheet.updateDynamicRows(auth, spreadsheetId, sheetnamewrite, range_write, data_create, row_header, uniquekey);
+                // เคลียร์ array หลังอัพโหลด
+                data_create = [];
+
                 // ไปยังหน้า NBS
                 await loginPage.gotoNBS();
                 // เข้าสู่ระบบด้วยชื่อผู้ใช้และรหัสผ่าน
@@ -263,17 +228,10 @@ for (const data_save_endorse of testData) {
                 // สร้าง instance ของ inquiryendorseformLocator
                 const inquiryendorseformlocator = inquiryendorseformLocator(newPage);
 
-                // // วนลูปเลือกสลักหลังตาม endorse_code
-                // for (const code of endorse_code) {
-                //     // คลิ๊กเลือกสลักหลังตาม code
-                //     await inquiryendorseformlocator.endorse_checkbox_locator(code).click({ timeout: 10000 });
-                //     await newPage.waitForTimeout(500); // รอ 0.5 วินาที
-                // }
-
-                 // วนลูปเลือกสลักหลังตาม endorse_code
-                for (const code of endorse_code) {
+                // วนลูปเลือกสลักหลังตาม endorse_code
+                for (const code of endorse_code_array) {
                     // คลิ๊กเลือกสลักหลังตาม code
-                    await inquiryendorseformlocator.endorse_checkbox_locator(code.endorse_code).click({ timeout: 10000 });
+                    await inquiryendorseformlocator.endorse_checkbox_locator(code).click({ timeout: 10000 });
                     await newPage.waitForTimeout(500); // รอ 0.5 วินาที
                 }
 
@@ -289,112 +247,25 @@ for (const data_save_endorse of testData) {
 
                 await newPage.waitForTimeout(2000); // รอ 2 วินาที เพื่อให้ข้อมูลโหลด
 
-                // // นับจำนวนเอกสารใน expecteddata
-                // const documentCount = data_save_endorse.expecteddata.SELECTOR_Alteration_MENU_SUB_7_In_Page_1_Detail_Panel_Data[0].data.length;
-                // // นับจำนวน tr ในตาราง รายการเอกสาร
-                // const documentRows = newPage.locator('table > tbody', { hasText: 'รายการเอกสาร' }).locator('tr');
-                // const actualDocumentCount = await documentRows.count();
-
-                // let result_function_maps;
-                // let result_function_maps_detail_document;
-
-                // // เช็คจำนวนเอกสาร ตรงกันหรือไม่
-                // if (documentCount !== actualDocumentCount) {
-                //     console.log('จำนวนเอกสารใน expecteddata ไม่ตรงกับจำนวนเอกสารในตาราง บนหน้าเว็บ');
-                // } else {
-                //     // สร้าง instance ของ detailinquiryformLocator
-                //     const detailinquiryformlocator = detailinquiryformLocator(newPage);
-                //     // Utils
-                //     const mapsdataobject = new mapsdataObject(newPage, expect);
-                //     // เช็คข้อมูลบนหน้าจอกับ expected - Static Data
-                //     result_function_maps = await mapsdataobject.mapsdataarrayfile_checkdata_request_alteration(detailinquiryformlocator, data_save_endorse.expecteddata);
-                //     // เช็คข้อมูลบนหน้าจอกับ expected รายละเอียดเอกสาร ... (จากการ mapping ข้อมูล)
-                //     result_function_maps_detail_document = await mapsdataobject.mapsdataarrayfile_checkdata_alteration_detaildocument(detailinquiryformlocator, data_save_endorse.expecteddata);
-                // }
-
-                // // logout ออกจากระบบ
-                // await logoutpage.logoutNBSPortal_newPage(newPage);
-
-                // const endtimestamp = getTimestamp(); // เวลาสิ้นสุด
-                // const endTime = Date.now();    // จบจับเวลา
-                // const duration = (endTime - today) / 1000; // วินาที
-
-                // ////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-                // let merge_result_status
-                // let merge_result_assertion
-
-                // // เช็คจำนวนเอกสาร ตรงกันหรือไม่
-                // if (documentCount !== actualDocumentCount) {
-                //     merge_result_status = ['Failed'];
-                //     merge_result_assertion = ['จำนวนเอกสารใน expecteddata ไม่ตรงกับจำนวนเอกสารในตาราง บนหน้าเว็บ'];
-                // } else {
-                //     // อันนี้อัพโหลดขึ้น google แบบรวมอันเดียว
-                //     merge_result_status = result_function_maps.status_result_array.concat(result_function_maps_detail_document.status_result_array);
-                //     merge_result_assertion = result_function_maps.assertion_result_array.concat(result_function_maps_detail_document.assertion_result_array);
-                // }
-
-                // // ตรวจสอบสถานะการทดสอบ แบบง่ายๆ ว่ามี Failed หรือไม่
-                // const statusResult = merge_result_status.includes('Failed') ? 'Failed' : 'Passed';
-                // // รวมทุกค่า assertion เป็น string เดียว
-                // const assertionResult = merge_result_assertion.join('\n');
-                // // เตรียมข้อมูลในรูปแบบ array 2 มิติ สำหรับ Google Sheet
-                // const googleDataBatch = [
-                //     [
-                //         starttimestamp,
-                //         'Test Automate',
-                //         testInfo.title,
-                //         policyNo,
-                //         assertionResult,
-                //         statusResult,
-                //         endtimestamp,
-                //         'Testing by Automate Playwright',
-                //         `${duration} วินาที`,
-                //         ''
-                //     ]
-                // ];
-
-                // // console.log(googleDataBatch);
-
-                // // อัพโหลดผลลัพธ์ไปยัง Google Sheet เป็นการ append ที่ range ที่กำหนด แบบต่อท้าย โดยจะไม่ลบข้อมูลเก่าใน Google Sheet
-                // await googlesheet.appendRows(auth, spreadsheetId_write, range_write, googleDataBatch);
-
-                // ////////////////////////////////////////////////////////////////////////////////////////////////////////
+                const receiveissuerequestalteration = new ReceiveIssueRequestAlteration(newPage, expect);
+                // กรอกข้อมูลสลักหลัง
+                await receiveissuerequestalteration.inputdataendorse_alteration({ ecn01_firstname: ecn01_firstname, ecn01_lastname: ecn01_lastname, ecn01_title: ecn01_title, endorse_code: endorse_code_array });
 
             } catch (error) {
-                const endtimestamp = getTimestamp(); // เวลาสิ้นสุด
-                const endTime = Date.now();    // จบจับเวลา
-                const duration = (endTime - today) / 1000; // วินาที
-
                 if (testInfo.retry === testInfo.project.retries) { // ถ้าเป็นการรันครั้งสุดท้าย (ไม่ว่าจะผ่านหรือไม่ผ่าน)
                     ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-                    // เตรียมข้อมูลในรูปแบบ array 2 มิติ สำหรับ Google Sheet
-                    const googleDataBatch = [
-                        [
-                            starttimestamp,
-                            'Test Automate',
-                            testInfo.title,
-                            policyNo,
-                            'เนื่องจากเกิดข้อผิดพลาด',
-                            'Error',
-                            endtimestamp,
-                            'Testing by Automate Playwright',
-                            `${duration} วินาที`,
-                            error.message
-                        ]
-                    ];
+                    throw error;
 
-                    // console.log(googleDataBatch);
+                    // เตรียมข้อมูลสำหรับอัพโหลดไปยัง Google Sheet
 
-                    // อัพโหลดผลลัพธ์ไปยัง Google Sheet เป็นการ append ที่ range ที่กำหนด แบบต่อท้าย โดยจะไม่ลบข้อมูลเก่าใน Google Sheet
-                    await googlesheet.appendRows(auth, spreadsheetId_write, range_write, googleDataBatch);
+
+                    // // อัพโหลดผลลัพธ์ไปยัง Google Sheet เป็นการ append ที่ range ที่กำหนด แบบต่อท้าย โดยจะไม่ลบข้อมูลเก่าใน Google Sheet
+                    // await googlesheet.appendRows(auth, sheetnamewrite, range_write, googleDataBatch);
                 }
-
                 throw error; // ต้องโยนออกไปให้ระบบนับว่า fail จะได้ retry
             }
         }
-
-    })
-}
+    }
+})
 
