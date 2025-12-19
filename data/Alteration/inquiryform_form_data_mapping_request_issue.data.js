@@ -9,7 +9,7 @@ export const inquiryformArraykey_receive_issue_label = [
         policy_line: 'ALL', 
         username: '1200', 
         password: '123', 
-        // endorse_code: ['ECN01','ECN02','ECN12'],
+        // endorse_code: ['ECN01'],
         SELECTOR_Alteration_MENU_SUB_1_In_Page_2_Detail_Panel_Data: [{ label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel ข้อมูลผู้เอาประกันภัย > ชื่อ - นามสกุล', data: [['นายเจทีพันบี ดีเก้าพีบี']] }],
         SELECTOR_Alteration_MENU_SUB_1_In_Page_4_Detail_Panel_Data: [{ label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel ข้อมูลผู้เอาประกันภัย > เลขที่บัตร', data: [['3-801X-XXXX6-912']] }],
         SELECTOR_Alteration_MENU_SUB_1_In_Page_6_Detail_Panel_Data: [{ label: 'หน้าจอ ค้นหาใบสอบถาม > ดูรายละเอียด > Panel ข้อมูลผู้เอาประกันภัย > สัญชาติ', data: [['ไทย']] }],
@@ -45,8 +45,8 @@ export const inquiryformArraykey_receive_issue_label = [
         },
         endorse: [
             {
-                'endorse_code': 'ECN01',
-                SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Title: 'นาย',
+                endorse_code: 'ECN01',
+                SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Title: 'ร้อยเอก',
                 SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Name: 'ทดสอบ',
                 SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Surname: 'จ้า',
             }
