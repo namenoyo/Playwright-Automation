@@ -235,7 +235,6 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
                     await newPage.waitForTimeout(500); // รอ 0.5 วินาที
                 }
 
-
                 // คลิ๊กปุ่ม บันทึก
                 await inquiryendorseformlocator.action_button.click({ timeout: 10000 });
                 // รอเมนู popup แสดง
