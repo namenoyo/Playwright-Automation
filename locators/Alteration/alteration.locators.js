@@ -131,6 +131,98 @@ export const requestissueformLocator = (page) => ({
     SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_btn_Cancel_popup_Confirm: page.locator('div[role="dialog"]', { hasText: 'ยืนยันการยกเลิก' }).getByRole('button', { name: 'ยืนยัน' }),
     SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_btn_Cancel_popup_Confirm_Cancel: page.locator('div[role="dialog"]', { hasText: 'ยืนยันการยกเลิก' }).getByRole('button', { name: 'ยกเลิก' }),
 
+    // ECN04
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_1_In_Page_Request_ECN04_1_Button : page.locator('button.MuiButton-containedPrimary:has-text("จัดการข้อมูลผู้รับประโยชน์")').click(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_1_In_Page_Request_ECN04_2_Button : page.locator('button.MuiButton-containedPrimary:has-text("ตกลง")').click(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_3_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("ความสัมพันธ์"))').locator('input#relationshipCode').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_4_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("อื่น ๆ โปรดระบุ"))').locator('input#relationshipName').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_5_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("คำนำหน้า"))').locator('input#beneficiaryTitleCode').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_6_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("ชื่อ"))').locator('input#beneficiaryName').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_7_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("นามสกุล"))').locator('input#beneficiarySurName').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_8_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("คำนำหน้า (ภาษาอังกฤษ)"))').locator('input#beneficiaryTitleCodeEng').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_9_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("ชื่อ (ภาษาอังกฤษ)"))').locator('input#beneficiaryNameEng').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_10_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("นามสกุล (ภาษาอังกฤษ)"))').locator('input#beneficiarySurNameEng').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_11_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("เพศ"))').locator('input#beneficiaryGender').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_12_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("วันเดือนปี เกิด"))').locator('input#beneficiaryBirthDate').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_13_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("อายุ"))').locator('input#beneficiaryCurrentAge').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_14_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("ประเภทบัตร"))').locator('input#beneficiaryCardType').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_15_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("เลขที่บัตร"))').locator('input#beneficiaryCardNo').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_16_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("สัดส่วนผลประโยชน์"))').locator('input#beneficiaryPercentage').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_17_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("เลขที่"))').locator('input#addrNo').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_18_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("หมู่ที่"))').locator('input#villageNo').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_19_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("หมู่บ้าน / อาคาร"))').locator('input#building').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_20_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("ตรอก / ซอย"))').locator('input#alley').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_21_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("ถนน"))').locator('input#road').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_22_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("จังหวัด"))').locator('input#provinceCode').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_23_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("อำเภอ / เขต"))').locator('input#districtCode').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_24_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("ตำบล / แขวง"))').locator('input#subdistrictCode').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_25_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("รหัสไปรษณีย์"))').locator('input#postalCode').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_26_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("โทรศัพท์มือถือ"))').locator('input#mobileNo').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_27_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("โทรศัพท์บ้าน"))').locator('input#telephoneNo').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_28_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("Email"))').locator('input#email').first(),
+
+    // ECN05
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_1_Button : page.locator('button.MuiButton-containedPrimary:has-text("จัดการข้อมูลผู้รับประโยชน์")').click(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_2_Input_Text : page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) div:has-text("ยกเลิกโอนสิทธิกลับเป็นของผู้เอาประกันภัย")', { hasText: 'เลขที่บันทึกสลักหลังที่ต้องการยกเลิก' }).locator('input#lastEndorsementNo').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_3_Input_Date_Pick : page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) div:has-text("ยกเลิกโอนสิทธิกลับเป็นของผู้เอาประกันภัย")', { hasText: 'วันที่บันทึกสลักหลัง' }).locator('input[name="lastEndorsementDate"]').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_4_Button : page.locator('#saveBtn:has-text("ตกลง")').click(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_5_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("ความสัมพันธ์"))').locator('input#relationshipCode').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_6_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("อื่น ๆ โปรดระบุ"))').locator('input#relationshipName').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_7_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("คำนำหน้า"))').locator('input#beneficiaryTitleCode').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_8_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("ชื่อ"))').locator('input#beneficiaryName').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_9_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("นามสกุล"))').locator('input#beneficiarySurName').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_10_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("คำนำหน้า (ภาษาอังกฤษ)"))').locator('input#beneficiaryTitleCodeEng').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_11_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("ชื่อ (ภาษาอังกฤษ)"))').locator('input#beneficiaryNameEng').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_12_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("นามสกุล (ภาษาอังกฤษ)"))').locator('input#beneficiarySurNameEng').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_13_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("เพศ"))').locator('input#beneficiaryGender').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_14_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("วันเดือนปี เกิด"))').locator('input#beneficiaryBirthDate').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_15_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("อายุ"))').locator('input#beneficiaryCurrentAge').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_16_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("ประเภทบัตร"))').locator('input#beneficiaryCardType').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_17_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("เลขที่บัตร"))').locator('input#beneficiaryCardNo').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_18_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("สัดส่วนผลประโยชน์"))').locator('input#beneficiaryPercentage').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_19_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("เลขที่"))').locator('input#addrNo').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_20_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("หมู่ที่"))').locator('input#villageNo').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_21_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("หมู่บ้าน / อาคาร"))').locator('input#building').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_22_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("ตรอก / ซอย"))').locator('input#alley').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_23_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("ถนน"))').locator('input#road').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_24_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("จังหวัด"))').locator('input#provinceCode').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_25_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("อำเภอ / เขต"))').locator('input#districtCode').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_26_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("ตำบล / แขวง"))').locator('input#subdistrictCode').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_27_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("รหัสไปรษณีย์"))').locator('input#postalCode').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_28_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("โทรศัพท์มือถือ"))').locator('input#mobileNo').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_29_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("โทรศัพท์บ้าน"))').locator('input#telephoneNo').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_30_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("Email"))').locator('input#email').first(),
+
+    // ECN06
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_1_In_Page_Request_ECN06_1_Button : page.locator('button.MuiButton-containedPrimary:has-text("จัดการข้อมูลผู้รับประโยชน์")').click(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_1_In_Page_Request_ECN06_2_Button : page.locator('#saveBtn:has-text("ตกลง")').click(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_3_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("ความสัมพันธ์"))').locator('input#relationshipCode').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_4_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("อื่น ๆ โปรดระบุ"))').locator('input#relationshipName').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_5_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("คำนำหน้า"))').locator('input#beneficiaryTitleCode').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_6_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("ชื่อ"))').locator('input#beneficiaryName').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_7_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("นามสกุล"))').locator('input#beneficiarySurName').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_8_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("คำนำหน้า (ภาษาอังกฤษ)"))').locator('input#beneficiaryTitleCodeEng').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_9_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("ชื่อ (ภาษาอังกฤษ)"))').locator('input#beneficiaryNameEng').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_10_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("นามสกุล (ภาษาอังกฤษ)"))').locator('input#beneficiarySurNameEng').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_11_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("เพศ"))').locator('input#beneficiaryGender').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_12_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("วันเดือนปี เกิด"))').locator('input#beneficiaryBirthDate').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_13_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("อายุ"))').locator('input#beneficiaryCurrentAge').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_14_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("ประเภทบัตร"))').locator('input#beneficiaryCardType').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_15_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("เลขที่บัตร"))').locator('input#beneficiaryCardNo').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_16_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("สัดส่วนผลประโยชน์"))').locator('input#beneficiaryPercentage').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_17_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("เลขที่"))').locator('input#addrNo').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_18_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("หมู่ที่"))').locator('input#villageNo').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_19_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("หมู่บ้าน / อาคาร"))').locator('input#building').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_20_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("ตรอก / ซอย"))').locator('input#alley').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_21_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("ถนน"))').locator('input#road').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_22_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("จังหวัด"))').locator('input#provinceCode').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_23_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("อำเภอ / เขต"))').locator('input#districtCode').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_24_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("ตำบล / แขวง"))').locator('input#subdistrictCode').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_25_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("รหัสไปรษณีย์"))').locator('input#postalCode').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_26_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("โทรศัพท์มือถือ"))').locator('input#mobileNo').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_27_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("โทรศัพท์บ้าน"))').locator('input#telephoneNo').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_28_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("Email"))').locator('input#email').first(),
+
     // ECN07
     SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_NoEndorseCancel: page.locator(`#lastEndorsementNo`),
     SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_DateSaveEndorse: page.locator(`#lastEndorsementDate`),
@@ -221,11 +313,15 @@ export const requestissueformLocator = (page) => ({
     // ECN09
     // ไม่มีข้อมูลที่ต้องกรอก
 
+    
     // ECN11
     // ข้อมูลที่เปลี่ยนแปลง
     SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_sel_ChangedData: page.locator('#editType'),
     // รายละเอียด
     SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_txt_Detail: page.locator('#editText'),
+    
+    // ECN12
+    // ไม่มีข้อมูลที่ต้องกรอก
 
     // ECN13
     // ไม่มีข้อมูลที่ต้องกรอก
