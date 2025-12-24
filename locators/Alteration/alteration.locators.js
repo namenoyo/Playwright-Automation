@@ -130,17 +130,17 @@ export const requestissueformLocator = (page) => ({
     SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Address_PostalCode: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'รหัสไปรษณีย์ *' }),
     SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Address_PhoneNumber: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'โทรศัพท์มือถือ' }),
     SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Address_PhoneNumber_Home: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'โทรศัพท์บ้าน' }),
-    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Address_Email: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'อีเมล' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Address_Email: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'Email' }),
     // ปุ่มการทำงาน
     SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_btn_Save: page.locator('div[role="dialog"]').getByRole('button', { name: 'ตกลง' }),
     SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_btn_Cancel: page.locator('div[role="dialog"]').getByRole('button', { name: 'ยกเลิก' }),
-    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_btn_Cancel_popup_Confirm: page.locator('div[role="dialog"]', { hasText: 'ยืนยันการยกเลิก' }).getByRole('button', { name: 'ยืนยัน' }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_btn_Cancel_popup_Confirm: page.locator('div[role="dialog"]', { hasText: 'ยืนยันการบันทึก' }).getByRole('button', { name: 'ยืนยัน' }),
     SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_btn_Cancel_popup_Confirm_Cancel: page.locator('div[role="dialog"]', { hasText: 'ยืนยันการยกเลิก' }).getByRole('button', { name: 'ยกเลิก' }),
 
     // ECN04
-    SELECTOR_Alteration_MENU_Save_Request_ECN04_1_In_Page_Request_ECN04_1_Button : page.locator('button.MuiButton-containedPrimary:has-text("จัดการข้อมูลผู้รับประโยชน์")').click(),
-    SELECTOR_Alteration_MENU_Save_Request_ECN04_1_In_Page_Request_ECN04_1_1_Button : page.locator('button i[title="แก้ไขผู้รับประโยชน์"]').click(),
-    SELECTOR_Alteration_MENU_Save_Request_ECN04_1_In_Page_Request_ECN04_2_Button : page.locator('button.MuiButton-containedPrimary:has-text("ตกลง")').click(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_1_In_Page_Request_ECN04_1_Button : page.locator('button.MuiButton-containedPrimary:has-text("จัดการข้อมูลผู้รับประโยชน์")'),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_1_In_Page_Request_ECN04_1_1_Button : page.locator('button i[title="แก้ไขผู้รับประโยชน์"]'),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_1_In_Page_Request_ECN04_2_Button : page.locator('button.MuiButton-containedPrimary:has-text("ตกลง")'),
     SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_3_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("ความสัมพันธ์"))').locator('input#relationshipCode').first(),
     SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_4_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("อื่น ๆ โปรดระบุ"))').locator('input#relationshipName').first(),
     SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_5_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("คำนำหน้า"))').locator('input#beneficiaryTitleCode').first(),
@@ -169,8 +169,8 @@ export const requestissueformLocator = (page) => ({
     SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_28_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("Email"))').locator('input#email').first(),
 
     // ECN05
-    SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_1_Button : page.locator('button.MuiButton-containedPrimary:has-text("จัดการข้อมูลผู้รับประโยชน์")').click(),
-    SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_1_1_Button : page.locator('button i[title="แก้ไขผู้รับประโยชน์"]').click(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_1_Button : page.locator('button.MuiButton-containedPrimary:has-text("จัดการข้อมูลผู้รับประโยชน์")'),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_1_1_Button : page.locator('button i[title="แก้ไขผู้รับประโยชน์"]'),
     SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_2_Input_Text : page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) div:has-text("ยกเลิกโอนสิทธิกลับเป็นของผู้เอาประกันภัย")', { hasText: 'เลขที่บันทึกสลักหลังที่ต้องการยกเลิก' }).locator('input#lastEndorsementNo').first(),
     SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_3_Input_Date_Pick : page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) div:has-text("ยกเลิกโอนสิทธิกลับเป็นของผู้เอาประกันภัย")', { hasText: 'วันที่บันทึกสลักหลัง' }).locator('input[name="lastEndorsementDate"]').first(),
     SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_3_Choose_Dropdown_List : page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) div:has-text("ยกเลิกโอนสิทธิกลับเป็นของผู้เอาประกันภัย") div:has(:text-is("เหตุผลการยกเลิกโอนสิทธิ"))').locator('input#cancelReasonCode').first(),
@@ -189,7 +189,7 @@ export const requestissueformLocator = (page) => ({
     SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_3_BankAccount_8_Input_Text : page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) div:has-text("ยกเลิกโอนสิทธิกลับเป็นของผู้เอาประกันภัย") div:has(:text-is("สาขา"))').locator('input#accountBranch').first(),
     SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_3_BankAccount_9_Input_Text : page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) div:has-text("ยกเลิกโอนสิทธิกลับเป็นของผู้เอาประกันภัย") div:has(:text-is("หมายเหตุ"))').locator('input#accountRemarkCode').first(),
     SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_3_BankAccount_10_Input_Text : page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) div:has-text("ยกเลิกโอนสิทธิกลับเป็นของผู้เอาประกันภัย") div:has(:text-is("ระบุเพิ่มเติม"))').locator('input#accountOtherRemark').first(),
-    SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_4_Button : page.locator('#saveBtn:has-text("ตกลง")').click(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_4_Button : page.locator('#saveBtn:has-text("ตกลง")'),
     SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_5_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("ความสัมพันธ์"))').locator('input#relationshipCode').first(),
     SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_6_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("อื่น ๆ โปรดระบุ"))').locator('input#relationshipName').first(),
     SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_7_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("คำนำหน้า"))').locator('input#beneficiaryTitleCode').first(),
@@ -218,9 +218,9 @@ export const requestissueformLocator = (page) => ({
     SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_30_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("Email"))').locator('input#email').first(),
 
     // ECN06
-    SELECTOR_Alteration_MENU_Save_Request_ECN06_1_In_Page_Request_ECN06_1_Button : page.locator('button.MuiButton-containedPrimary:has-text("จัดการข้อมูลผู้รับประโยชน์")').click(),
-    SELECTOR_Alteration_MENU_Save_Request_ECN06_1_In_Page_Request_ECN06_1_1_Button : page.locator('button i[title="แก้ไขผู้รับประโยชน์"]').click(),
-    SELECTOR_Alteration_MENU_Save_Request_ECN06_1_In_Page_Request_ECN06_2_Button : page.locator('#saveBtn:has-text("ตกลง")').click(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_1_In_Page_Request_ECN06_1_Button : page.locator('button.MuiButton-containedPrimary:has-text("จัดการข้อมูลผู้รับประโยชน์")'),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_1_In_Page_Request_ECN06_1_1_Button : page.locator('button i[title="แก้ไขผู้รับประโยชน์"]'),
+    SELECTOR_Alteration_MENU_Save_Request_ECN06_1_In_Page_Request_ECN06_2_Button : page.locator('#saveBtn:has-text("ตกลง")'),
     SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_3_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("ความสัมพันธ์"))').locator('input#relationshipCode').first(),
     SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_4_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("อื่น ๆ โปรดระบุ"))').locator('input#relationshipName').first(),
     SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_5_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("คำนำหน้า"))').locator('input#beneficiaryTitleCode').first(),
@@ -249,11 +249,11 @@ export const requestissueformLocator = (page) => ({
     SELECTOR_Alteration_MENU_Save_Request_ECN06_2_In_Page_Request_ECN06_28_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("Email"))').locator('input#email').first(),
 
     // ECN07
-    SELECTOR_Alteration_MENU_Save_Request_ECN07_1_In_Page_Request_ECN07_1_Button : page.locator('button.MuiButton-containedPrimary:has-text("จัดการข้อมูลผู้รับประโยชน์")').click(),
-    SELECTOR_Alteration_MENU_Save_Request_ECN07_1_In_Page_Request_ECN07_1_1_Button : page.locator('button i[title="แก้ไขผู้รับประโยชน์"]').click(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN07_1_In_Page_Request_ECN07_1_Button : page.locator('button.MuiButton-containedPrimary:has-text("จัดการข้อมูลผู้รับประโยชน์")'),
+    SELECTOR_Alteration_MENU_Save_Request_ECN07_1_In_Page_Request_ECN07_1_1_Button : page.locator('button i[title="แก้ไขผู้รับประโยชน์"]'),
     SELECTOR_Alteration_MENU_Save_Request_ECN07_1_In_Page_Request_ECN07_2_Input_Text : page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) div:has-text("ยกเลิกการห้ามเปลี่ยนผู้รับประโยชน์")', { hasText: 'เลขที่บันทึกสลักหลังที่ต้องการยกเลิก' }).locator('input#lastEndorsementNo').first(),
     SELECTOR_Alteration_MENU_Save_Request_ECN07_1_In_Page_Request_ECN07_3_Input_Date_Pick : page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) div:has-text("ยกเลิกการห้ามเปลี่ยนผู้รับประโยชน์")', { hasText: 'วันที่บันทึกสลักหลัง' }).locator('input[name="lastEndorsementDate"]').first(),
-    SELECTOR_Alteration_MENU_Save_Request_ECN07_1_In_Page_Request_ECN07_4_Button : page.locator('#saveBtn:has-text("ตกลง")').click(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN07_1_In_Page_Request_ECN07_4_Button : page.locator('#saveBtn:has-text("ตกลง")'),
     SELECTOR_Alteration_MENU_Save_Request_ECN07_2_In_Page_Request_ECN07_5_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("ความสัมพันธ์"))').locator('input#relationshipCode').first(),
     SELECTOR_Alteration_MENU_Save_Request_ECN07_2_In_Page_Request_ECN07_6_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("อื่น ๆ โปรดระบุ"))').locator('input#relationshipName').first(),
     SELECTOR_Alteration_MENU_Save_Request_ECN07_2_In_Page_Request_ECN07_7_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("คำนำหน้า"))').locator('input#beneficiaryTitleCode').first(),

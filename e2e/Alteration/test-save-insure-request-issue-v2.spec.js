@@ -274,12 +274,17 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
                 await inquiryendorseformlocator.action_button.click({ timeout: 10000 });
                 // รอเมนู popup แสดง
                 await expect(inquiryendorseformlocator.confirm_popup).toBeVisible({ timeout: 60000 });
-                // คลิ๊กปุ่ม ยืนยัน
-                await inquiryendorseformlocator.confirm_button.click({ timeout: 10000 });
-                // เช็คว่าสลับไปที่เมนู สอบถามสลักหลัง หรือไม่
-                await expect(newPage.locator('div#section-policy-save', { hasText: 'ข้อมูลผู้เอาประกันภัย' })).toBeVisible({ timeout: 60000 }); // รอไม่เกิน 60 วินาที
 
-                await newPage.waitForTimeout(2000); // รอ 2 วินาที เพื่อให้ข้อมูลโหลด
+                await Promise.all([
+                    newPage.waitForResponse(response =>
+                        response.url().includes('/thaisamut/rs/alter/v1/master/relations/O') && response.status() === 200
+                    ),
+                    // คลิ๊กปุ่ม ยืนยัน
+                    await inquiryendorseformlocator.confirm_button.click({ timeout: 10000 }),
+                ], { timeout: 60000 }); // รอไม่เกิน 60 วินาที
+
+                // เช็คว่าสลับไปที่เมนู รับเรื่องสลักหลัง หรือไม่
+                await expect(newPage.locator('div#section-policy-save', { hasText: 'ข้อมูลผู้เอาประกันภัย' })).toBeVisible({ timeout: 60000 }); // รอไม่เกิน 60 วินาที
 
                 const receiveissuerequestalteration = new ReceiveIssueRequestAlteration(newPage, expect);
                 // กรอกข้อมูลสลักหลัง
