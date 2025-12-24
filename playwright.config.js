@@ -65,7 +65,6 @@ export default defineConfig({
         },
         // video: 'on', // เปิดการอัดวิดีโอทุกเคส
         screenshot: 'only-on-failure', // ถ้าอยากเก็บ screenshot เฉพาะเคสล้ม
-
       },
 
       // // 1920x1080
@@ -79,7 +78,6 @@ export default defineConfig({
       //   },
       //   // video: 'on', // เปิดการอัดวิดีโอทุกเคส
       //   // screenshot: 'only-on-failure', // ถ้าอยากเก็บ screenshot เฉพาะเคสล้ม
-
       // },
     },
 

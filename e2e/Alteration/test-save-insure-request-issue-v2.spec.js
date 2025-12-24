@@ -51,11 +51,11 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
     const googlesheet = new GoogleSheet();
     const auth = await googlesheet.initAuth();
     const spreadsheetId = '1anVVVH2lHAZ5VxqZZlp0XrIft5uW3SkfzxWSpSpqRjQ';
-    const readrange = `Data_Mapping_Service!A7:BT1000000`;
+    const readrange = `Data_Mapping_Service!A6:ZZ1000000`;
     testData = await googlesheet.fetchSheetData_key(auth, spreadsheetId, readrange);
 
     const sheetnamewrite = `Data_Mapping_Service`;
-    const range_write = `A7:BT`;
+    const range_write = `A6:ZZ`;
 
     for (const [index, data_save_endorse] of testData.entries()) {
 
@@ -64,7 +64,7 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
 
         // ชื่อ header key สำหรับการอ้างอิงข้อมูล
         const uniquekey = 'unique_key';
-        const row_header = 7; // บวก 4 เพราะข้อมูลเริ่มที่แถวที่ 4 ใน Google Sheet
+        const row_header = 6; // บวก 4 เพราะข้อมูลเริ่มที่แถวที่ 4 ใน Google Sheet
 
         const row_uniquekey = data_save_endorse['unique_key'];
         const username = data_save_endorse['Username']; // ชื่อผู้ใช้สำหรับทดสอบ
@@ -81,8 +81,43 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
         const ecn01_title = data_save_endorse['ECN01_01'];
         const ecn01_firstname = data_save_endorse['ECN01_02'];
         const ecn01_lastname = data_save_endorse['ECN01_03'];
+        // ECN02
+        const ecn02_housenumber = data_save_endorse['ECN02_01'];
+        const ecn02_moo = data_save_endorse['ECN02_02'];
+        const ecn02_village = data_save_endorse['ECN02_03'];
+        const ecn02_soi = data_save_endorse['ECN02_04'];
+        const ecn02_road = data_save_endorse['ECN02_05'];
+        const ecn02_province = data_save_endorse['ECN02_06'];
+        const ecn02_district = data_save_endorse['ECN02_07'];
+        const ecn02_subdistrict = data_save_endorse['ECN02_08'];
+        // ECN03
+        const ecn03_mode = data_save_endorse['ECN03_00'];
+        const ecn03_relationship = data_save_endorse['ECN03_01'];
+        const ecn03_relationship_other = data_save_endorse['ECN03_02'];
+        const ecn03_title = data_save_endorse['ECN03_03'];
+        const ecn03_firstname = data_save_endorse['ECN03_04'];
+        const ecn03_lastname = data_save_endorse['ECN03_05'];
+        const ecn03_title_eng = data_save_endorse['ECN03_06'];
+        const ecn03_firstname_eng = data_save_endorse['ECN03_07'];
+        const ecn03_lastname_eng = data_save_endorse['ECN03_08'];
+        const ecn03_sex = data_save_endorse['ECN03_09'];
+        const ecn03_birthdate = data_save_endorse['ECN03_10'];
+        const ecn03_idcardtype = data_save_endorse['ECN03_12'];
+        const ecn03_idcardnumber = data_save_endorse['ECN03_13'];
+        const ecn03_percentage = data_save_endorse['ECN03_14'];
+        const ecn03_housenumber = data_save_endorse['ECN03_15'];
+        const ecn03_moo = data_save_endorse['ECN03_16'];
+        const ecn03_village = data_save_endorse['ECN03_17'];
+        const ecn03_soi = data_save_endorse['ECN03_18'];
+        const ecn03_road = data_save_endorse['ECN03_19'];
+        const ecn03_province = data_save_endorse['ECN03_20'];
+        const ecn03_district = data_save_endorse['ECN03_21'];
+        const ecn03_subdistrict = data_save_endorse['ECN03_22'];
+        const ecn03_mobilephone = data_save_endorse['ECN03_24'];
+        const ecn03_housetelephone = data_save_endorse['ECN03_25'];
+        const ecn03_email = data_save_endorse['ECN03_26'];
 
-        if (process === 'Waiting for Create Data') {
+        if (process === 'Waiting for Create Data' || process === 'In Progress') {
             try {
 
                 // อัพเดท Process เป็น 'In Progress'
@@ -248,8 +283,15 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
 
                 const receiveissuerequestalteration = new ReceiveIssueRequestAlteration(newPage, expect);
                 // กรอกข้อมูลสลักหลัง
-                await receiveissuerequestalteration.inputdataendorse_alteration({ ecn01_firstname: ecn01_firstname, ecn01_lastname: ecn01_lastname, ecn01_title: ecn01_title, endorse_code: endorse_code_array });
+                await receiveissuerequestalteration.inputdataendorse_alteration({ 
+                    endorse_code: endorse_code_array,
+                    ecn01_firstname: ecn01_firstname, ecn01_lastname: ecn01_lastname, ecn01_title: ecn01_title,
+                    ecn02_housenumber: ecn02_housenumber, ecn02_moo: ecn02_moo, ecn02_village: ecn02_village, ecn02_soi: ecn02_soi, ecn02_road: ecn02_road, ecn02_province: ecn02_province, ecn02_district: ecn02_district, ecn02_subdistrict: ecn02_subdistrict,
+                    ecn03_mode: ecn03_mode, ecn03_relationship: ecn03_relationship, ecn03_relationship_other: ecn03_relationship_other, ecn03_title: ecn03_title, ecn03_firstname: ecn03_firstname, ecn03_lastname: ecn03_lastname, ecn03_title_eng: ecn03_title_eng, ecn03_firstname_eng: ecn03_firstname_eng, ecn03_lastname_eng: ecn03_lastname_eng, ecn03_sex: ecn03_sex, ecn03_birthdate: ecn03_birthdate, ecn03_idcardtype: ecn03_idcardtype, ecn03_idcardnumber: ecn03_idcardnumber, ecn03_percentage: ecn03_percentage, ecn03_housenumber: ecn03_housenumber, ecn03_moo: ecn03_moo, ecn03_village: ecn03_village, ecn03_soi: ecn03_soi, ecn03_road: ecn03_road, ecn03_province: ecn03_province, ecn03_district: ecn03_district, ecn03_subdistrict: ecn03_subdistrict, ecn03_mobilephone: ecn03_mobilephone, ecn03_housetelephone: ecn03_housetelephone, ecn03_email: ecn03_email,
 
+                });
+                // เลือก checkbox เอกสารที่มีการ require
+                // await receiveissuerequestalteration.checkbox_document_required_alteration();
             } catch (error) {
                 if (testInfo.retry === testInfo.project.retries) { // ถ้าเป็นการรันครั้งสุดท้าย (ไม่ว่าจะผ่านหรือไม่ผ่าน)
                     ////////////////////////////////////////////////////////////////////////////////////////////////////////
