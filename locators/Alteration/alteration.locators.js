@@ -167,6 +167,16 @@ export const requestissueformLocator = (page) => ({
     SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_26_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ที่อยู่ติดต่อ") div:has(:text-is("โทรศัพท์มือถือ"))').locator('input#mobileNo').first(),
     SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_27_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("โทรศัพท์บ้าน"))').locator('input#telephoneNo').first(),
     SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_28_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("Email"))').locator('input#email').first(),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_29_Radio : page.locator('#receiveChannel-0'),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_30_Radio : page.locator('#receiveChannel-1'),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_31_Select_BankAccount : page.locator('input#bankCode'),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_32_Input_Text_BankAccount : page.locator('input#accountNo'),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_33_Input_Text_BankAccount : page.locator('input#accountBranch'),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_34_Select_BankAccount : page.locator('input#accountRemarkCode'),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_35_Input_Text_BankAccount : page.locator('input#accountOtherRemark'),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_36_Input_Text_BankAccount : page.locator('input#accountTitleName'),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_37_Input_Text_BankAccount : page.locator('input#accountFirstName'),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_38_Input_Text_BankAccount : page.locator('input#accountLastName'),
 
     // ECN05
     SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_1_Button : page.locator('button.MuiButton-containedPrimary:has-text("จัดการข้อมูลผู้รับประโยชน์")'),
