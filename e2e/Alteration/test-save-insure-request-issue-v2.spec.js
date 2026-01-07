@@ -167,7 +167,7 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
                     console.log('\nเริ่มทำการบันทึก รับเรื่องสลักหลัง');
 
                     // อัพเดท Process เป็น 'In Progress'
-                    data_create.push({ [uniquekey]: row_uniquekey, Process: 'In Progress', Remark: '' });
+                    data_create.push({ [uniquekey]: row_uniquekey, Process: 'In Progress', Remark: '', "เลขที่รับเรื่อง": "" });
                     // อัพโหลดผลลัพธ์ไปยัง Google Sheet เป็นการ update ที่ range ที่กำหนด
                     await googlesheet.updateDynamicRows(auth, spreadsheetId, sheetnamewrite, range_write, data_create, row_header, uniquekey);
                     // เคลียร์ array หลังอัพโหลด
@@ -349,7 +349,7 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
 
                     });
                     // เลือก checkbox เอกสารที่มีการ require
-                    // await receiveissuerequestalteration.checkbox_document_required_alteration();
+                    await receiveissuerequestalteration.checkbox_document_required_alteration();
 
 
 
@@ -365,6 +365,8 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
 
                 if (flag_reverse_data === 'TRUE' || flag_reverse_data === 'True' || flag_reverse_data === 'true') {
                     console.log('\nเริ่มทำการย้อนข้อมูล รับเรื่องสลักหลัง');
+
+                    console.log('ทำการย้อนข้อมูล รับเรื่องสลักหลัง เสร็จเรียบร้อยแล้ว');
                 }
                 
             } catch (error) {
