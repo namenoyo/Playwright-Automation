@@ -60,6 +60,36 @@ const configdb = {
             DB_PORT: 5432,
             DB_NAME: 'coreul',
         }
+    },
+    alteration: {
+        SIT: {
+            DB_USER: '',
+            DB_PASSWORD: '',
+            DB_HOST: '',
+            DB_PORT: 5432,
+            DB_NAME: 'alter',
+        },
+        SIT_EDIT: {
+            DB_USER: 'alter',
+            DB_PASSWORD: 'nopass',
+            DB_HOST: '11.100.8.105',
+            DB_PORT: 5432,
+            DB_NAME: 'alter',
+        },
+        UAT: {
+            DB_USER: '',
+            DB_PASSWORD: '',
+            DB_HOST: '',
+            DB_PORT: 5432,
+            DB_NAME: 'alter',
+        },
+        UAT_EDIT: {
+            DB_USER: '',
+            DB_PASSWORD: '',
+            DB_HOST: '',
+            DB_PORT: 5432,
+            DB_NAME: 'alter',
+        }
     }
 }
 

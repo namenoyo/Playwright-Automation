@@ -1,5 +1,9 @@
 const { test, expect } = require('@playwright/test');
 
+// Database
+const { Database } = require('../../database/database');
+const { configdb } = require('../../database/database_env');
+
 // Pages
 const { ReceiveIssueRequestAlteration } = require('../../pages/Alteration/receive_issue_request_alteration.js');
 
@@ -57,6 +61,19 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
     const sheetnamewrite = `Data_Mapping_Service`;
     const range_write = `A6:ZZ`;
 
+    const db_name = 'alteration';
+    const db_env = 'SIT_EDIT'; // SIT | SIT_EDIT / UAT | UAT_EDIT
+
+    let db;
+
+    db = new Database({
+        user: configdb[db_name][db_env].DB_USER,
+        host: configdb[db_name][db_env].DB_HOST,
+        database: configdb[db_name][db_env].DB_NAME,
+        password: configdb[db_name][db_env].DB_PASSWORD,
+        port: configdb[db_name][db_env].DB_PORT,
+    });
+
     for (const [index, data_save_endorse] of testData.entries()) {
 
         // เตรียมตัวแปรเก็บผลลัพธ์
@@ -76,7 +93,7 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
         const endorse_code = data_save_endorse['Endorse_code']; // ข้อมูลสลักหลังที่ต้องการเลือก ตัวอย่างสำหรับทดสอบ
         // เอา endorse_code ที่เป็น string มาแปลงเป็น array
         const endorse_code_array = endorse_code.split(',').map(code => code.trim());
-
+        const document_request_no = data_save_endorse['เลขที่รับเรื่อง']; // เลขที่เอกสารคำขอสลักหลัง
         const flag_request_issue = data_save_endorse['Flag_request_issue'];
         const flag_reverse_data = data_save_endorse['Flag_reverse_data'];
 
@@ -160,9 +177,8 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
         const ecn04_firstname_bankaccount = data_save_endorse['ECN04_29_BankAccount_07'];
         const ecn04_lastname_bankaccount = data_save_endorse['ECN04_29_BankAccount_08'];
 
-        if (process === 'Waiting for Create Data' || process === 'In Progress') {
+        if ((process === 'Waiting for Create Data' || process === 'In Progress') && document_request_no === '') {
             try {
-
                 if (flag_request_issue === 'TRUE' || flag_request_issue === 'True' || flag_request_issue === 'true') {
                     console.log('\nเริ่มทำการบันทึก รับเรื่องสลักหลัง');
 
@@ -333,45 +349,96 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
                     // เช็คว่าสลับไปที่เมนู รับเรื่องสลักหลัง หรือไม่
                     await expect(newPage.locator('div#section-policy-save', { hasText: 'ข้อมูลผู้เอาประกันภัย' })).toBeVisible({ timeout: 60000 }); // รอไม่เกิน 60 วินาที
 
-                    const receiveissuerequestalteration = new ReceiveIssueRequestAlteration(newPage, expect);
-                    // กรอกข้อมูลสลักหลัง
-                    await receiveissuerequestalteration.inputdataendorse_alteration({
-                        endorse_code: endorse_code_array,
-                        // ECN01
-                        ecn01_firstname: ecn01_firstname, ecn01_lastname: ecn01_lastname, ecn01_title: ecn01_title,
-                        // ECN02
-                        ecn02_housenumber: ecn02_housenumber, ecn02_moo: ecn02_moo, ecn02_village: ecn02_village, ecn02_soi: ecn02_soi, ecn02_road: ecn02_road, ecn02_province: ecn02_province, ecn02_district: ecn02_district, ecn02_subdistrict: ecn02_subdistrict,
-                        // ECN03
-                        ecn03_mode: ecn03_mode, ecn03_relationship: ecn03_relationship, ecn03_relationship_other: ecn03_relationship_other, ecn03_title: ecn03_title, ecn03_firstname: ecn03_firstname, ecn03_lastname: ecn03_lastname, ecn03_title_eng: ecn03_title_eng, ecn03_firstname_eng: ecn03_firstname_eng, ecn03_lastname_eng: ecn03_lastname_eng, ecn03_sex: ecn03_sex, ecn03_birthdate: ecn03_birthdate, ecn03_idcardtype: ecn03_idcardtype, ecn03_idcardnumber: ecn03_idcardnumber, ecn03_percentage: ecn03_percentage, ecn03_housenumber: ecn03_housenumber, ecn03_moo: ecn03_moo, ecn03_village: ecn03_village, ecn03_soi: ecn03_soi, ecn03_road: ecn03_road, ecn03_province: ecn03_province, ecn03_district: ecn03_district, ecn03_subdistrict: ecn03_subdistrict, ecn03_mobilephone: ecn03_mobilephone, ecn03_housetelephone: ecn03_housetelephone, ecn03_email: ecn03_email,
-                        // ECN04
-                        ecn04_mode: ecn04_mode, ecn04_relationship: ecn04_relationship, ecn04_relationship_other: ecn04_relationship_other, ecn04_title: ecn04_title, ecn04_firstname: ecn04_firstname, ecn04_lastname: ecn04_lastname, ecn04_title_eng: ecn04_title_eng, ecn04_firstname_eng: ecn04_firstname_eng, ecn04_lastname_eng: ecn04_lastname_eng, ecn04_sex: ecn04_sex, ecn04_birthdate: ecn04_birthdate, ecn04_idcardtype: ecn04_idcardtype, ecn04_idcardnumber: ecn04_idcardnumber, ecn04_percentage: ecn04_percentage, ecn04_housenumber: ecn04_housenumber, ecn04_moo: ecn04_moo, ecn04_village: ecn04_village, ecn04_soi: ecn04_soi, ecn04_road: ecn04_road, ecn04_province: ecn04_province, ecn04_district: ecn04_district, ecn04_subdistrict: ecn04_subdistrict, ecn04_mobilephone: ecn04_mobilephone, ecn04_housetelephone: ecn04_housetelephone, ecn04_email: ecn04_email, ecn04_channelpayment: ecn04_channelpayment, ecn04_promptpay: ecn04_promptpay, ecn04_title_promptpay: ecn04_title_promptpay, ecn04_firstname_promptpay: ecn04_firstname_promptpay, ecn04_lastname_promptpay: ecn04_lastname_promptpay, ecn04_bankname_bankaccount: ecn04_bankname_bankaccount, ecn04_bankno_bankaccount: ecn04_bankno_bankaccount, ecn04_bankbranch_bankaccount: ecn04_bankbranch_bankaccount, ecn04_remark_bankaccount: ecn04_remark_bankaccount, ecn04_other_bankaccount: ecn04_other_bankaccount, ecn04_title_bankaccount: ecn04_title_bankaccount, ecn04_firstname_bankaccount: ecn04_firstname_bankaccount, ecn04_lastname_bankaccount: ecn04_lastname_bankaccount,
-                        // ECN05
+                    // ดึงค่ารายการสลักหลังที่แสดงบนหน้าจอ
+                    const element = await newPage.locator('div[class="MuiGrid-root MuiGrid-item"]', {hasText: 'สลักหลัง Non Finance'}).locator('[id*="section-endorsement-"]')
+                    const count = await element.count();
+                    const endorse_code_screen = [];
+                    for (let i = 0; i < count; i++) {
+                        const raw = await element.nth(i).getAttribute('id');   // เช่น test-E01
+                        const idx = raw.indexOf('-E');                         // หาตำแหน่ง -E
+                        const trimmed = idx >= 0 ? raw.substring(idx + 1) : raw; // เอาตั้งแต่ E เป็นต้นไป
+                        endorse_code_screen.push(trimmed);                                     // เก็บผลลัพธ์
+                    }
 
-                    });
-                    // เลือก checkbox เอกสารที่มีการ require
-                    await receiveissuerequestalteration.checkbox_document_required_alteration();
+                    // เปรียบเทียบข้อมูลระหว่าง endorse_code_array กับ endorse_code_screen
+                    const arr1 = endorse_code_array;
+                    const arr2 = endorse_code_screen;
+                    const sorted1 = [...arr1].sort();
+                    const sorted2 = [...arr2].sort();
+                    const same = sorted1.toString() === sorted2.toString();
+                    // หาตัวที่ใน arr1 มี แต่ arr2 ไม่มี
+                    const missing = arr1.filter(v => !arr2.includes(v));
+                    // หาตัวที่ใน arr2 มี แต่ arr1 ไม่มี
+                    const extra = arr2.filter(v => !arr1.includes(v));
+                    // console.log({ same, missing, extra });
 
+                    let requestno
 
+                    // เงื่อนไข ตรวจสอบผลลัพธ์การเปรียบเทียบ
+                    if (!same) {
+                        // อัพเดท Remark เป็น error.message
+                        data_create.push({ [uniquekey]: row_uniquekey, Process: 'Error', Remark: `ข้อมูลสลักหลังที่เลือกไม่ตรงกับที่แสดงบนหน้าจอ. Missing: ${missing.join(', ')}, Extra: ${extra.join(', ')}` });
+                        // อัพโหลดผลลัพธ์ไปยัง Google Sheet เป็นการ update ที่ range ที่กำหนด
+                        await googlesheet.updateDynamicRows(auth, spreadsheetId, sheetnamewrite, range_write, data_create, row_header, uniquekey);
+                        // เคลียร์ array หลังอัพโหลด
+                        data_create = [];
+                        throw new Error(`ข้อมูลสลักหลังที่เลือกไม่ตรงกับที่แสดงบนหน้าจอ`);
+                    } else {
+                        const receiveissuerequestalteration = new ReceiveIssueRequestAlteration(newPage, expect);
+                        // กรอกข้อมูลสลักหลัง
+                        await receiveissuerequestalteration.inputdataendorse_alteration({
+                            endorse_code: endorse_code_screen,
+                            // ECN01
+                            ecn01_firstname: ecn01_firstname, ecn01_lastname: ecn01_lastname, ecn01_title: ecn01_title,
+                            // ECN02
+                            ecn02_housenumber: ecn02_housenumber, ecn02_moo: ecn02_moo, ecn02_village: ecn02_village, ecn02_soi: ecn02_soi, ecn02_road: ecn02_road, ecn02_province: ecn02_province, ecn02_district: ecn02_district, ecn02_subdistrict: ecn02_subdistrict,
+                            // ECN03
+                            ecn03_mode: ecn03_mode, ecn03_relationship: ecn03_relationship, ecn03_relationship_other: ecn03_relationship_other, ecn03_title: ecn03_title, ecn03_firstname: ecn03_firstname, ecn03_lastname: ecn03_lastname, ecn03_title_eng: ecn03_title_eng, ecn03_firstname_eng: ecn03_firstname_eng, ecn03_lastname_eng: ecn03_lastname_eng, ecn03_sex: ecn03_sex, ecn03_birthdate: ecn03_birthdate, ecn03_idcardtype: ecn03_idcardtype, ecn03_idcardnumber: ecn03_idcardnumber, ecn03_percentage: ecn03_percentage, ecn03_housenumber: ecn03_housenumber, ecn03_moo: ecn03_moo, ecn03_village: ecn03_village, ecn03_soi: ecn03_soi, ecn03_road: ecn03_road, ecn03_province: ecn03_province, ecn03_district: ecn03_district, ecn03_subdistrict: ecn03_subdistrict, ecn03_mobilephone: ecn03_mobilephone, ecn03_housetelephone: ecn03_housetelephone, ecn03_email: ecn03_email,
+                            // ECN04
+                            ecn04_mode: ecn04_mode, ecn04_relationship: ecn04_relationship, ecn04_relationship_other: ecn04_relationship_other, ecn04_title: ecn04_title, ecn04_firstname: ecn04_firstname, ecn04_lastname: ecn04_lastname, ecn04_title_eng: ecn04_title_eng, ecn04_firstname_eng: ecn04_firstname_eng, ecn04_lastname_eng: ecn04_lastname_eng, ecn04_sex: ecn04_sex, ecn04_birthdate: ecn04_birthdate, ecn04_idcardtype: ecn04_idcardtype, ecn04_idcardnumber: ecn04_idcardnumber, ecn04_percentage: ecn04_percentage, ecn04_housenumber: ecn04_housenumber, ecn04_moo: ecn04_moo, ecn04_village: ecn04_village, ecn04_soi: ecn04_soi, ecn04_road: ecn04_road, ecn04_province: ecn04_province, ecn04_district: ecn04_district, ecn04_subdistrict: ecn04_subdistrict, ecn04_mobilephone: ecn04_mobilephone, ecn04_housetelephone: ecn04_housetelephone, ecn04_email: ecn04_email, ecn04_channelpayment: ecn04_channelpayment, ecn04_promptpay: ecn04_promptpay, ecn04_title_promptpay: ecn04_title_promptpay, ecn04_firstname_promptpay: ecn04_firstname_promptpay, ecn04_lastname_promptpay: ecn04_lastname_promptpay, ecn04_bankname_bankaccount: ecn04_bankname_bankaccount, ecn04_bankno_bankaccount: ecn04_bankno_bankaccount, ecn04_bankbranch_bankaccount: ecn04_bankbranch_bankaccount, ecn04_remark_bankaccount: ecn04_remark_bankaccount, ecn04_other_bankaccount: ecn04_other_bankaccount, ecn04_title_bankaccount: ecn04_title_bankaccount, ecn04_firstname_bankaccount: ecn04_firstname_bankaccount, ecn04_lastname_bankaccount: ecn04_lastname_bankaccount,
+                            // ECN05
 
-                    // อัพเดท Process เป็น 'Finish'
-                    data_create.push({ [uniquekey]: row_uniquekey, Process: 'Finish', Remark: 'ทำการบันทึก รับเรื่องสลักหลัง เสร็จเรียบร้อยแล้ว', 'เลขที่รับเรื่อง': 'TEST-01' });
-                    // อัพโหลดผลลัพธ์ไปยัง Google Sheet เป็นการ update ที่ range ที่กำหนด
-                    await googlesheet.updateDynamicRows(auth, spreadsheetId, sheetnamewrite, range_write, data_create, row_header, uniquekey);
-                    // เคลียร์ array หลังอัพโหลด
-                    data_create = [];
+                        });
+                        // เลือก checkbox เอกสารที่มีการ require
+                        await receiveissuerequestalteration.checkbox_document_required_alteration();
 
+                        // หลังจากคลิกปุ่มบันทึก เก็บ response ของเลขที่รับเรื่อง
+                        const [response] = await Promise.all([
+                            newPage.waitForResponse(resp =>
+                                resp.url().includes('/thaisamut/rs/alter/v1/request') && resp.status() === 200
+                            ),
+                            // คลิกปุ่มบันทึก
+                            await receiveissuerequestalteration.save_receive_issue_request_alteration(),
+                        ]);
+                        const responseBody = await response.json();
+                        requestno = responseBody.requestNo; // หรือเปลี่ยนชื่อ key ตาม response จริง
+                        console.log('เลขที่รับเรื่อง:', requestno);
+
+                        // // บันทึก รับเรื่องสลักหลัง
+                        // await receiveissuerequestalteration.save_receive_issue_request_alteration();
+                    }
+
+                    if (flag_reverse_data !== 'TRUE' && flag_reverse_data !== 'True' && flag_reverse_data !== 'true') {
+                        // อัพเดท Process เป็น 'Finish'
+                        data_create.push({ [uniquekey]: row_uniquekey, Process: 'Finish', Remark: '- ทำการบันทึก รับเรื่องสลักหลัง เสร็จเรียบร้อยแล้ว', 'เลขที่รับเรื่อง': `${requestno} (Create)` });
+                        // อัพโหลดผลลัพธ์ไปยัง Google Sheet เป็นการ update ที่ range ที่กำหนด
+                        await googlesheet.updateDynamicRows(auth, spreadsheetId, sheetnamewrite, range_write, data_create, row_header, uniquekey);
+                        // เคลียร์ array หลังอัพโหลด
+                        data_create = [];
+                    } else {
+                        // อัพเดท Process เป็น 'Finish'
+                        data_create.push({ [uniquekey]: row_uniquekey, Remark: '- ทำการบันทึก รับเรื่องสลักหลัง เสร็จเรียบร้อยแล้ว', 'เลขที่รับเรื่อง': `${requestno} (Create)` });
+                        // อัพโหลดผลลัพธ์ไปยัง Google Sheet เป็นการ update ที่ range ที่กำหนด
+                        await googlesheet.updateDynamicRows(auth, spreadsheetId, sheetnamewrite, range_write, data_create, row_header, uniquekey);
+                        // เคลียร์ array หลังอัพโหลด
+                        data_create = [];
+                    }
+                    
                     console.log('ทำการบันทึก รับเรื่องสลักหลัง เสร็จเรียบร้อยแล้ว');
-                }
-
-                if (flag_reverse_data === 'TRUE' || flag_reverse_data === 'True' || flag_reverse_data === 'true') {
-                    console.log('\nเริ่มทำการย้อนข้อมูล รับเรื่องสลักหลัง');
-
-                    console.log('ทำการย้อนข้อมูล รับเรื่องสลักหลัง เสร็จเรียบร้อยแล้ว');
                 }
                 
             } catch (error) {
                 if (testInfo.retry === testInfo.project.retries) { // ถ้าเป็นการรันครั้งสุดท้าย (ไม่ว่าจะผ่านหรือไม่ผ่าน)
-                    ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
                     // อัพเดท Remark เป็น error.message
                     data_create.push({ [uniquekey]: row_uniquekey, Process: 'Error', Remark: error.message });
@@ -379,6 +446,114 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
                     await googlesheet.updateDynamicRows(auth, spreadsheetId, sheetnamewrite, range_write, data_create, row_header, uniquekey);
                     // เคลียร์ array หลังอัพโหลด
                     data_create = [];
+
+                }
+                throw error; // ต้องโยนออกไปให้ระบบนับว่า fail จะได้ retry
+            }
+        } else if ((process === 'Waiting for Create Data' || process === 'In Progress') && document_request_no !== '') {
+
+            const only_document_request_no = document_request_no.split(' ')[0]; // เอาเฉพาะเลขที่รับเรื่อง โดยตัด (Create) หรือ (Skip) ออก
+
+            if (flag_reverse_data !== 'TRUE' && flag_reverse_data !== 'True' && flag_reverse_data !== 'true') {
+                // อัพเดท Process เป็น 'Finish'
+                data_create.push({ [uniquekey]: row_uniquekey, Process: 'Finish', Remark: '- ข้ามการบันทึก รับเรื่องสลักหลัง เนื่องจาก ทำการบันทึก รับเรื่องสลักหลัง เรียบร้อยแล้ว', 'เลขที่รับเรื่อง': `${only_document_request_no} (Skip)` });
+                // อัพโหลดผลลัพธ์ไปยัง Google Sheet เป็นการ update ที่ range ที่กำหนด
+                await googlesheet.updateDynamicRows(auth, spreadsheetId, sheetnamewrite, range_write, data_create, row_header, uniquekey);
+                // เคลียร์ array หลังอัพโหลด
+                data_create = [];
+            } else {
+                // อัพเดท ข้อมูล
+                data_create.push({ [uniquekey]: row_uniquekey, Remark: '- ข้ามการบันทึก รับเรื่องสลักหลัง เนื่องจาก ทำการบันทึก รับเรื่องสลักหลัง เรียบร้อยแล้ว', 'เลขที่รับเรื่อง': `${only_document_request_no} (Skip)` });
+                // อัพโหลดผลลัพธ์ไปยัง Google Sheet เป็นการ update ที่ range ที่กำหนด
+                await googlesheet.updateDynamicRows(auth, spreadsheetId, sheetnamewrite, range_write, data_create, row_header, uniquekey);
+                // เคลียร์ array หลังอัพโหลด
+                data_create = [];
+            }
+
+            console.log('\nข้ามการบันทึก รับเรื่องสลักหลัง เนื่องจาก ทำการบันทึก รับเรื่องสลักหลัง เรียบร้อยแล้ว');
+        }
+
+        // ดึงข้อมูลล่าสุด หลังจากบันทึก รับเรื่องสลักหลัง เสร็จ
+        const data_present = await googlesheet.fetchSheetData_key_rows(auth, spreadsheetId, readrange, null, null, row => row.unique_key === row_uniquekey);
+        const process_present = data_present[0]['Process'];
+        const document_request_no_present = data_present[0]['เลขที่รับเรื่อง'];
+        const remark_present = data_present[0]['Remark'];
+
+        if ((process_present === 'Waiting for Create Data' || process_present === 'In Progress') && document_request_no_present !== '') {
+            const only_document_request_no_present = document_request_no_present.split(' ')[0]; // เอาเฉพาะเลขที่รับเรื่อง โดยตัด (Create) หรือ (Skip) ออก
+
+            try {
+                if (flag_reverse_data === 'TRUE' || flag_reverse_data === 'True' || flag_reverse_data === 'true') {
+                    console.log('\nเริ่มทำการย้อนข้อมูล รับเรื่องสลักหลัง');
+                    const query_reverse_data_alteration = `
+                        WITH
+                        u_a AS (
+                        UPDATE tx_request_header
+                        SET request_status = 'CAX'
+                        WHERE policy_no = $1
+                        and request_no = $2
+                        RETURNING id
+                        ),
+                        u_b AS (
+                        UPDATE tx_request_endorsement b
+                        SET endorse_status = 'CAX'
+                        FROM u_a
+                        WHERE b.tx_request_header_id = u_a.id
+                        RETURNING b.tx_request_header_id
+                        ),
+                        u_c AS (
+                        UPDATE tx_request_endorsement_group c
+                        SET endorse_group_status = 'CAX'
+                        FROM u_a
+                        WHERE c.tx_request_header_id = u_a.id
+                        RETURNING c.tx_request_header_id
+                        )
+                        SELECT
+                        (SELECT count(*) FROM u_a) AS updated_header_rows,
+                        (SELECT count(*) FROM u_b) AS updated_endorsement_rows,
+                        (SELECT count(*) FROM u_c) AS updated_endorsement_group_rows;
+                    `;
+                    const params = [policyNo, only_document_request_no_present];
+
+                    const result_query_reverse_data_alteration = await db.query(query_reverse_data_alteration, params);
+                    // console.log('ผลลัพธ์การย้อนข้อมูล รับเรื่องสลักหลัง');
+                    // console.log('ผลลัพธ์การย้อนข้อมูล รับเรื่องสลักหลัง:', result_query_reverse_data_alteration.rows[0]);
+
+                    // ปิด database
+                    await db.close();
+
+                    if ((flag_reverse_data === 'TRUE' || flag_reverse_data === 'True' || flag_reverse_data === 'true') && (flag_request_issue === 'TRUE' || flag_request_issue === 'True' || flag_request_issue === 'true')) {
+                        // อัพเดท Process เป็น 'Finish'
+                        data_create.push({ [uniquekey]: row_uniquekey, Process: 'Finish', Remark: `${remark_present}\n- ทำการย้อนข้อมูล รับเรื่องสลักหลัง เสร็จเรียบร้อยแล้ว`, 'เลขที่รับเรื่อง': `${document_request_no_present}\n${only_document_request_no_present} (Reversed)` });
+                        // อัพโหลดผลลัพธ์ไปยัง Google Sheet เป็นการ update ที่ range ที่กำหนด
+                        await googlesheet.updateDynamicRows(auth, spreadsheetId, sheetnamewrite, range_write, data_create, row_header, uniquekey);
+                        // เคลียร์ array หลังอัพโหลด
+                        data_create = [];
+
+                        console.log('ทำการย้อนข้อมูล รับเรื่องสลักหลัง เสร็จเรียบร้อยแล้ว');
+                    } else {
+                        // อัพเดท Process เป็น 'Finish'
+                        data_create.push({ [uniquekey]: row_uniquekey, Process: 'Finish', Remark: '- ทำการย้อนข้อมูล รับเรื่องสลักหลัง เสร็จเรียบร้อยแล้ว', 'เลขที่รับเรื่อง': `${only_document_request_no_present} (Reversed)` });
+                        // อัพโหลดผลลัพธ์ไปยัง Google Sheet เป็นการ update ที่ range ที่กำหนด
+                        await googlesheet.updateDynamicRows(auth, spreadsheetId, sheetnamewrite, range_write, data_create, row_header, uniquekey);
+                        // เคลียร์ array หลังอัพโหลด
+                        data_create = [];
+
+                        console.log('ทำการย้อนข้อมูล รับเรื่องสลักหลัง เสร็จเรียบร้อยแล้ว');
+                    }
+                    
+                }
+                
+            } catch (error) {
+                if (testInfo.retry === testInfo.project.retries) { // ถ้าเป็นการรันครั้งสุดท้าย (ไม่ว่าจะผ่านหรือไม่ผ่าน)
+
+                    // อัพเดท Remark เป็น error.message
+                    data_create.push({ [uniquekey]: row_uniquekey, Process: 'Error', Remark: error.message });
+                    // อัพโหลดผลลัพธ์ไปยัง Google Sheet เป็นการ update ที่ range ที่กำหนด
+                    await googlesheet.updateDynamicRows(auth, spreadsheetId, sheetnamewrite, range_write, data_create, row_header, uniquekey);
+                    // เคลียร์ array หลังอัพโหลด
+                    data_create = [];
+
                 }
                 throw error; // ต้องโยนออกไปให้ระบบนับว่า fail จะได้ retry
             }
