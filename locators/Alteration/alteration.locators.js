@@ -78,6 +78,10 @@ export const requestissueformLocator = (page) => ({
     // Locator other
     SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Sel_All: page.locator('div[class="MuiInputBase-root MuiInput-root MuiInput-underline Mui-focused Mui-focused MuiInputBase-formControl MuiInput-formControl"]', { state: 'visible', timeout: 10000 }),
     SELECTOR_Alteration_MENU_BTN_SAVE: page.getByRole('button', { name: 'บันทึก' }),
+    SELECTOR_Alteration_MENU_POPUP_CONFIRM_SAVE: page.locator('div[role="dialog"]', { hasText: 'ยืนยันการบันทึกรับเรื่องสลักหลัง' }),
+    SELECTOR_Alteration_MENU_POPUP_CONFIRM_SAVE_BTN_CONFIRM: page.locator('div[role="dialog"]', { hasText: 'ยืนยันการบันทึกรับเรื่องสลักหลัง' }).locator('button', { hasText: 'ยืนยัน' }),
+    SELECTOR_Alteration_MENU_POPUP_SUCCESS: page.locator('div[role="dialog"]', { hasText: 'บันทึกรายการสำเร็จ' }),
+    SELECTOR_Alteration_MENU_POPUP_SUCCESS_BTN_AGREE: page.locator('div[role="dialog"]', { hasText: 'บันทึกรายการสำเร็จ' }).locator('button', { hasText: 'ตกลง' }),
 
     //เข้าสู่หน้าจอระบบ Alteration > หน้าจอ รับเรื่องสลักหลัง > ดูรายละเอียด > Panel สลักหลัง Non Finance
     // ECN01
@@ -108,7 +112,7 @@ export const requestissueformLocator = (page) => ({
     SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Relationship_Other: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'อื่น ๆ โปรดระบุ' }),
     SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Title: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'คำนำหน้า *' }),
     SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Name: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'ชื่อ *' }),
-    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_edit_Surname: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'นามสกุล *', exact: true }),
+    SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_edit_Surname: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'นามสกุล', exact: true }),
     SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_add_Surname: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'นามสกุล', exact: true }),
     SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Title_Eng: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'คำนำหน้า (ภาษาอังกฤษ)' }),
     SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_Name_Eng: page.locator('div[role="dialog"]').getByRole('textbox', { name: 'ชื่อ (ภาษาอังกฤษ)' }),
@@ -147,7 +151,7 @@ export const requestissueformLocator = (page) => ({
     SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_btn_Cancel_popup_Confirm_Cancel: page.locator('div[role="dialog"]', { hasText: 'ยืนยันการยกเลิก' }).getByRole('button', { name: 'ยกเลิก' }),
 
     // ECN04
-    SELECTOR_Alteration_MENU_Save_Request_ECN04_1_In_Page_Request_ECN04_1_Button : page.locator('button.MuiButton-containedPrimary:has-text("จัดการข้อมูลผู้รับประโยชน์")'),
+    SELECTOR_Alteration_MENU_Save_Request_ECN04_1_In_Page_Request_ECN04_1_Button : (endorse) => page.locator(`#section-endorsement-${endorse}`).getByRole('button', { name: 'จัดการข้อมูลผู้รับประโยชน์' }),
     SELECTOR_Alteration_MENU_Save_Request_ECN04_1_In_Page_Request_ECN04_1_1_Button : (endorse) => page.locator(`#section-endorsement-${endorse}`).locator('i[title="แก้ไขผู้รับประโยชน์"]'),
     SELECTOR_Alteration_MENU_Save_Request_ECN04_1_In_Page_Request_ECN04_2_Button : page.locator('button.MuiButton-containedPrimary:has-text("ตกลง")'),
     SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_3_Input_Text : page.locator('div:has-text("จัดการผู้รับประโยชน์") div:has-text("ข้อมูลผู้รับประโยชน์") div:has(:text-is("ความสัมพันธ์"))').locator('input#relationshipCode').first(),
