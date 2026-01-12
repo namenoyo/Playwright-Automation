@@ -166,7 +166,63 @@ class GoogleSheet {
     });
 
     return data;
-}
+  }
+
+  async fetchSheetData_key_rows(auth, spreadsheetId, range, fields = null, rowIndexes = null, filterFn = null) {
+    const sheets = google.sheets({ version: 'v4', auth });
+    const res = await sheets.spreadsheets.values.get({ spreadsheetId, range });
+
+    const values = res.data.values || [];
+    if (values.length === 0) return [];
+
+    const header = values[0];
+
+    // หาจำนวน column จาก range (เช่น A1:D10)
+    const columnCount = range.match(/([A-Z]+):([A-Z]+)/);
+    let maxCols = 0;
+    if (columnCount) {
+      const colStart = columnCount[1];
+      const colEnd = columnCount[2];
+      const colToNumber = col => {
+        let num = 0;
+        for (let i = 0; i < col.length; i++) {
+          num *= 26;
+          num += col.charCodeAt(i) - 64;
+        }
+        return num;
+      };
+      maxCols = colToNumber(colEnd) - colToNumber(colStart) + 1;
+    }
+
+    let data = values.slice(1).map(row => {
+      while (row.length < maxCols) {
+        row.push('');
+      }
+      const obj = {};
+      header.forEach((key, index) => {
+        obj[key] = row[index] || '';
+      });
+      if (fields && Array.isArray(fields)) {
+        const filtered = {};
+        for (const f of fields) {
+          filtered[f] = obj[f];
+        }
+        return filtered;
+      }
+      return obj;
+    });
+
+    // เลือกเฉพาะบรรทัดที่ต้องการ
+    if (Array.isArray(rowIndexes)) {
+      data = rowIndexes.map(i => data[i]).filter(Boolean);
+    }
+    // หรือ filter ด้วยฟังก์ชัน
+    if (typeof filterFn === 'function') {
+      data = data.filter(filterFn);
+    }
+
+    return data;
+  }
 
   // บันทึกข้อมูลลง Google Sheet โดยรับ spreadsheetId และ range และ rows (ข้อมูลที่เป็น array 2D)
   async updateRows(auth, spreadsheetId, range, rows) {
@@ -322,7 +378,7 @@ class GoogleSheet {
     });
 
     return res.data;
-}
+  }
 
 
   // เพิ่มแถวใหม่ที่ range ที่กำหนด โดยไม่ลบข้อมูลเก่า ใช้สำหรับ append ข้อมูลใหม่ต่อท้ายข้อมูลเก่า

@@ -8,6 +8,10 @@ import { gotoMenu } from '../../pages/menu.page.js';
 const { GoogleSheet } = require('../../utils/google-sheet-OAuth.helper.js');
 
 test('Generate Thai QR Code', async ({ page }, testInfo) => {
+
+    // setting เวลาให้เคสนี้รัน
+    test.setTimeout(36000000); // 10 ชั่วโมง
+
      // เริ่มทำการทดสอบ
     const loginPage = new LoginPage(page);
     const logoutPage = new LogoutPage(page, expect);
