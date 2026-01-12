@@ -477,7 +477,7 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
                             requestno = responseBody.requestNo; // หรือเปลี่ยนชื่อ key ตาม response จริง
                             console.log('เลขที่รับเรื่อง:', requestno);
                         }
-                        if (flag_reverse_data === 'TRUE' && flag_reverse_data === 'True' && flag_reverse_data === 'true') {
+                        if (flag_reverse_data === 'TRUE' || flag_reverse_data === 'True' || flag_reverse_data === 'true') {
                             // อัพเดท Process เป็น 'Finish'
                             data_create.push({ [uniquekey]: row_uniquekey, Remark: '- ทำการบันทึก รับเรื่องสลักหลัง เสร็จเรียบร้อยแล้ว', 'เลขที่รับเรื่อง': `${requestno} (Create)` });
                             // อัพโหลดผลลัพธ์ไปยัง Google Sheet เป็นการ update ที่ range ที่กำหนด
@@ -494,6 +494,20 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
                         }
 
                         console.log('ทำการบันทึก รับเรื่องสลักหลัง เสร็จเรียบร้อยแล้ว');
+
+                        // ปิด tab ที่ไม่ใช้งาน เพื่อป้องกันการใช้ resource มากเกินไป
+                        const context = page.context();
+                        const pages = context.pages();
+                        for (let i = 1; i < pages.length; i++) {
+                            await pages[i].close();
+                        }
+
+                        // ปิด popup confirm
+                        await page.locator('div[aria-labelledby="confirmation-dialog-title"]').locator('button[aria-label="Close"]').click({ timeout: 10000 })
+                        await expect(page.locator('div[aria-labelledby="confirmation-dialog-title"]')).not.toBeVisible();
+
+                        // logout
+                        await logoutpage.logoutNBSPortal();
                     }
 
                 } catch (error) {
@@ -619,20 +633,6 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
             // const endTime_case = Date.now();
             // const duration_case =  (endTime_case - startTime_case) / 1000;
             // console.log(`เวลาที่ใช้ในการทำงานของเคสนี้: ${duration_case} วินาที`);
-
-            // ปิด tab ที่ไม่ใช้งาน เพื่อป้องกันการใช้ resource มากเกินไป
-            const context = page.context();
-            const pages = context.pages();
-            for (let i = 1; i < pages.length; i++) {
-                await pages[i].close();
-            }
-
-            // ปิด popup confirm
-            await page.locator('div[aria-labelledby="confirmation-dialog-title"]').locator('button[aria-label="Close"]').click({ timeout: 10000 })
-            await expect(page.locator('div[aria-labelledby="confirmation-dialog-title"]')).not.toBeVisible();
-
-            // logout
-            await logoutpage.logoutNBSPortal();
         }
     }
 
