@@ -550,6 +550,283 @@ class ReceiveIssueRequestAlteration {
                     await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_38_Input_Text_BankAccount.fill(data.ecn04_lastname_bankaccount, { timeout: 10000 });
                     await this.page.waitForTimeout(500);
                 }
+            } else if (code === 'ECN05') {
+                // กรอกข้อมูลสลักหลัง ECN05
+                // กรอก เลขที่บันทึกสลักหลังที่ต้องการยกเลิก
+                await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_2_Input_Text.fill(data.ecn05_issue_request_no_cancel, { timeout: 10000 });
+                // กรอกวันที่บันทึกสลักหลัง
+                await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_3_Input_Date_Pick.fill(data.ecn05_issue_request_date, { timeout: 10000 });
+                await this.page.waitForTimeout(500);
+                // กดปุ่ม แก้ไขข้อมูลผู้รับประโยชน์
+                const is_visible_edit_button_ecn05 = await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_1_1_Button(code).isVisible();
+                const is_visible_add_button_ecn05 = await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_1_Button(code).isVisible();
+                if (is_visible_edit_button_ecn05 === true && is_visible_add_button_ecn05 === true) {
+                    // กรอกข้อมูลสลักหลัง ECN05
+                    if (data.ecn05_mode === 'Edit') {
+                        // กดปุ่ม แก้ไขผู้รับประโยชน์
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_1_1_Button(code).click({ timeout: 10000 });
+                    } else if (data.ecn05_mode === 'New') {
+                        // กดปุ่ม จัดการข้อมูลผู้รับผลประโยชน์
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_1_Button.click({ timeout: 10000 });
+                    }
+                    // รอ popup จัดการข้อมูลผู้รับผลประโยชน์ ขึ้นมา
+                    await this.expect(this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_ManageBenefit).toBeVisible({ timeout: 10000 });
+
+                    // ข้อมูลผู้รับผลประโยชน์
+                    // เลือก ความสัมพันธ์
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_5_Input_Text.click({ timeout: 10000 });
+                    // เช็คจำนวน option ความสัมพันธ์
+                    const count_relationship_options = await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Sel_All.getByText(data.ecn05_relationship, { exact: true }).count();
+                    if (count_relationship_options > 1) {
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Sel_All.getByText(data.ecn05_relationship, { exact: true }).nth(1).click({ timeout: 10000 });
+                    } else {
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Sel_All.getByText(data.ecn05_relationship, { exact: true }).click({ timeout: 10000 });
+                    }
+                    if (data.ecn05_relationship === 'อื่นๆ') {
+                        // กรอก ความสัมพันธ์อื่นๆ
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_6_Input_Text.fill('', { timeout: 10000 });
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_6_Input_Text.fill(data.ecn05_relationship_other, { timeout: 10000 });
+                        await this.page.waitForTimeout(500);
+                    }
+                    // เลือก คำนำหน้า
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_7_Input_Text.click({ timeout: 10000 });
+                    // เช็คจำนวน option คำนำหน้า
+                    const count_title_options = await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Sel_All.getByText(data.ecn05_title, { exact: true }).count();
+                    if (count_title_options > 1) {
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Sel_All.getByText(data.ecn05_title, { exact: true }).nth(1).click({ timeout: 10000 });
+                    } else {
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Sel_All.getByText(data.ecn05_title, { exact: true }).click({ timeout: 10000 });
+                    }
+                    // กรอก ชื่อ
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_8_Input_Text.fill('', { timeout: 10000 });
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_8_Input_Text.fill(data.ecn05_firstname, { timeout: 10000 });
+                    await this.page.waitForTimeout(500);
+                    // กรอก นามสกุล
+                    // ถ้าไม่มีข้อมูลข้ามไปเลย
+                    if (data.ecn05_mode === 'Edit') {
+                        if (data.ecn05_lastname !== undefined && data.ecn05_lastname !== null && data.ecn05_lastname !== '') {
+                            await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_9_Input_Text.fill('', { timeout: 10000 });
+                            await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_9_Input_Text.fill(data.ecn05_lastname, { timeout: 10000 });
+                        }
+                    } else if (data.ecn05_mode === 'New') {
+                        if (data.ecn05_lastname !== undefined && data.ecn05_lastname !== null && data.ecn05_lastname !== '') {
+                            await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_9_Input_Text.fill('', { timeout: 10000 });
+                            await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_9_Input_Text.fill(data.ecn05_lastname, { timeout: 10000 });
+                        }
+                    }
+                    // เลือก คำนำหน้า (ภาษาอังกฤษ)
+                    // ถ้าไม่มีข้อมูลข้ามไปเลย
+                    if (data.ecn05_title_eng !== undefined && data.ecn05_title_eng !== null && data.ecn05_title_eng !== '') {
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_10_Input_Text.click({ timeout: 10000 });
+                        // เช็คจำนวน option คำนำหน้า (ภาษาอังกฤษ)
+                        const count_title_eng_options = await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Sel_All.getByText(data.ecn05_title_eng, { exact: true }).count();
+                        if (count_title_eng_options > 1) {
+                            await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Sel_All.getByText(data.ecn05_title_eng, { exact: true }).nth(1).click({ timeout: 10000 });
+                        } else {
+                            await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Sel_All.getByText(data.ecn05_title_eng, { exact: true }).click({ timeout: 10000 });
+                        }
+                    }
+                    // กรอก ชื่อ (ภาษาอังกฤษ)
+                    // ถ้าไม่มีข้อมูลข้ามไปเลย
+                    if (data.ecn05_firstname_eng !== undefined && data.ecn05_firstname_eng !== null && data.ecn05_firstname_eng !== '') {
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_11_Input_Text.fill('', { timeout: 10000 });
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_11_Input_Text.fill(data.ecn05_firstname_eng, { timeout: 10000 });
+                        await this.page.waitForTimeout(500);
+                    }
+                    // กรอก นามสกุล (ภาษาอังกฤษ)
+                    // ถ้าไม่มีข้อมูลข้ามไปเลย
+                    if (data.ecn05_lastname_eng !== undefined && data.ecn05_lastname_eng !== null && data.ecn05_lastname_eng !== '') {
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_12_Input_Text.fill('', { timeout: 10000 });
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_12_Input_Text.fill(data.ecn05_lastname_eng, { timeout: 10000 });
+                        await this.page.waitForTimeout(500);
+                    }
+                    // เช็คว่า enable ปุ่ม เพศ หรือไม่ โดยจะกำหนดเงื่อนไขการทำงาน ถ้า enable
+                    const is_enabled_sex = await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_13_Input_Text.isEnabled();
+                    if (is_enabled_sex) {
+                        // เลือก เพศ
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_13_Input_Text.click({ timeout: 10000 });
+                        // เช็คจำนวน option เพศ
+                        const count_sex_options = await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Sel_All.getByText(data.ecn05_sex, { exact: true }).count();
+                        if (count_sex_options > 1) {
+                            await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Sel_All.getByText(data.ecn05_sex, { exact: true }).nth(1).click({ timeout: 10000 });
+                        } else {
+                            await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Sel_All.getByText(data.ecn05_sex, { exact: true }).click({ timeout: 10000 });
+                        }
+                    }
+                    // กรอก วันเดือนปีเกิด
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_14_Input_Text.fill('', { timeout: 10000 });
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_14_Input_Text.fill(data.ecn05_birthdate, { timeout: 10000 });
+                    await this.page.waitForTimeout(500);
+                    // เช็คว่า อายุ อัพเดทหรือยัง
+                    await this.expect(this.page.locator('#beneficiaryCurrentAge')).not.toBeEmpty({ timeout: 10000 });
+                    // เลือก ประเภทบัตร
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_16_Input_Text.click({ timeout: 10000 });
+                    // เช็คจำนวน option ประเภทบัตร
+                    const count_idcardtype_options = await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Sel_All.locator('label', { hasText: data.ecn05_idcardtype, exact: true }).count();
+                    if (count_idcardtype_options > 1) {
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Sel_All.locator('label', { hasText: data.ecn05_idcardtype, exact: true }).nth(1).click({ timeout: 10000 });
+                    } else {
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Sel_All.locator('label', { hasText: data.ecn05_idcardtype, exact: true }).click({ timeout: 10000 });
+                    }
+                    // กรอก หมายเลขบัตร
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_17_Input_Text.fill('', { timeout: 10000 });
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_17_Input_Text.fill(data.ecn05_idcardnumber, { timeout: 10000 });
+                    await this.page.waitForTimeout(500);
+                    // กรอก สัดส่วนผลประโยชน์
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_18_Input_Text.fill('', { timeout: 10000 });
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_18_Input_Text.fill(data.ecn05_percentage, { timeout: 10000 });
+                    await this.page.waitForTimeout(500);
+
+                    // ที่อยู่ติดต่อ
+                    // กรอก บ้านเลขที่
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_19_Input_Text.fill('', { timeout: 10000 });
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_19_Input_Text.fill(data.ecn05_housenumber, { timeout: 10000 });
+                    await this.page.waitForTimeout(500);
+                    // กรอก หมู่
+                    // ถ้าไม่มีข้อมูลข้ามไปเลย
+                    if (data.ecn05_moo !== undefined && data.ecn05_moo !== null && data.ecn05_moo !== '') {
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_20_Input_Text.fill('', { timeout: 10000 });
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_20_Input_Text.fill(data.ecn05_moo, { timeout: 10000 });
+                        await this.page.waitForTimeout(500);
+                    }
+                    // กรอก หมู่บ้าน
+                    // ถ้าไม่มีข้อมูลข้ามไปเลย
+                    if (data.ecn05_village !== undefined && data.ecn05_village !== null && data.ecn05_village !== '') {
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_21_Input_Text.fill('', { timeout: 10000 });
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_21_Input_Text.fill(data.ecn05_village, { timeout: 10000 });
+                        await this.page.waitForTimeout(500);
+                    }
+                    // กรอก ซอย
+                    // ถ้าไม่มีข้อมูลข้ามไปเลย
+                    if (data.ecn05_soi !== undefined && data.ecn05_soi !== null && data.ecn05_soi !== '') {
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_22_Input_Text.fill('', { timeout: 10000 });
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_22_Input_Text.fill(data.ecn05_soi, { timeout: 10000 });
+                        await this.page.waitForTimeout(500);
+                    }
+                    // กรอก ถนน
+                    // ถ้าไม่มีข้อมูลข้ามไปเลย
+                    if (data.ecn05_road !== undefined && data.ecn05_road !== null && data.ecn05_road !== '') {
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_23_Input_Text.fill('', { timeout: 10000 });
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_23_Input_Text.fill(data.ecn05_road, { timeout: 10000 });
+                        await this.page.waitForTimeout(500);
+                    }
+                    // เลือก จังหวัด
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_24_Input_Text.click({ timeout: 10000 });
+                    // เช็คจำนวน option จังหวัด
+                    const count_province_options = await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Sel_All.getByText(data.ecn05_province, { exact: true }).count();
+                    if (count_province_options > 1) {
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Sel_All.getByText(data.ecn05_province, { exact: true }).nth(1).click({ timeout: 10000 });
+                    } else {
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Sel_All.getByText(data.ecn05_province, { exact: true }).click({ timeout: 10000 });
+                    }
+                    // เลือก อำเภอ/เขต
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_25_Input_Text.click({ timeout: 10000 });
+                    // เช็คจำนวน option อำเภอ/เขต
+                    const count_district_options = await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Sel_All.getByText(data.ecn05_district, { exact: true }).count();
+                    if (count_district_options > 1) {
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Sel_All.getByText(data.ecn05_district, { exact: true }).nth(1).click({ timeout: 10000 });
+                    } else {
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Sel_All.getByText(data.ecn05_district, { exact: true }).click({ timeout: 10000 });
+                    }
+                    // เลือก ตำบล/แขวง
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_26_Input_Text.click({ timeout: 10000 });
+                    // เช็คจำนวน option ตำบล/แขวง
+                    const count_subdistrict_options = await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Sel_All.locator('label', { hasText: data.ecn05_subdistrict }).count();
+                    if (count_subdistrict_options > 1) {
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Sel_All.locator('label', { hasText: data.ecn05_subdistrict }).nth(1).click({ timeout: 10000 });
+                    } else {
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Sel_All.locator('label', { hasText: data.ecn05_subdistrict }).click({ timeout: 10000 });
+                    }
+                    // เช็คว่าช่่องไปรษณีย์มีค่าอัพเดทหรือยัง
+                    await this.expect(this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_27_Input_Text).not.toBeEmpty({ timeout: 10000 });
+                    // กรอก เบอร์โทรศัพท์
+                    // ถ้าไม่มีข้อมูลข้ามไปเลย
+                    if (data.ecn05_mobilephone !== undefined && data.ecn05_mobilephone !== null && data.ecn05_mobilephone !== '') {
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_28_Input_Text.fill('', { timeout: 10000 });
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_28_Input_Text.fill(data.ecn05_mobilephone, { timeout: 10000 });
+                        await this.page.waitForTimeout(500);
+                    }
+                    // กรอก โทรศัพท์บ้าน
+                    // ถ้าไม่มีข้อมูลข้ามไปเลย
+                    if (data.ecn05_housetelephone !== undefined && data.ecn05_housetelephone !== null && data.ecn05_housetelephone !== '') {
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_29_Input_Text.fill('', { timeout: 10000 });
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_29_Input_Text.fill(data.ecn05_housetelephone, { timeout: 10000 });
+                        await this.page.waitForTimeout(500);
+                    }
+                    // กรอก อีเมล
+                    // ถ้าไม่มีข้อมูลข้ามไปเลย
+                    if (data.ecn05_email !== undefined && data.ecn05_email !== null && data.ecn05_email !== '') {
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_30_Input_Text.fill('', { timeout: 10000 });
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_2_In_Page_Request_ECN05_30_Input_Text.fill(data.ecn05_email, { timeout: 10000 });
+                        await this.page.waitForTimeout(500);
+                    }
+                    // กดปุ่ม บันทึก ใน popup ผู้รับผลประโยชน์
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_btn_Save.click({ timeout: 10000 });
+                    // รอ popup ยืนยันการบันทึกผู้รับผลประโยชน์ ขึ้นมา
+                    await this.expect(this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_btn_Cancel_popup_Confirm).toBeVisible({ timeout: 10000 });
+                    // กดปุ่ม ยืนยัน ใน popup ยืนยันการบันทึกผู้รับผลประโยชน์
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_Beneficiary_btn_Cancel_popup_Confirm.click({ timeout: 10000 });
+                    // รอ popup จัดการข้อมูลผู้รับผลประโยชน์ หายไป
+                    await this.expect(this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_popup_ManageBenefit).not.toBeVisible({ timeout: 10000 });
+
+                    // เลือก เหตุผลการยกเลิกการโอนสิทธิ
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_3_Choose_Dropdown_List.click({ timeout: 10000 });
+                    await this.page.mouse.wheel(0, 250);
+                    if (data.ecn05_issue_request_reason === 'ผู้รับโอนสิทธิเสียชีวิต') {
+                        await this.page.keyboard.press('Enter');
+                        // await this.page.locator('#react-select-5-option-0').click({ timeout: 10000 });
+                    } else if (data.ecn05_issue_request_reason === 'ผู้เอาประกันภัยและผู้รับโอนสิทธิตกลงร่วมกันยกเลิกการโอนสิทธิ') {
+                        await this.page.keyboard.press('ArrowDown');
+                        await this.page.keyboard.press('Enter');
+                        // await this.page.locator('#react-select-5-option-1').click({ timeout: 10000 });
+                    }
+                    
+                }
+                // ประสงค์ที่จะรับเงินตามเงื่อนไขกรมธรรม์ด้วยวิธีหนึ่ง ดังนี้ *
+                if (data.ecn05_chanelpayment === 'พร้อมเพย์') {
+                    // เลือก ช่องทางพร้อมเพย์
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_3_Promptpay_Radio.click({ timeout: 10000 });
+                    // เลือก หมายเหตุ
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_3_BankAccount_9_Input_Text.click({ timeout: 10000 });
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Sel_All.locator('label', { hasText: data.ecn05_promptpay_remark }).click({ timeout: 10000 });
+                } else if (data.ecn05_chanelpayment === 'บัญชีธนาคาร') {
+                    // เลือก ช่องทางบัญชีธนาคาร
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_3_BankAccount_Radio.check({ timeout: 10000 });
+                    // เลือก ธนาคาร
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_3_BankAccount_5_Input_Text.click({ timeout: 10000 });
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Sel_All.locator('label', { hasText: data.ecn05_bank_bankname }).click({ timeout: 10000 });
+                    // กรอก หมายเลขบัญชี
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_3_BankAccount_7_Input_Text.fill('', { timeout: 10000 });
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_3_BankAccount_7_Input_Text.fill(data.ecn05_bank_accountno, { timeout: 10000 });
+                    await this.page.waitForTimeout(500);
+                    // กรอก สาขา
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_3_BankAccount_8_Input_Text.fill('', { timeout: 10000 });
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_3_BankAccount_8_Input_Text.fill(data.ecn05_bank_branch, { timeout: 10000 });
+                    await this.page.waitForTimeout(500);
+                    // เลือก หมายเหตุ
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_3_BankAccount_9_Input_Text.click({ timeout: 10000 });
+                    await this.requestissueformlocators.SELECTOR_Alteration_MENU_SUB_4_In_Page_4_Detail_Panel_Data_Sel_All.locator('label', { hasText: data.ecn05_bank_remark }).click({ timeout: 10000 });
+                    if (data.ecn05_bank_remark === 'อื่น ๆ') {
+                        // รอช่องหมายเหตุ enable
+                        await this.expect(this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_3_BankAccount_10_Input_Text).toBeEnabled({ timeout: 10000 });
+                        // กรอก หมายเหตุอื่นๆ
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_3_BankAccount_10_Input_Text.fill('', { timeout: 10000 });
+                        await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_3_BankAccount_10_Input_Text.fill(data.ecn05_bank_remark_other, { timeout: 10000 });
+                        await this.page.waitForTimeout(500);
+                    }
+                    // // กรอก คำนำหน้าชื่อ
+                    // await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_3_Promptpay_1_Input_Text.fill('', { timeout: 10000 });
+                    // await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_3_Promptpay_1_Input_Text.fill(data.ecn05_title_bankaccount, { timeout: 10000 });
+                    // await this.page.waitForTimeout(500);
+                    // // กรอก ชื่อ
+                    // await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_3_Promptpay_2_Input_Text.fill('', { timeout: 10000 });
+                    // await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_3_Promptpay_2_Input_Text.fill(data.ecn05_firstname_bankaccount, { timeout: 10000 });
+                    // await this.page.waitForTimeout(500);
+                    // // กรอก นามสกุล
+                    // await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_3_Promptpay_3_Input_Text.fill('', { timeout: 10000 });
+                    // await this.requestissueformlocators.SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_3_Promptpay_3_Input_Text.fill(data.ecn05_lastname_bankaccount, { timeout: 10000 });
+                    // await this.page.waitForTimeout(500);
+                }
             }
         }
     }
