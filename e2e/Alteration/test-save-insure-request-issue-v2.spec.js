@@ -40,7 +40,7 @@ test.describe.configure({ mode: 'parallel' }); // ให้เคสในไฟ
 
 test(`Scenario | สร้างรับเรื่องสลักหลัง`, async ({ page }, testInfo) => {
     // setting เวลาให้เคสนี้รัน
-    test.setTimeout(180000); // 3 นาที
+    test.setTimeout(3600000); // 1 ชั่วโมง
 
     // ส่วนของการเข้าหน้า CIS
     // Page
@@ -194,6 +194,46 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
         const ecn04_title_bankaccount = data_save_endorse['ECN04_29_BankAccount_06'];
         const ecn04_firstname_bankaccount = data_save_endorse['ECN04_29_BankAccount_07'];
         const ecn04_lastname_bankaccount = data_save_endorse['ECN04_29_BankAccount_08'];
+
+        // ECN05
+        const ecn05_issue_request_no_cancel = data_save_endorse['ECN05_01'];
+        const ecn05_issue_request_date = data_save_endorse['ECN05_02'];
+        const ecn05_issue_request_reason = data_save_endorse['ECN05_03'];
+        const ecn05_mode = data_save_endorse['ECN05_00'];
+        const ecn05_relationship = data_save_endorse['ECN05_06'];
+        const ecn05_relationship_other = data_save_endorse['ECN05_07'];
+        const ecn05_title = data_save_endorse['ECN05_08'];
+        const ecn05_firstname = data_save_endorse['ECN05_09'];
+        const ecn05_lastname = data_save_endorse['ECN05_10'];
+        const ecn05_title_eng = data_save_endorse['ECN05_11'];
+        const ecn05_firstname_eng = data_save_endorse['ECN05_12'];
+        const ecn05_lastname_eng = data_save_endorse['ECN05_13'];
+        const ecn05_sex = data_save_endorse['ECN05_14'];
+        const ecn05_birthdate = data_save_endorse['ECN05_15'];
+        const ecn05_idcardtype = data_save_endorse['ECN05_17'];
+        const ecn05_idcardnumber = data_save_endorse['ECN05_18'];
+        const ecn05_percentage = data_save_endorse['ECN05_19'];
+        const ecn05_housenumber = data_save_endorse['ECN05_20'];
+        const ecn05_moo = data_save_endorse['ECN05_21'];
+        const ecn05_village = data_save_endorse['ECN05_22'];
+        const ecn05_soi = data_save_endorse['ECN05_23'];
+        const ecn05_road = data_save_endorse['ECN05_24'];
+        const ecn05_province = data_save_endorse['ECN05_25'];
+        const ecn05_district = data_save_endorse['ECN05_26'];
+        const ecn05_subdistrict = data_save_endorse['ECN05_27'];
+        const ecn05_mobilephone = data_save_endorse['ECN05_29'];
+        const ecn05_housetelephone = data_save_endorse['ECN05_30'];
+        const ecn05_email = data_save_endorse['ECN05_31'];
+        const ecn05_chanelpayment = data_save_endorse['ECN05_04'];
+        const ecn05_promptpay_remark = data_save_endorse['ECN05_05_Promtpay_01'];
+        const ecn05_promptpay_title = data_save_endorse['ECN05_05_Promtpay_02'];
+        const ecn05_promptpay_firstname = data_save_endorse['ECN05_05_Promtpay_03'];
+        const ecn05_promptpay_lastname = data_save_endorse['ECN05_05_Promtpay_04'];
+        const ecn05_bank_bankname = data_save_endorse['ECN05_05_BankAccount_06'];
+        const ecn05_bank_accountno = data_save_endorse['ECN05_05_BankAccount_08'];
+        const ecn05_bank_branch = data_save_endorse['ECN05_05_BankAccount_09'];
+        const ecn05_bank_remark = data_save_endorse['ECN05_05_BankAccount_10'];
+        const ecn05_bank_remark_other = data_save_endorse['ECN05_05_BankAccount_11'];
 
         // // จับเวลาเริ่มต้นการทำงานของแต่ละเคส
         // const startTime_case = Date.now();
@@ -419,6 +459,7 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
                                 // ECN04
                                 ecn04_mode: ecn04_mode, ecn04_relationship: ecn04_relationship, ecn04_relationship_other: ecn04_relationship_other, ecn04_title: ecn04_title, ecn04_firstname: ecn04_firstname, ecn04_lastname: ecn04_lastname, ecn04_title_eng: ecn04_title_eng, ecn04_firstname_eng: ecn04_firstname_eng, ecn04_lastname_eng: ecn04_lastname_eng, ecn04_sex: ecn04_sex, ecn04_birthdate: ecn04_birthdate, ecn04_idcardtype: ecn04_idcardtype, ecn04_idcardnumber: ecn04_idcardnumber, ecn04_percentage: ecn04_percentage, ecn04_housenumber: ecn04_housenumber, ecn04_moo: ecn04_moo, ecn04_village: ecn04_village, ecn04_soi: ecn04_soi, ecn04_road: ecn04_road, ecn04_province: ecn04_province, ecn04_district: ecn04_district, ecn04_subdistrict: ecn04_subdistrict, ecn04_mobilephone: ecn04_mobilephone, ecn04_housetelephone: ecn04_housetelephone, ecn04_email: ecn04_email, ecn04_channelpayment: ecn04_channelpayment, ecn04_promptpay: ecn04_promptpay, ecn04_title_promptpay: ecn04_title_promptpay, ecn04_firstname_promptpay: ecn04_firstname_promptpay, ecn04_lastname_promptpay: ecn04_lastname_promptpay, ecn04_bankname_bankaccount: ecn04_bankname_bankaccount, ecn04_bankno_bankaccount: ecn04_bankno_bankaccount, ecn04_bankbranch_bankaccount: ecn04_bankbranch_bankaccount, ecn04_remark_bankaccount: ecn04_remark_bankaccount, ecn04_other_bankaccount: ecn04_other_bankaccount, ecn04_title_bankaccount: ecn04_title_bankaccount, ecn04_firstname_bankaccount: ecn04_firstname_bankaccount, ecn04_lastname_bankaccount: ecn04_lastname_bankaccount,
                                 // ECN05
+                                ecn05_issue_request_no_cancel: ecn05_issue_request_no_cancel, ecn05_issue_request_date: ecn05_issue_request_date, ecn05_issue_request_reason: ecn05_issue_request_reason, ecn05_mode: ecn05_mode, ecn05_relationship: ecn05_relationship, ecn05_relationship_other: ecn05_relationship_other, ecn05_title: ecn05_title, ecn05_firstname: ecn05_firstname, ecn05_lastname: ecn05_lastname, ecn05_title_eng: ecn05_title_eng, ecn05_firstname_eng: ecn05_firstname_eng, ecn05_lastname_eng: ecn05_lastname_eng, ecn05_sex: ecn05_sex, ecn05_birthdate: ecn05_birthdate, ecn05_idcardtype: ecn05_idcardtype, ecn05_idcardnumber: ecn05_idcardnumber, ecn05_percentage: ecn05_percentage, ecn05_housenumber: ecn05_housenumber, ecn05_moo: ecn05_moo, ecn05_village: ecn05_village, ecn05_soi: ecn05_soi, ecn05_road: ecn05_road, ecn05_province: ecn05_province, ecn05_district: ecn05_district, ecn05_subdistrict: ecn05_subdistrict, ecn05_mobilephone: ecn05_mobilephone, ecn05_housetelephone: ecn05_housetelephone, ecn05_email: ecn05_email, ecn05_chanelpayment: ecn05_chanelpayment, ecn05_promptpay_remark: ecn05_promptpay_remark, ecn05_promptpay_title: ecn05_promptpay_title, ecn05_promptpay_firstname: ecn05_promptpay_firstname, ecn05_promptpay_lastname: ecn05_promptpay_lastname, ecn05_bank_bankname: ecn05_bank_bankname, ecn05_bank_accountno: ecn05_bank_accountno, ecn05_bank_branch: ecn05_bank_branch, ecn05_bank_remark: ecn05_bank_remark, ecn05_bank_remark_other: ecn05_bank_remark_other
 
                             });
                             // เลือก checkbox เอกสารที่มีการ require
@@ -435,21 +476,17 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
                             const responseBody = await response.json();
                             requestno = responseBody.requestNo; // หรือเปลี่ยนชื่อ key ตาม response จริง
                             console.log('เลขที่รับเรื่อง:', requestno);
-
-                            // // บันทึก รับเรื่องสลักหลัง
-                            // await receiveissuerequestalteration.save_receive_issue_request_alteration();
                         }
-
-                        if (flag_reverse_data !== 'TRUE' && flag_reverse_data !== 'True' && flag_reverse_data !== 'true') {
+                        if (flag_reverse_data === 'TRUE' && flag_reverse_data === 'True' && flag_reverse_data === 'true') {
                             // อัพเดท Process เป็น 'Finish'
-                            data_create.push({ [uniquekey]: row_uniquekey, Process: 'Finish', Remark: '- ทำการบันทึก รับเรื่องสลักหลัง เสร็จเรียบร้อยแล้ว', 'เลขที่รับเรื่อง': `${requestno} (Create)` });
+                            data_create.push({ [uniquekey]: row_uniquekey, Remark: '- ทำการบันทึก รับเรื่องสลักหลัง เสร็จเรียบร้อยแล้ว', 'เลขที่รับเรื่อง': `${requestno} (Create)` });
                             // อัพโหลดผลลัพธ์ไปยัง Google Sheet เป็นการ update ที่ range ที่กำหนด
                             await googlesheet.updateDynamicRows(auth, spreadsheetId, sheetnamewrite, range_write, data_create, row_header, uniquekey);
                             // เคลียร์ array หลังอัพโหลด
                             data_create = [];
                         } else {
                             // อัพเดท Process เป็น 'Finish'
-                            data_create.push({ [uniquekey]: row_uniquekey, Remark: '- ทำการบันทึก รับเรื่องสลักหลัง เสร็จเรียบร้อยแล้ว', 'เลขที่รับเรื่อง': `${requestno} (Create)` });
+                            data_create.push({ [uniquekey]: row_uniquekey, Process: 'Finish', Remark: '- ทำการบันทึก รับเรื่องสลักหลัง เสร็จเรียบร้อยแล้ว', 'เลขที่รับเรื่อง': `${requestno} (Create)` });
                             // อัพโหลดผลลัพธ์ไปยัง Google Sheet เป็นการ update ที่ range ที่กำหนด
                             await googlesheet.updateDynamicRows(auth, spreadsheetId, sheetnamewrite, range_write, data_create, row_header, uniquekey);
                             // เคลียร์ array หลังอัพโหลด

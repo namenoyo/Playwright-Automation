@@ -192,8 +192,8 @@ export const requestissueformLocator = (page) => ({
     SELECTOR_Alteration_MENU_Save_Request_ECN04_2_In_Page_Request_ECN04_38_Input_Text_BankAccount : page.locator('input#accountLastName'),
 
     // ECN05
-    SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_1_Button : page.locator('button.MuiButton-containedPrimary:has-text("จัดการข้อมูลผู้รับประโยชน์")'),
-    SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_1_1_Button : page.locator('button i[title="แก้ไขผู้รับประโยชน์"]'),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_1_Button : (endorse) => page.locator(`#section-endorsement-${endorse}`).getByRole('button', { name: 'จัดการข้อมูลผู้รับประโยชน์' }),
+    SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_1_1_Button : (endorse) => page.locator(`#section-endorsement-${endorse}`).locator('i[title="แก้ไขผู้รับประโยชน์"]'),
     SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_2_Input_Text : page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) div:has-text("ยกเลิกโอนสิทธิกลับเป็นของผู้เอาประกันภัย")', { hasText: 'เลขที่บันทึกสลักหลังที่ต้องการยกเลิก' }).locator('input#lastEndorsementNo').first(),
     SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_3_Input_Date_Pick : page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) div:has-text("ยกเลิกโอนสิทธิกลับเป็นของผู้เอาประกันภัย")', { hasText: 'วันที่บันทึกสลักหลัง' }).locator('input[name="lastEndorsementDate"]').first(),
     SELECTOR_Alteration_MENU_Save_Request_ECN05_1_In_Page_Request_ECN05_3_Choose_Dropdown_List : page.locator('div.MuiExpansionPanel-root:has(.ExpansionPanelSummaryTitle:text-is("สลักหลัง Non Finance")) div:has-text("ยกเลิกโอนสิทธิกลับเป็นของผู้เอาประกันภัย") div:has(:text-is("เหตุผลการยกเลิกโอนสิทธิ"))').locator('input#cancelReasonCode').first(),
