@@ -423,6 +423,38 @@ class GoogleSheet {
 
   }
 
+  async appendRowswitholdcolumn(auth, spreadsheetId, range, rows) {
+  const sheets = google.sheets({ version: 'v4', auth });
+
+  // ---------------------
+  // 1. Normalize column count (กัน column shift)
+  // ---------------------
+  const maxCols = Math.max(...rows.map(r => r.length));
+  const normalized = rows.map(r => {
+    if (r.length < maxCols) {
+      return [...r, ...Array(maxCols - r.length).fill('')];
+    }
+    return r;
+  });
+
+  // ---------------------
+  // 2. Append แบบเริ่มที่ column เดิม (ใช้ A1)
+  // ---------------------
+  const res = await sheets.spreadsheets.values.append({
+    spreadsheetId,
+    range,                       // เช่น 'Log_Query_Result!A1'
+    valueInputOption: 'RAW',
+    insertDataOption: 'INSERT_ROWS',
+    requestBody: {
+      majorDimension: 'ROWS',
+      values: normalized,
+    },
+  });
+
+  return res.data;
+}
+
+
 
 }
 
