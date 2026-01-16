@@ -59,8 +59,11 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
     const googlesheet = new GoogleSheet();
     const auth = await googlesheet.initAuth();
     const spreadsheetId = '1anVVVH2lHAZ5VxqZZlp0XrIft5uW3SkfzxWSpSpqRjQ';
-    const readrange = `Data_Mapping_Service!A6:ZZ1000000`;
+    const sheetname = `Data_Mapping_Service`;
+    const readrange = `${sheetname}!A6:ZZ1000000`;
     testData = await googlesheet.fetchSheetData_key(auth, spreadsheetId, readrange);
+    const sheetnamewrite = sheetname;
+    const range_write = `A6:ZZ`;
 
     // // จับเวลาสิ้นสุด
     // const endTime_fetch_data = Date.now();
@@ -68,8 +71,8 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
     // console.log(`ใช้เวลาในการดึงข้อมูลจาก Google Sheets: ${duration_fetch_data} วินาที`);
     // console.log('ดึงข้อมูลจาก Google Sheets เรียบร้อย จำนวน ' + testData.length + ' รายการ \n');
 
-    const sheetnamewrite = `Data_Mapping_Service`;
-    const range_write = `A6:ZZ`;
+    // ดึงข้อมูล Query สลักจาก Google Sheet
+    const query_check_data_endorse = await googlesheet.fetchSheetData_key(auth, spreadsheetId, `Query ตรวจสอบข้อมูล!A1:H1000`);
 
     const db_name = 'alteration';
     const db_env = 'SIT_EDIT'; // SIT | SIT_EDIT / UAT | UAT_EDIT
@@ -91,6 +94,9 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
     // กรองเอาเฉพาะเคสที่ DATA USER BY ที่กำหนดเท่านั้น
     const allowUser = ['ท็อป'];
     const result_filter_user = result_new_array_status_not_finish.filter(x => allowUser.includes(x["DATA USER BY"]));
+
+    // ไปยังหน้า NBS
+    await loginPage.gotoNBS();
 
     for (const [index, data_save_endorse] of result_filter_user.entries()) {
 
@@ -242,6 +248,7 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
             if ((process === 'Waiting for Create Data' || process === 'In Progress') && document_request_no === '') {
                 try {
                     if (flag_request_issue === 'TRUE' || flag_request_issue === 'True' || flag_request_issue === 'true') {
+                        console.log('\n------------------------------------------------------------------------');
                         console.log('\nเริ่มทำการบันทึก รับเรื่องสลักหลัง');
 
                         // อัพเดท Process เป็น 'In Progress'
@@ -251,8 +258,6 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
                         // เคลียร์ array หลังอัพโหลด
                         data_create = [];
 
-                        // ไปยังหน้า NBS
-                        await loginPage.gotoNBS();
                         // เข้าสู่ระบบด้วยชื่อผู้ใช้และรหัสผ่าน
                         await loginPage.login(username, password);
 
@@ -465,17 +470,37 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
                             // เลือก checkbox เอกสารที่มีการ require
                             await receiveissuerequestalteration.checkbox_document_required_alteration();
 
-                            // หลังจากคลิกปุ่มบันทึก เก็บ response ของเลขที่รับเรื่อง
-                            const [response] = await Promise.all([
-                                newPage.waitForResponse(resp =>
-                                    resp.url().includes('/thaisamut/rs/alter/v1/request') && resp.status() === 200
-                                ),
-                                // คลิกปุ่มบันทึก
-                                await receiveissuerequestalteration.save_receive_issue_request_alteration(),
-                            ]);
+                            // // หลังจากคลิกปุ่มบันทึก เก็บ response ของเลขที่รับเรื่อง
+                            // const [response] = await Promise.all([
+                            //     newPage.waitForResponse(resp =>
+                            //         resp.url().includes('/thaisamut/rs/alter/v1/request') && resp.status() === 200
+                            //     ),
+                            //     // คลิกปุ่มบันทึก
+                            //     await receiveissuerequestalteration.save_receive_issue_request_alteration(),
+                            // ]);
+                            // const responseBody = await response.json();
+                            // requestno = responseBody.requestNo; // หรือเปลี่ยนชื่อ key ตาม response จริง
+                            // console.log('เลขที่รับเรื่อง:', requestno);
+
+                            // 1. Start waiting for response (Promise)
+                            const responsePromise = newPage.waitForResponse(resp =>
+                                resp.url().includes('/thaisamut/rs/alter/v1/request') && resp.status() === 200
+                            );
+
+                            // 2. Click save (await)
+                            await receiveissuerequestalteration.save_receive_issue_request_alteration();
+
+                            // 3. Get response (ต้อง await ให้เสร็จก่อน)
+                            const response = await responsePromise;
+                            if (!response) throw new Error('No response received');
+                            if (!response.ok()) throw new Error('Response not OK: ' + response.status());
                             const responseBody = await response.json();
-                            requestno = responseBody.requestNo; // หรือเปลี่ยนชื่อ key ตาม response จริง
+                            requestno = responseBody.requestNo;
                             console.log('เลขที่รับเรื่อง:', requestno);
+
+                            // 4. รอ new tab หลังจาก response เสร็จแล้วเท่านั้น
+                            const newTab = await newPage.context().waitForEvent('page');
+                            await newTab.waitForLoadState();
                         }
                         if (flag_reverse_data === 'TRUE' || flag_reverse_data === 'True' || flag_reverse_data === 'true') {
                             // อัพเดท Process เป็น 'Finish'
@@ -503,11 +528,42 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
                         }
 
                         // ปิด popup confirm
-                        await page.locator('div[aria-labelledby="confirmation-dialog-title"]').locator('button[aria-label="Close"]').click({ timeout: 10000 })
+                        await page.locator('div[aria-labelledby="confirmation-dialog-title"]').locator('button[aria-label="Close"]').click({ timeout: 10000 });
                         await expect(page.locator('div[aria-labelledby="confirmation-dialog-title"]')).not.toBeVisible();
 
                         // logout
                         await logoutpage.logoutNBSPortal();
+
+                        // นำข้อมูลไปตรวจสอบในฐานข้อมูล และลงผลลัพธ์ใน Google Sheet
+                        let result_data_check_endorse_array = [];
+                        console.log('\nเริ่มตรวจสอบข้อมูล รับเรื่องสลักหลัง ในฐานข้อมูล');
+                        for (const endorse_code of endorse_code_array) {
+                            let querys = query_check_data_endorse.filter(item => endorse_code.includes(item.Endorse || item.endorse)).map(item => item.Query);
+                            let envs = query_check_data_endorse.filter(item => endorse_code.includes(item.Endorse || item.endorse)).map(item => item.ENV);
+                            let databases = query_check_data_endorse.filter(item => endorse_code.includes(item.Endorse || item.endorse)).map(item => item.Database);
+
+                            let db_check_data;
+                            db_check_data = new Database({
+                                user: configdb[databases[0]][envs[0]].DB_USER,
+                                host: configdb[databases[0]][envs[0]].DB_HOST,
+                                database: configdb[databases[0]][envs[0]].DB_NAME,
+                                password: configdb[databases[0]][envs[0]].DB_PASSWORD,
+                                port: configdb[databases[0]][envs[0]].DB_PORT,
+                            });
+
+                            if (endorse_code === 'ECN01') {
+                                const params = [requestno];
+                                const result_query_check_data_insert_database = await db_check_data.query(querys[0], params);
+                                const flatArray = result_query_check_data_insert_database.rows.flatMap(row => Object.values(row));
+                                result_data_check_endorse_array.push(flatArray);
+                                // flatArray = [1, 2, 3, 4]
+                            }
+
+                            // ปิดการเชื่อมต่อฐานข้อมูล
+                            db_check_data.close();
+                        }
+                        await googlesheet.appendRowswitholdcolumn(auth, spreadsheetId,'Log_Query_Result!A1',result_data_check_endorse_array);
+                        console.log('ตรวจสอบข้อมูล รับเรื่องสลักหลัง ในฐานข้อมูล เรียบร้อยแล้ว');
                     }
 
                 } catch (error) {
