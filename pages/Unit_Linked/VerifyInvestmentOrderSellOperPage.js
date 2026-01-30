@@ -3,6 +3,7 @@ const { selectDate } = require('../../utils/calendarHelper.js');
 
 // locators
 const { search_verify_InvestmentOrderOper, table_verify_InvestmentOrderOper, dialog_verify_InvestmentOrderOper } = require('../../locators/Unit_Linked/VerifyInvestmentOrderSellOper.locators.js');
+const { time } = require('console');
 
 class VerifyInvestmentOrderSellOperPage {
     constructor(page, expect) {
@@ -39,7 +40,7 @@ class VerifyInvestmentOrderSellOperPage {
         }
     }
 
-    async confirm_verify_VerifyInvestmentOrderOper() {
+    async confirm_verify_VerifyInvestmentOrderOper(data) {
         // กดปุ่ม ยืนยันคำสั่งขาย
         await this.table_verify_investmentorderoper.verify_investmentorderoper_btnconfirmorder.click({ timeout: 10000 });
         // รอ dialog ยืนยันคำสั่งขายขึ้นมา
@@ -47,6 +48,10 @@ class VerifyInvestmentOrderSellOperPage {
         await this.dialog_verify_investmentorderoper.verify_investmentorderoper_confirmorderinvestment.getByText('ใช่', { exact: true }).click({ timeout: 10000 });
         // รอ dialog หายไป
         await this.expect(this.dialog_verify_investmentorderoper.verify_investmentorderoper_confirmorderinvestment).not.toBeVisible({ timeout: 60000 });
+
+        // รอ loading ค้นหาข้อมูล
+        await this.expect(this.page.locator('div[class="busy-dialog yui3-panel-content yui3-widget-stdmod"]'), { hasText: 'กำลังค้นหาข้อมูล...' ,timeout: 60000 }).toBeVisible({ timeout: 60000 });
+        await this.expect(this.page.locator('div[class="busy-dialog yui3-panel-content yui3-widget-stdmod"]'), { hasText: 'กำลังค้นหาข้อมูล...' ,timeout: 60000 }).not.toBeVisible({ timeout: 60000 });
 
         // รอ dialog กรอกเหตุผล cutoff ขึ้นมา
         await this.page.waitForTimeout(1000);
@@ -65,7 +70,7 @@ class VerifyInvestmentOrderSellOperPage {
                 el.dispatchEvent(new Event('input', { bubbles: true }));
                 el.dispatchEvent(new Event('keyup', { bubbles: true }));
                 el.dispatchEvent(new Event('change', { bubbles: true }));
-            }, 'ทดสอบ');
+            }, data.remarkcutoff_oper);
 
             // กดปุ่ม ส่งคำสั่งวันนี้
             await this.dialog_verify_investmentorderoper.verify_investmentorderoper_comment_cutoff.getByText('ส่งคำสั่งวันนี้', { exact: true }).click({ timeout: 10000 });
