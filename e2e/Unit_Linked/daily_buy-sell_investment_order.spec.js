@@ -110,13 +110,6 @@ test('Daily Buy-Sell Investment Order - Unit Linked', async ({ page }) => {
     console.log(`\nวันที่ปัจจุบันของระบบ: ${toDashed(currentdate)}`);
 
     // Process Create RV
-    // const query_check_all_order_policy_create_rv = `select distinct polnvc, iotcvc 
-    //                                         from tivreq01 t 
-    //                                         where 
-    //                                         ordrdt <= '${currentdate}'
-    //                                         and irstvc not in ('IR03','IR04','IR05')
-    //                                         order by polnvc asc
-    //                                         limit 1`;
     const query_check_all_order_policy_create_rv = `select distinct TIVREQ01.polnvc, TIVREQ01.iotcvc 
                                             from TIVREQ01,tivinv01 
                                             where 
@@ -127,7 +120,6 @@ test('Daily Buy-Sell Investment Order - Unit Linked', async ({ page }) => {
                                                 OR 
                                                 (TIVREQ01.irstvc NOT IN ('IR03','IR04','IR05') AND TIVREQ01.iotcvc = 'P')
                                             )
-                                            and TIVREQ01.iotcvc = 'P'
                                             order by TIVREQ01.polnvc asc
                                             `; // limit 2
     const result_check_all_order_policy_create_rv = await db.query(query_check_all_order_policy_create_rv);

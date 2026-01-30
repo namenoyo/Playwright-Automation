@@ -708,9 +708,25 @@ test('Run MVY UL', async ({ page }) => {
 
                     while ((status_transaction === 'VR01' || status_transaction === 'VR02') && invoiceid_transaction === '0') {
 
+                        const transaction_date = result_check_transactionstatus.rows[0].ordrdt.toString().substring(0, 8);
+
                         // เช็คเลขธุรกรรม และ สถานะตรวจสอบคำสั่งซื้อ-ขาย สำหรับฝ่ายปฏิบัติการ
                         if (status_transaction === 'VR01' && invoiceid_transaction === '0') {
 
+                            //ตัด string เอาแค่ วันที่ 8 ตัวแรก
+                            const transaction_date = result_check_transactionstatus.rows[0].ordrdt.toString().substring(0, 8);
+
+                            console.log(`\nสร้างคำสั่งขาย oper เลขที่อ้างอิง: ${result_check_transactionstatus.rows[0].invoid}, วันที่สั่งซื้อขาย: ${transaction_date}, Transaction No: ${result_check_transactionstatus.rows[0].altnvc}`);
+
+                            // กด tab "รอสร้างคำสั่งขาย"
+                            await menubar_InvestmentOrderOper(page).investmentorderoper_btnWaitingforCreateOrder.click({ timeout: 60000 });
+                            // ค้นหาข้อมูลคำสั่งขาย
+                            await verifyInvestmentOrderBuyOperPage.search_verify_VerifyInvestmentOrderOper_Tab1({ date: transaction_date });
+                            // เลือก checkbox ตาม transaction no
+                            await verifyInvestmentOrderBuyOperPage.click_verify_VerifyInvestmentOrderOperCheckButton({ transactionno: result_check_transactionstatus.rows[0].altnvc });
+
+                            // สร้างคำสั่งขาย จากฝ่าย ปฏิบัติการ
+                            await verifyInvestmentOrderBuyOperPage.confirm_verify_VerifyInvestmentOrderOper_Tab1({ remarkcutoff_oper: remarkcutoff_oper });
 
                         } else if (status_transaction === 'VR02' && invoiceid_transaction === '0') {
 
@@ -824,15 +840,17 @@ test('Run MVY UL', async ({ page }) => {
 
                         while ((status_transaction === 'VR01' || status_transaction === 'VR02') && invoiceid_transaction === '0') {
 
+                            const transaction_date = recheck_result_check_transactionstatus_orderbuy.rows[0].ordrdt.toString().substring(0, 8);
+
                             // เช็คเลขธุรกรรม และ สถานะตรวจสอบคำสั่งซื้อ-ขาย สำหรับฝ่ายปฏิบัติการ
                             if (status_transaction === 'VR01' && invoiceid_transaction === '0') {
 
-                                console.log(`\nสร้างคำสั่งซื้อ oper เลขที่อ้างอิง: ${recheck_result_check_transactionstatus_orderbuy.rows[0].invoid}, วันที่สั่งซื้อขาย: ${recheck_result_check_transactionstatus_orderbuy.rows[0].ordrdt}, Transaction No: ${recheck_result_check_transactionstatus_orderbuy.rows[0].altnvc}`);
+                                console.log(`\nสร้างคำสั่งซื้อ oper เลขที่อ้างอิง: ${recheck_result_check_transactionstatus_orderbuy.rows[0].invoid}, วันที่สั่งซื้อขาย: ${transaction_date}, Transaction No: ${recheck_result_check_transactionstatus_orderbuy.rows[0].altnvc}`);
 
                                 // กด tab "รอสร้างคำสั่งซื้อ"
                                 await menubar_InvestmentBuyOrderOper(page).investmentorderoper_btnWaitingforCreateOrder.click({ timeout: 10000 });
                                 // ค้นหาข้อมูลคำสั่งซื้อ
-                                await verifyInvestmentOrderBuyOperPage.search_verify_VerifyInvestmentOrderOper_Tab1({ date: recheck_result_check_transactionstatus_orderbuy.rows[0].ordrdt });
+                                await verifyInvestmentOrderBuyOperPage.search_verify_VerifyInvestmentOrderOper_Tab1({ date: transaction_date });
                                 // เลือก checkbox ตาม transaction no
                                 await verifyInvestmentOrderBuyOperPage.click_verify_VerifyInvestmentOrderOperCheckButton({ transactionno: recheck_result_check_transactionstatus_orderbuy.rows[0].altnvc });
 
@@ -842,7 +860,7 @@ test('Run MVY UL', async ({ page }) => {
                             } else if (status_transaction === 'VR02' && invoiceid_transaction === '0') {
 
                                 console.log(`\nตรวจสอบคำสั่งซื้อ oper เลขที่อ้างอิง: ${recheck_result_check_transactionstatus_orderbuy.rows[0].invoid}, วันที่สั่งซื้อขาย: ${recheck_result_check_transactionstatus_orderbuy.rows[0].ordrdt}, Transaction No: ${recheck_result_check_transactionstatus_orderbuy.rows[0].altnvc}`);
-
+                                
                                 // กด tab "ตรวจสอบและยืนยันคำสั่งซื้อประจำวัน"
                                 await menubar_InvestmentBuyOrderOper(page).investmentorderoper_btnVerifyInvestmentOrder.click({ timeout: 10000 });
                                 // ค้นหาข้อมูลคำสั่งซื้อ
