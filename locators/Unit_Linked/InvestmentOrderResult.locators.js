@@ -21,6 +21,7 @@ export const dialog_InvestmentOrderResult = (page) => ({
     investmentorderresult_dialogSuccess: page.locator('div[class="confirm-dialog yui3-panel-content yui3-widget-stdmod"]').getByText('ยืนยันผลคำสั่งซื้อ-ขาย', { exact: true }),
     investmentorderresult_dialog_btnSuccess: page.locator('div[class="confirm-dialog yui3-panel-content yui3-widget-stdmod"]', { hasText: 'ยืนยันผลคำสั่งซื้อ-ขาย' }).getByText('ใช่', { exact: true }),
     investmentorderresult_dialog_popuperror_helpdesk: page.locator('div[class="alert-dialog yui3-panel-content yui3-widget-stdmod"]', { hasText: 'เกิดข้อผิดพลาดในระบบ กรุณาติดต่อ Helpdesk Support' }),
+    investmentorderresult_dialog_popupsuccessfully_already: page.locator('div[class="alert-dialog yui3-panel-content yui3-widget-stdmod"]', { hasText: 'มีการยืนยันผลคำสั่งเรียบร้อยแล้ว' }),
     investmentorderresult_dialog_popupSuccess: page.locator('div[class="alert-dialog yui3-panel-content yui3-widget-stdmod"]', { hasText: 'บันทึก ยืนยันผลคำสั่งซื้อ-ขาย เรียบร้อยแล้ว' }),
     investmentorderresult_dialog_btnPopupSuccess: page.locator('div[class="alert-dialog yui3-panel-content yui3-widget-stdmod"]', { hasText: 'บันทึก ยืนยันผลคำสั่งซื้อ-ขาย เรียบร้อยแล้ว' }).getByText('ตกลง', { exact: true }),
 });
