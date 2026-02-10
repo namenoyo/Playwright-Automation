@@ -70,12 +70,43 @@ export class InvestmentOrderResultPage {
                 console.log(`ปรับสถานะคำสั่งซื้อขายหน่วยลงทุน เลขที่อ้างอิง ${data.invoiceno} เป็น IR03 เรียบร้อยแล้ว`);
             }
         } else {
-            // รอหน้าจอ บันทึกเสร็จ แสดง
-            await this.expect(this.dialog_investmentorderresult.investmentorderresult_dialog_popupSuccess).toBeVisible({ timeout: 60000 });
-            // กดปุ่ม ตกลง เพื่อปิด popup
-            await this.dialog_investmentorderresult.investmentorderresult_dialog_btnPopupSuccess.click({ timeout: 10000 });
-            // รอหน้าจอ บันทึกเสร็จ แสดง
-            await this.expect(this.dialog_investmentorderresult.investmentorderresult_dialog_popupSuccess).not.toBeVisible({ timeout: 60000 });
+            const isSuccessfullyalreadyVisible = await this.dialog_investmentorderresult.investmentorderresult_dialog_popupsuccessfully_already.isVisible({ timeout: 60000 });
+            console.log('isSuccessfullyalreadyVisible:', isSuccessfullyalreadyVisible);
+            if (isSuccessfullyalreadyVisible) {
+                // กดปุ่ม ตกลง เพื่อปิด popup
+                await this.dialog_investmentorderresult.investmentorderresult_dialog_popupsuccessfully_already.locator('button', { hasText: 'ตกลง' }).click({ timeout: 10000 });
+                // รอหน้าจอ popup หายไป
+                await this.expect(this.dialog_investmentorderresult.investmentorderresult_dialog_popupsuccessfully_already).not.toBeVisible({ timeout: 60000 });
+
+                await this.page.waitForTimeout(5000); // รอ 5 วินาที เพื่อให้ข้อมูลอัพเดทในระบบ
+
+                // เลือก checkbox ตาม invoice number
+                await this.table_investmentorderresult.investmentorderresult_tblCheckbox(data.invoiceno).click({ timeout: 10000 });
+                // รอหน้าจอ confirm ปรากฏ
+                await this.expect(this.formconfirm_investmentorderresult.investmentorderresult_frmConfirm).toBeVisible({ timeout: 60000 });
+                // กดปุ่ม ยืนยัน
+                await this.formconfirm_investmentorderresult.investmentorderresult_frmConfirm_btnConfirm.click({ timeout: 10000 });
+                // รอหน้าจอ ยืนยันการบันทึก ปรากฏ
+                await this.expect(this.dialog_investmentorderresult.investmentorderresult_dialogSuccess).toBeVisible({ timeout: 60000 });
+                // กดปุ่ม ใช่ เพื่อปิด popup
+                await this.dialog_investmentorderresult.investmentorderresult_dialog_btnSuccess.click({ timeout: 10000 });
+                // เช็คว่ามี popup กำลังค้นหาข้อมูล แสดงหรือไม่
+                await this.expect(this.page.locator('div[class="busy-dialog yui3-panel-content yui3-widget-stdmod"]'), { hasText: 'กำลังค้นหาข้อมูล...', timeout: 60000 }).toBeVisible({ timeout: 60000 });
+                await this.expect(this.page.locator('div[class="busy-dialog yui3-panel-content yui3-widget-stdmod"]'), { hasText: 'กำลังค้นหาข้อมูล...', timeout: 60000 }).not.toBeVisible({ timeout: 60000 });
+                // รอหน้าจอ บันทึกเสร็จ แสดง
+                await this.expect(this.dialog_investmentorderresult.investmentorderresult_dialog_popupSuccess).toBeVisible({ timeout: 60000 });
+                // กดปุ่ม ตกลง เพื่อปิด popup
+                await this.dialog_investmentorderresult.investmentorderresult_dialog_btnPopupSuccess.click({ timeout: 10000 });
+                // รอหน้าจอ บันทึกเสร็จ แสดง
+                await this.expect(this.dialog_investmentorderresult.investmentorderresult_dialog_popupSuccess).not.toBeVisible({ timeout: 60000 });
+            } else {
+                // รอหน้าจอ บันทึกเสร็จ แสดง
+                await this.expect(this.dialog_investmentorderresult.investmentorderresult_dialog_popupSuccess).toBeVisible({ timeout: 60000 });
+                // กดปุ่ม ตกลง เพื่อปิด popup
+                await this.dialog_investmentorderresult.investmentorderresult_dialog_btnPopupSuccess.click({ timeout: 10000 });
+                // รอหน้าจอ บันทึกเสร็จ แสดง
+                await this.expect(this.dialog_investmentorderresult.investmentorderresult_dialog_popupSuccess).not.toBeVisible({ timeout: 60000 });
+            }
         }
 
         if (data.update_data_error_helpdesk_support === true) {

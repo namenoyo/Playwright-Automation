@@ -121,7 +121,7 @@ test('Daily Buy-Sell Investment Order - Unit Linked', async ({ page }) => {
                                                 (TIVREQ01.irstvc NOT IN ('IR03','IR04','IR05') AND TIVREQ01.iotcvc = 'P')
                                             )
                                             order by TIVREQ01.polnvc asc
-                                            `; // limit 2
+                                            limit 1`; // limit 2
     const result_check_all_order_policy_create_rv = await db.query(query_check_all_order_policy_create_rv);
 
     // วนลูปตรวจสอบกรมธรรม์ที่มีคำสั่งซื้อขายหน่วยลงทุนค้างอยู่ เพื่อทำ Process สร้าง RV
@@ -523,7 +523,7 @@ test('Daily Buy-Sell Investment Order - Unit Linked', async ({ page }) => {
                             if (status_transaction === 'VR01' && invoiceid_transaction === '0') {
 
                                 //ตัด string เอาแค่ วันที่ 8 ตัวแรก
-                                const transaction_date = row_oper_sell.trandt.toString().substring(0, 8);
+                                const transaction_date = row_oper_buy.trandt.toString().substring(0, 8);
 
                                 console.log(`\nสร้างคำสั่งซื้อ oper เลขที่อ้างอิง: ${row_oper_buy.invoid}, วันที่สั่งซื้อขาย: ${transaction_date}, Transaction No: ${row_oper_buy.altnvc}`);
 
