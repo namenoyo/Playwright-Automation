@@ -61,7 +61,7 @@ export default defineConfig({
         // screen: { width: 1366, height: 768 },
         // headless: true,
         
-        headless: false,
+        headless: false, // เปิดเห็นหน้าจอขณะรัน
         viewport: null,
 
         launchOptions: {
