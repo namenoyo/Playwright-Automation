@@ -103,8 +103,14 @@ test('G-Able Auto Pay', async ({ page }, testInfo) => {
 
                         // กดปุ่ม ค้นหา และรอโหลดข้อมูล
                         await Promise.all([
-                            page.waitForResponse(response =>
-                                response.url().includes('/receipt-combine/UI/CustomerPay') && response.status() === 200
+                            page.waitForResponse(response => 
+                            {
+                                if (env === 'SIT') {
+                                    return response.url().includes('/receipt-combine/UI/CustomerPay') && response.status() === 200;
+                                } else if (env === 'UAT') {
+                                    return response.url().includes('/receipt-combine_uat/UI/CustomerPay') && response.status() === 200;
+                                }
+                            }
                             ),
                             // กดปุ่ม ค้นหา
                             await page.locator('#ctl00_ContentPlaceHolder1_brnSearchCust').click()
@@ -118,11 +124,16 @@ test('G-Able Auto Pay', async ({ page }, testInfo) => {
                         for (let i = 0; i < processcount; i++) {
                             const context = page.context();
 
-                            const newPagePromise = context.waitForEvent('page', { timeout: 10000 }).catch(() => null);
+                            const newPagePromise = context.waitForEvent('page', { timeout: 3000 }).catch(() => null);
 
-                            const responsePromise = page.waitForResponse(response =>
-                                response.url().includes('/receipt-combine/UI/CustomerPay') &&
-                                response.status() === 200
+                            const responsePromise = page.waitForResponse(response => 
+                                {
+                                    if (env === 'SIT') {
+                                        return response.url().includes('/receipt-combine/UI/CustomerPay') && response.status() === 200;
+                                    } else if (env === 'UAT') {
+                                        return response.url().includes('/receipt-combine_uat/UI/CustomerPay') && response.status() === 200;
+                                    }
+                                }
                             );
 
                             await Promise.all([
@@ -147,8 +158,14 @@ test('G-Able Auto Pay', async ({ page }, testInfo) => {
 
                         // เลือก dropdown stock ใบเสร็จ และรอโหลดข้อมูล
                         await Promise.all([
-                            page.waitForResponse(response =>
-                                response.url().includes('/receipt-combine/UI/CustomerPay') && response.status() === 200
+                            page.waitForResponse(response => 
+                                {
+                                if (env === 'SIT') {
+                                    return response.url().includes('/receipt-combine/UI/CustomerPay') && response.status() === 200;
+                                } else if (env === 'UAT') {
+                                    return response.url().includes('/receipt-combine_uat/UI/CustomerPay') && response.status() === 200;
+                                }
+                            }
                             ),
                             // เลือก dropdown stock ใบเสร็จ
                             await page.locator('#ctl00_ContentPlaceHolder1_ddlStock').selectOption('0')
@@ -281,8 +298,13 @@ test('G-Able Auto Pay', async ({ page }, testInfo) => {
                             if (policyno_in_table === policyno) {
                                 // เลือก checkbox แต่ละแถว
                                 await Promise.all([
-                                    page.waitForResponse(response =>
-                                        response.url().includes('/receipt-combine/UI/ConfirmReceiptCustomer.aspx') && response.status() === 200
+                                    page.waitForResponse(response => {
+                                        if (env === 'SIT') {
+                                            return response.url().includes('/receipt-combine/UI/ConfirmReceiptCustomer.aspx') && response.status() === 200;
+                                        } else if (env === 'UAT') {
+                                            return response.url().includes('/receipt-combine_uat/UI/ConfirmReceiptCustomer.aspx') && response.status() === 200;
+                                        }
+                                    }
                                     ),
                                     // กดปุ่ม เลือก checkbox
                                     page.locator('#ctl00_ContentPlaceHolder1_dgReceipt > tbody > tr').nth(i + 2).locator('td > input[type="checkbox"]').check({ timeout: 5000 })
@@ -312,8 +334,13 @@ test('G-Able Auto Pay', async ({ page }, testInfo) => {
 
                         // กดปุ่ม เพิ่มรายการ
                         await Promise.all([
-                            tab4.waitForResponse(response =>
-                                response.url().includes('/receipt-combine/UI/ConfirmReceipt.aspx?SCase=C&FromPage=CusPay') && response.status() === 200
+                            tab4.waitForResponse(response => {
+                                if (env === 'SIT') {
+                                    return response.url().includes('/receipt-combine/UI/ConfirmReceipt.aspx?SCase=C&FromPage=CusPay') && response.status() === 200;
+                                } else if (env === 'UAT') {
+                                    return response.url().includes('/receipt-combine_uat/UI/ConfirmReceipt.aspx?SCase=C&FromPage=CusPay') && response.status() === 200;
+                                }
+                            }
                             ),
                             // กดปุ่ม เพิ่มรายการ
                             tab4.locator('#btnAddtolist').click()
