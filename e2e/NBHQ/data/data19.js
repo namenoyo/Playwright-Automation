@@ -1,0 +1,36 @@
+export const caseDatas = [
+{
+  environment: 'UAT',
+  agentCode: '6000806', 
+  partnerNo: '8290001',
+  cusTitlePrefix: 'นาง', 
+  cardNo: '1420151025988',
+  gender: 'หญิง',
+  cusName: 'หูฟังใหญ่', 
+  cusSurname: 'ไสยเวทย์', 
+  applicationNo: '1002000728',
+  tempReceiptNo: '00357737', 
+  age:'35',
+  occupationCode: '6102', 
+  policyName: 'A19',
+  policyType: 'สามัญ',
+  paymentPeriod: 'รายปี',
+  insuredAmount: '25000', 
+  numBene: "1",
+  beneRela_1: 'บิดา', 
+  benePrefix_1: 'นาย', 
+  beneName_1: 'เพทกระดาษสาย',
+  beneSurname_1: 'ทองคำน้ำ', 
+  beneAge_1: '50 ปี', 
+  riders: [
+   //{ name: 'CI120', coverage: '200,000.00' },
+    { name: 'HS', coverage: 'H&S2000' },
+  //{ name: 'WP2', coverage: '155,800.00' },
+  // { name: 'CB', coverage: '200,000.00' },
+  { name: 'OPD', coverage: 'OPD500' },
+   //  { name: 'DAB', coverage: '1,000.00' },
+   
+  ], 
+  email: 'panuwat.ko@ocean.co.th', //no need
+},
+];
