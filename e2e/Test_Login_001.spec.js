@@ -14,3 +14,8 @@ test('Test_Login_001', async ({ page }) => {
   // await expect(page).toHaveURL(/dashboard|home|main/);
 });
 
+
+test('google', async ({ page }) => {
+  await page.goto('https://www.google.com');
+  await expect(page).toHaveTitle(/Google/);
+});

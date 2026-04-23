@@ -24,7 +24,7 @@ test('G-Able Auto Pay', async ({ page }, testInfo) => {
     const result_new_array_status_not_finish = testData.filter(x => !denyStatus.includes(x.Status));
 
     // กรองเอาเฉพาะเคสที่ DATA USER BY ที่กำหนดเท่านั้น
-    const allowUser = ['Top'];
+    const allowUser = ['Eve'];
     const result_filter_user = result_new_array_status_not_finish.filter(x => allowUser.includes(x["Create By"]));
 
     for (const [index, data] of result_filter_user.entries()) {
@@ -117,42 +117,51 @@ test('G-Able Auto Pay', async ({ page }, testInfo) => {
                         ], { timeout: 500000 }); // รอไม่เกิน 500 วินาที
                         await expect(page.locator('#ctl00_ContentPlaceHolder1_dgCustomerPay')).toBeVisible({ timeout: 500000 });
 
-                        // เลือก checkbox รายการทั้งหมด
-                        const countcheckbox = await page.locator('#ctl00_ContentPlaceHolder1_dgCustomerPay > tbody > tr').count();
-                        // console.log(`จำนวนแถวที่พบ: ${countcheckbox - 2} แถว`);
-                        const processcount = countcheckbox - 2; // ลบ 2 ออกเพราะ 2 แถวเป็น header
-                        for (let i = 0; i < processcount; i++) {
-                            const context = page.context();
+                        let countcheckbox;
+                        // จับจำนวน page โดยจะเป็น text ของ column แรกที่เป็นเลขลำดับ แล้วเอาค่ามาใส่ใน array เพื่อเอาไป loop ต่อ โดยจะเป็น ค่าว่างระหว่าง เลข ข้อมูลที่ได้จะเป็น 1 2 3 4 5 6 7 8 9 10 ... ไปเรื่อยๆ ตามจำนวนแถวที่มี ซึ่งจะช่วยให้เรา loop เลือก checkbox แต่ละแถวได้ถูกต้อง
+                        const countcheckpage = await page.locator('#ctl00_ContentPlaceHolder1_dgCustomerPay > tbody > tr').nth(0).locator('td').textContent();
+                        const countcheckarray = countcheckpage.split(/\s+/).filter(x => x.trim() !== '');
+                        // console.log(`จำนวนคอลัมน์ที่พบ: ${countcheckarray.length} คอลัมน์`);
+                        for (let i = 0; i < countcheckarray.length; i++) {
+                            // console.log(`คอลัมน์ที่ ${i + 1}: ${countcheckarray[i]}`);
+                            await page.locator('#ctl00_ContentPlaceHolder1_dgCustomerPay > tbody > tr').nth(0).locator('td').getByText(countcheckarray[i]).click();
+                            await page.waitForTimeout(500);
+                            // เลือก checkbox รายการทั้งหมด
+                            countcheckbox = await page.locator('#ctl00_ContentPlaceHolder1_dgCustomerPay > tbody > tr').count();
+                            // console.log(`จำนวนแถวที่พบ: ${countcheckbox - 2} แถว`);
+                            const processcount = countcheckbox - 2; // ลบ 2 ออกเพราะ 2 แถวเป็น header
+                            for (let i = 0; i < processcount; i++) {
+                                const context = page.context();
 
-                            const newPagePromise = context.waitForEvent('page', { timeout: 3000 }).catch(() => null);
+                                const newPagePromise = context.waitForEvent('page', { timeout: 3000 }).catch(() => null);
 
-                            const responsePromise = page.waitForResponse(response => 
-                                {
+                                const responsePromise = page.waitForResponse(response => {
                                     if (env === 'SIT') {
                                         return response.url().includes('/receipt-combine/UI/CustomerPay') && response.status() === 200;
                                     } else if (env === 'UAT') {
                                         return response.url().includes('/receipt-combine_uat/UI/CustomerPay') && response.status() === 200;
                                     }
                                 }
-                            );
+                                );
 
-                            await Promise.all([
-                                responsePromise,
-                                newPagePromise,
-                                page.locator('#ctl00_ContentPlaceHolder1_dgCustomerPay > tbody > tr')
-                                    .nth(i + 2)
-                                    .locator('td > input[type="checkbox"]')
-                                    .check({ timeout: 5000 })
-                            ], { timeout: 500000 });
+                                await Promise.all([
+                                    responsePromise,
+                                    newPagePromise,
+                                    page.locator('#ctl00_ContentPlaceHolder1_dgCustomerPay > tbody > tr')
+                                        .nth(i + 2)
+                                        .locator('td > input[type="checkbox"]')
+                                        .check({ timeout: 5000 })
+                                ], { timeout: 500000 });
 
-                            const newPage = await newPagePromise;
-                            if (newPage) {
-                                // console.log('>> New tab detected:', newPage.url());
-                                await newPage.waitForLoadState('networkidle');
-                                // กดปุ่ม ยืนยัน ใน tab ใหม่
-                                await newPage.locator('#btnconfirm').click({ timeout: 5000 });
-                                // รอให้ tab ใหม่ ปิดตัวเอง
-                                await newPage.waitForEvent('close', { timeout: 10000 });
+                                const newPage = await newPagePromise;
+                                if (newPage) {
+                                    // console.log('>> New tab detected:', newPage.url());
+                                    await newPage.waitForLoadState('networkidle');
+                                    // กดปุ่ม ยืนยัน ใน tab ใหม่
+                                    await newPage.locator('#btnconfirm').click({ timeout: 5000 });
+                                    // รอให้ tab ใหม่ ปิดตัวเอง
+                                    await newPage.waitForEvent('close', { timeout: 10000 });
+                                }
                             }
                         }
 
@@ -289,26 +298,36 @@ test('G-Able Auto Pay', async ({ page }, testInfo) => {
                         await page.getByRole('link', { name: 'รับชำระเงินจากลูกค้า' }).click();
                         await page.waitForLoadState('networkidle');
 
-                        // เลือก checkbox รายการทั้งหมด ที่เลข stock ตรงกัน
-                        const countcheckbox_stock = await page.locator('#ctl00_ContentPlaceHolder1_dgReceipt > tbody > tr').count();
-                        // console.log(`จำนวนแถวที่พบ: ${countcheckbox_stock - 2} แถว`);
-                        const processcount_stock = countcheckbox_stock - 2; // ลบ 2 ออกเพราะ 2 แถวเป็น header
-                        for (let i = 0; i < processcount_stock; i++) {
-                            const policyno_in_table = await page.locator('#ctl00_ContentPlaceHolder1_dgReceipt > tbody > tr').nth(i + 2).locator('td').nth(1).innerText();
-                            if (policyno_in_table === policyno) {
-                                // เลือก checkbox แต่ละแถว
-                                await Promise.all([
-                                    page.waitForResponse(response => {
-                                        if (env === 'SIT') {
-                                            return response.url().includes('/receipt-combine/UI/ConfirmReceiptCustomer.aspx') && response.status() === 200;
-                                        } else if (env === 'UAT') {
-                                            return response.url().includes('/receipt-combine_uat/UI/ConfirmReceiptCustomer.aspx') && response.status() === 200;
+                        let countcheckbox_stock;
+                        // จับจำนวน page โดยจะเป็น text ของ column แรกที่เป็นเลขลำดับ แล้วเอาค่ามาใส่ใน array เพื่อเอาไป loop ต่อ โดยจะเป็น ค่าว่างระหว่าง เลข ข้อมูลที่ได้จะเป็น 1 2 3 4 5 6 7 8 9 10 ... ไปเรื่อยๆ ตามจำนวนแถวที่มี ซึ่งจะช่วยให้เรา loop เลือก checkbox แต่ละแถวได้ถูกต้อง
+                        const countcheckpage = await page.locator('#ctl00_ContentPlaceHolder1_dgReceipt > tbody > tr').nth(0).locator('td').textContent();
+                        const countcheckarray = countcheckpage.split(/\s+/).filter(x => x.trim() !== '');
+                        for (let i = 0; i < countcheckarray.length; i++) {
+                            await page.locator('#ctl00_ContentPlaceHolder1_dgReceipt > tbody > tr').nth(0).locator('td').getByText(countcheckarray[i]).click();
+                            await page.waitForTimeout(500);
+
+                            // เลือก checkbox รายการทั้งหมด ที่เลข stock ตรงกัน
+                            countcheckbox_stock = await page.locator('#ctl00_ContentPlaceHolder1_dgReceipt > tbody > tr').count();
+                            // console.log(`จำนวนแถวที่พบ: ${countcheckbox_stock - 2} แถว`);
+                            const processcount_stock = countcheckbox_stock - 2; // ลบ 2 ออกเพราะ 2 แถวเป็น header
+                            for (let i = 0; i < processcount_stock; i++) {
+                                const policyno_in_table = await page.locator('#ctl00_ContentPlaceHolder1_dgReceipt > tbody > tr').nth(i + 2).locator('td').nth(1).innerText();
+                                // console.log(policyno_in_table, policyno)
+                                if (policyno_in_table === policyno) {
+                                    // เลือก checkbox แต่ละแถว
+                                    await Promise.all([
+                                        page.waitForResponse(response => {
+                                            if (env === 'SIT') {
+                                                return response.url().includes('/receipt-combine/UI/ConfirmReceiptCustomer.aspx') && response.status() === 200;
+                                            } else if (env === 'UAT') {
+                                                return response.url().includes('/receipt-combine_uat/UI/ConfirmReceiptCustomer.aspx') && response.status() === 200;
+                                            }
                                         }
-                                    }
-                                    ),
-                                    // กดปุ่ม เลือก checkbox
-                                    page.locator('#ctl00_ContentPlaceHolder1_dgReceipt > tbody > tr').nth(i + 2).locator('td > input[type="checkbox"]').check({ timeout: 5000 })
-                                ], { timeout: 500000 }); // รอไม่เกิน 500 วินาที
+                                        ),
+                                        // กดปุ่ม เลือก checkbox
+                                        page.locator('#ctl00_ContentPlaceHolder1_dgReceipt > tbody > tr').nth(i + 2).locator('td > input[type="checkbox"]').check({ timeout: 5000 })
+                                    ], { timeout: 500000 }); // รอไม่เกิน 500 วินาที
+                                }
                             }
                         }
 
