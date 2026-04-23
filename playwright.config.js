@@ -57,11 +57,21 @@ export default defineConfig({
       // 1366x768
       use: {
         // ...devices['Desktop Chrome'],
-        headless: true,
-        viewport: { width: 1366, height: 768 },
-        screen: { width: 1366, height: 768 },
+        // viewport: { width: 1366, height: 768 },
+        // screen: { width: 1366, height: 768 },
+        // headless: true,
+        
+        headless: false, // เปิดเห็นหน้าจอขณะรัน
+        viewport: null,
+
         launchOptions: {
-          args: ['--window-size=1366,768'],
+          args: [
+            // '--window-size=1366,768',
+            '--start-maximized',   // 👈 เปิดเต็มจอ
+            '--disable-web-security',
+            '--disable-site-isolation-trials',
+            '--disable-features=IsolateOrigins,site-per-process,NetworkService'
+          ],
         },
         // video: 'on', // เปิดการอัดวิดีโอทุกเคส
         screenshot: 'only-on-failure', // ถ้าอยากเก็บ screenshot เฉพาะเคสล้ม

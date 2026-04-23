@@ -1,4 +1,4 @@
-const { search_NewCase, table_NewCase, popup_NewCase_CustomerInfo, form_AddNewCase_Tab1, form_AddNewCase_Tab2, form_AddNewCase_Tab3, form_AddNewCase_SaveDraft } = require('../../../locators/Unit_Linked/NB/NewCase.locators.js');
+const { search_NewCase, table_NewCase, popup_NewCase_CustomerInfo, form_AddNewCase_Tab1, form_AddNewCase_Tab2, form_AddNewCase_Tab3, form_AddNewCase_SaveDraft, form_AddNewCase_Save } = require('../../../locators/Unit_Linked/NB/NewCase.locators.js');
 
 class NewCasePage {
     constructor(page, expect) {
@@ -11,6 +11,7 @@ class NewCasePage {
         this.formaddnewcase_tab2 = form_AddNewCase_Tab2(page);
         this.formaddnewcase_tab3 = form_AddNewCase_Tab3(page);
         this.formaddnewcase_savedraft = form_AddNewCase_SaveDraft(page);
+        this.formaddnewcase_save = form_AddNewCase_Save(page);
     }
 
     async searchNewCase(data) {
@@ -499,6 +500,13 @@ class NewCasePage {
         } else {
             console.log('คะแนนความเสี่ยงมีการกรอกไปแล้ว ไม่ต้องกรอกซ้ำ');
         }
+        
+        // เก็บจำนวนเงินรวมทั้งหมด
+        await this.formaddnewcase_tab1.newcase_formAddNewCase_tab1_txtTotalAmount.waitFor({ state: 'visible', timeout: 60000 });
+        const totalamount = await this.formaddnewcase_tab1.newcase_formAddNewCase_tab1_txtTotalAmount.textContent();
+        // นำจำนวนเงินที่ดึงมา ลบเครื่องหมาย คอมม่า (,) และ .00 ออก
+        const totalamountclean = totalamount.replace(/,/g, '').replace('.00', '');
+        return totalamountclean;
     }
 
     async formAddNewCase_Tab2(data) {
@@ -661,6 +669,36 @@ class NewCasePage {
         await this.expect(this.formaddnewcase_savedraft.newcase_formAddNewCase_popupSaveDraftSuccess).not.toBeVisible({ timeout: 60000 });
         // รอ popup บันทึกเคสใหม่ ปิด
         await this.expect(this.page.locator('#mainDialogId')).not.toBeVisible({ timeout: 60000 });
+    }
+
+    async formAddNewCase_Save() {
+        // กดปุ่ม บันทึกเคสใหม่
+        await this.formaddnewcase_save.newcase_formAddNewCase_btnSave.click({ timeout: 10000 });
+        // รอโหลดข้อมูล
+        await this.expect(this.page.locator('div[class="yui3-widget-bd"]', { hasText: 'กำลังดึงข้อมูล...',timeout: 30000 })).not.toBeVisible({ timeout: 60000 });
+        // ยืนยันการบันทึกเคสใหม่
+        await this.formaddnewcase_save.newcase_formAddNewCase_popupConfirmSave.getByRole('button', { name: 'ยืนยัน' }).click({ timeout: 10000 });
+        // รอ popup บันทึกสำเร็จ แสดง
+        await this.expect(this.formaddnewcase_save.newcase_formAddNewCase_popupSaveSuccess).toBeVisible({ timeout: 60000 });
+        // กดปุ่ม ตกลง ใน popup บันทึกสำเร็จ
+        await this.formaddnewcase_save.newcase_formAddNewCase_popupSaveSuccess.getByRole('button', { name: 'ตกลง' }).click({ timeout: 10000 });
+        // รอ popup บันทึกสำเร็จ ปิด
+        await this.expect(this.formaddnewcase_save.newcase_formAddNewCase_popupSaveSuccess).not.toBeVisible({ timeout: 60000 });
+        // รอ popup บันทึกเคสใหม่ ปิด
+        await this.expect(this.page.locator('#mainDialogId')).not.toBeVisible({ timeout: 60000 });
+    }
+
+    async formAddNewCase_CustomerConfirm(data) {
+        // กดปุ่ม ยืนยันข้อมูลกับลูกค้า
+        await this.tablenewcase.newcase_tbl_chkSelectCase(data.requestcode).click({ timeout: 10000 });
+        // ยืนยันบันทึกข้อมูลกับลูกค้า
+        await this.searchnewcase.newcase_btnConfirmCustomerSave.click({ timeout: 10000 });
+        // รอ popup บันทึกสำเร็จ
+        await this.expect(this.page.locator('div[class="yui3-widget-bd"]', { hasText: 'ยืนยันการบันทึกข้อมูลเรียบร้อยแล้ว' })).toBeVisible({ timeout: 60000 });
+        // กดปุ่ม ตกลง ใน popup บันทึกสำเร็จ
+        await this.page.locator('div[class="yui3-widget-bd"]', { hasText: 'ยืนยันการบันทึกข้อมูลเรียบร้อยแล้ว' }).getByRole('button', { name: 'ตกลง' }).click({ timeout: 10000 });
+        // รอ popup บันทึกสำเร็จ ปิด
+        await this.expect(this.page.locator('div[class="yui3-widget-bd"]', { hasText: 'ยืนยันการบันทึกข้อมูลเรียบร้อยแล้ว' })).not.toBeVisible({ timeout: 60000 });
     }
 
 }

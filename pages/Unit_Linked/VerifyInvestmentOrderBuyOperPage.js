@@ -46,7 +46,7 @@ class VerifyInvestmentOrderBuyOperPage {
         }
     }
 
-    async confirm_verify_VerifyInvestmentOrderOper() {
+    async confirm_verify_VerifyInvestmentOrderOper(data) {
         // กดปุ่ม ยืนยันคำสั่งขาย
         await this.table_verify_investmentorderoper.verify_investmentorderoper_btnconfirmorder.click({ timeout: 10000 });
         // รอ dialog ยืนยันคำสั่งขายขึ้นมา
@@ -54,6 +54,10 @@ class VerifyInvestmentOrderBuyOperPage {
         await this.dialog_verify_investmentorderoper.verify_investmentorderoper_confirmorderinvestment.getByText('ใช่', { exact: true }).click({ timeout: 10000 });
         // รอ dialog หายไป
         await this.expect(this.dialog_verify_investmentorderoper.verify_investmentorderoper_confirmorderinvestment).not.toBeVisible({ timeout: 60000 });
+
+        // รอ loading ค้นหาข้อมูล
+        await this.expect(this.page.locator('div[class="busy-dialog yui3-panel-content yui3-widget-stdmod"]'), { hasText: 'กำลังค้นหาข้อมูล...' ,timeout: 60000 }).toBeVisible({ timeout: 60000 });
+        await this.expect(this.page.locator('div[class="busy-dialog yui3-panel-content yui3-widget-stdmod"]'), { hasText: 'กำลังค้นหาข้อมูล...' ,timeout: 60000 }).not.toBeVisible({ timeout: 60000 });
 
         // รอ dialog กรอกเหตุผล cutoff ขึ้นมา
         await this.page.waitForTimeout(1000);
@@ -72,7 +76,7 @@ class VerifyInvestmentOrderBuyOperPage {
                 el.dispatchEvent(new Event('input', { bubbles: true }));
                 el.dispatchEvent(new Event('keyup', { bubbles: true }));
                 el.dispatchEvent(new Event('change', { bubbles: true }));
-            }, 'ทดสอบ');
+            }, data.remarkcutoff_oper);
 
             // กดปุ่ม ส่งคำสั่งวันนี้
             await this.dialog_verify_investmentorderoper.verify_investmentorderoper_comment_cutoff.getByText('ส่งคำสั่งวันนี้', { exact: true }).click({ timeout: 10000 });
@@ -96,7 +100,7 @@ class VerifyInvestmentOrderBuyOperPage {
         await this.expect(this.dialog_verify_investmentorderoper.verify_investmentorderoper_successpopup).not.toBeVisible({ timeout: 60000 });
     }
 
-    async confirm_verify_VerifyInvestmentOrderOper_Tab1() {
+    async confirm_verify_VerifyInvestmentOrderOper_Tab1(data) {
         // กดปุ่ม ยืนยันคำสั่งขาย
         await this.table_verify_investmentorderoper.verify_investmentorderoper_btnconfirmorder_Tab1.click({ timeout: 10000 });
         // รอ dialog ยืนยันคำสั่งขายขึ้นมา
@@ -122,7 +126,7 @@ class VerifyInvestmentOrderBuyOperPage {
                 el.dispatchEvent(new Event('input', { bubbles: true }));
                 el.dispatchEvent(new Event('keyup', { bubbles: true }));
                 el.dispatchEvent(new Event('change', { bubbles: true }));
-            }, 'ทดสอบ');
+            }, data.remarkcutoff_oper);
 
             // กดปุ่ม ส่งคำสั่งวันนี้
             await this.dialog_verify_investmentorderoper.verify_investmentorderoper_comment_cutoff_tab1.getByText('ส่งคำสั่งวันนี้', { exact: true }).click({ timeout: 10000 });

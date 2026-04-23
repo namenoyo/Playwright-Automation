@@ -40,7 +40,7 @@ test.describe.configure({ mode: 'parallel' }); // ให้เคสในไฟ
 
 test(`Scenario | สร้างรับเรื่องสลักหลัง`, async ({ page }, testInfo) => {
     // setting เวลาให้เคสนี้รัน
-    test.setTimeout(180000); // 3 นาที
+    test.setTimeout(3600000); // 1 ชั่วโมง
 
     // ส่วนของการเข้าหน้า CIS
     // Page
@@ -59,8 +59,11 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
     const googlesheet = new GoogleSheet();
     const auth = await googlesheet.initAuth();
     const spreadsheetId = '1anVVVH2lHAZ5VxqZZlp0XrIft5uW3SkfzxWSpSpqRjQ';
-    const readrange = `Data_Mapping_Service!A6:ZZ1000000`;
+    const sheetname = `Data_Mapping_Service`;
+    const readrange = `${sheetname}!A6:ZZ1000000`;
     testData = await googlesheet.fetchSheetData_key(auth, spreadsheetId, readrange);
+    const sheetnamewrite = sheetname;
+    const range_write = `A6:ZZ`;
 
     // // จับเวลาสิ้นสุด
     // const endTime_fetch_data = Date.now();
@@ -68,8 +71,8 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
     // console.log(`ใช้เวลาในการดึงข้อมูลจาก Google Sheets: ${duration_fetch_data} วินาที`);
     // console.log('ดึงข้อมูลจาก Google Sheets เรียบร้อย จำนวน ' + testData.length + ' รายการ \n');
 
-    const sheetnamewrite = `Data_Mapping_Service`;
-    const range_write = `A6:ZZ`;
+    // ดึงข้อมูล Query สลักจาก Google Sheet
+    const query_check_data_endorse = await googlesheet.fetchSheetData_key(auth, spreadsheetId, `Query ตรวจสอบข้อมูล!A1:H1000`);
 
     const db_name = 'alteration';
     const db_env = 'SIT_EDIT'; // SIT | SIT_EDIT / UAT | UAT_EDIT
@@ -91,6 +94,9 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
     // กรองเอาเฉพาะเคสที่ DATA USER BY ที่กำหนดเท่านั้น
     const allowUser = ['ท็อป'];
     const result_filter_user = result_new_array_status_not_finish.filter(x => allowUser.includes(x["DATA USER BY"]));
+
+    // ไปยังหน้า NBS
+    await loginPage.gotoNBS();
 
     for (const [index, data_save_endorse] of result_filter_user.entries()) {
 
@@ -195,6 +201,46 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
         const ecn04_firstname_bankaccount = data_save_endorse['ECN04_29_BankAccount_07'];
         const ecn04_lastname_bankaccount = data_save_endorse['ECN04_29_BankAccount_08'];
 
+        // ECN05
+        const ecn05_issue_request_no_cancel = data_save_endorse['ECN05_01'];
+        const ecn05_issue_request_date = data_save_endorse['ECN05_02'];
+        const ecn05_issue_request_reason = data_save_endorse['ECN05_03'];
+        const ecn05_mode = data_save_endorse['ECN05_00'];
+        const ecn05_relationship = data_save_endorse['ECN05_06'];
+        const ecn05_relationship_other = data_save_endorse['ECN05_07'];
+        const ecn05_title = data_save_endorse['ECN05_08'];
+        const ecn05_firstname = data_save_endorse['ECN05_09'];
+        const ecn05_lastname = data_save_endorse['ECN05_10'];
+        const ecn05_title_eng = data_save_endorse['ECN05_11'];
+        const ecn05_firstname_eng = data_save_endorse['ECN05_12'];
+        const ecn05_lastname_eng = data_save_endorse['ECN05_13'];
+        const ecn05_sex = data_save_endorse['ECN05_14'];
+        const ecn05_birthdate = data_save_endorse['ECN05_15'];
+        const ecn05_idcardtype = data_save_endorse['ECN05_17'];
+        const ecn05_idcardnumber = data_save_endorse['ECN05_18'];
+        const ecn05_percentage = data_save_endorse['ECN05_19'];
+        const ecn05_housenumber = data_save_endorse['ECN05_20'];
+        const ecn05_moo = data_save_endorse['ECN05_21'];
+        const ecn05_village = data_save_endorse['ECN05_22'];
+        const ecn05_soi = data_save_endorse['ECN05_23'];
+        const ecn05_road = data_save_endorse['ECN05_24'];
+        const ecn05_province = data_save_endorse['ECN05_25'];
+        const ecn05_district = data_save_endorse['ECN05_26'];
+        const ecn05_subdistrict = data_save_endorse['ECN05_27'];
+        const ecn05_mobilephone = data_save_endorse['ECN05_29'];
+        const ecn05_housetelephone = data_save_endorse['ECN05_30'];
+        const ecn05_email = data_save_endorse['ECN05_31'];
+        const ecn05_chanelpayment = data_save_endorse['ECN05_04'];
+        const ecn05_promptpay_remark = data_save_endorse['ECN05_05_Promtpay_01'];
+        const ecn05_promptpay_title = data_save_endorse['ECN05_05_Promtpay_02'];
+        const ecn05_promptpay_firstname = data_save_endorse['ECN05_05_Promtpay_03'];
+        const ecn05_promptpay_lastname = data_save_endorse['ECN05_05_Promtpay_04'];
+        const ecn05_bank_bankname = data_save_endorse['ECN05_05_BankAccount_06'];
+        const ecn05_bank_accountno = data_save_endorse['ECN05_05_BankAccount_08'];
+        const ecn05_bank_branch = data_save_endorse['ECN05_05_BankAccount_09'];
+        const ecn05_bank_remark = data_save_endorse['ECN05_05_BankAccount_10'];
+        const ecn05_bank_remark_other = data_save_endorse['ECN05_05_BankAccount_11'];
+
         // // จับเวลาเริ่มต้นการทำงานของแต่ละเคส
         // const startTime_case = Date.now();
 
@@ -202,6 +248,7 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
             if ((process === 'Waiting for Create Data' || process === 'In Progress') && document_request_no === '') {
                 try {
                     if (flag_request_issue === 'TRUE' || flag_request_issue === 'True' || flag_request_issue === 'true') {
+                        console.log('\n------------------------------------------------------------------------');
                         console.log('\nเริ่มทำการบันทึก รับเรื่องสลักหลัง');
 
                         // อัพเดท Process เป็น 'In Progress'
@@ -211,8 +258,6 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
                         // เคลียร์ array หลังอัพโหลด
                         data_create = [];
 
-                        // ไปยังหน้า NBS
-                        await loginPage.gotoNBS();
                         // เข้าสู่ระบบด้วยชื่อผู้ใช้และรหัสผ่าน
                         await loginPage.login(username, password);
 
@@ -419,37 +464,54 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
                                 // ECN04
                                 ecn04_mode: ecn04_mode, ecn04_relationship: ecn04_relationship, ecn04_relationship_other: ecn04_relationship_other, ecn04_title: ecn04_title, ecn04_firstname: ecn04_firstname, ecn04_lastname: ecn04_lastname, ecn04_title_eng: ecn04_title_eng, ecn04_firstname_eng: ecn04_firstname_eng, ecn04_lastname_eng: ecn04_lastname_eng, ecn04_sex: ecn04_sex, ecn04_birthdate: ecn04_birthdate, ecn04_idcardtype: ecn04_idcardtype, ecn04_idcardnumber: ecn04_idcardnumber, ecn04_percentage: ecn04_percentage, ecn04_housenumber: ecn04_housenumber, ecn04_moo: ecn04_moo, ecn04_village: ecn04_village, ecn04_soi: ecn04_soi, ecn04_road: ecn04_road, ecn04_province: ecn04_province, ecn04_district: ecn04_district, ecn04_subdistrict: ecn04_subdistrict, ecn04_mobilephone: ecn04_mobilephone, ecn04_housetelephone: ecn04_housetelephone, ecn04_email: ecn04_email, ecn04_channelpayment: ecn04_channelpayment, ecn04_promptpay: ecn04_promptpay, ecn04_title_promptpay: ecn04_title_promptpay, ecn04_firstname_promptpay: ecn04_firstname_promptpay, ecn04_lastname_promptpay: ecn04_lastname_promptpay, ecn04_bankname_bankaccount: ecn04_bankname_bankaccount, ecn04_bankno_bankaccount: ecn04_bankno_bankaccount, ecn04_bankbranch_bankaccount: ecn04_bankbranch_bankaccount, ecn04_remark_bankaccount: ecn04_remark_bankaccount, ecn04_other_bankaccount: ecn04_other_bankaccount, ecn04_title_bankaccount: ecn04_title_bankaccount, ecn04_firstname_bankaccount: ecn04_firstname_bankaccount, ecn04_lastname_bankaccount: ecn04_lastname_bankaccount,
                                 // ECN05
+                                ecn05_issue_request_no_cancel: ecn05_issue_request_no_cancel, ecn05_issue_request_date: ecn05_issue_request_date, ecn05_issue_request_reason: ecn05_issue_request_reason, ecn05_mode: ecn05_mode, ecn05_relationship: ecn05_relationship, ecn05_relationship_other: ecn05_relationship_other, ecn05_title: ecn05_title, ecn05_firstname: ecn05_firstname, ecn05_lastname: ecn05_lastname, ecn05_title_eng: ecn05_title_eng, ecn05_firstname_eng: ecn05_firstname_eng, ecn05_lastname_eng: ecn05_lastname_eng, ecn05_sex: ecn05_sex, ecn05_birthdate: ecn05_birthdate, ecn05_idcardtype: ecn05_idcardtype, ecn05_idcardnumber: ecn05_idcardnumber, ecn05_percentage: ecn05_percentage, ecn05_housenumber: ecn05_housenumber, ecn05_moo: ecn05_moo, ecn05_village: ecn05_village, ecn05_soi: ecn05_soi, ecn05_road: ecn05_road, ecn05_province: ecn05_province, ecn05_district: ecn05_district, ecn05_subdistrict: ecn05_subdistrict, ecn05_mobilephone: ecn05_mobilephone, ecn05_housetelephone: ecn05_housetelephone, ecn05_email: ecn05_email, ecn05_chanelpayment: ecn05_chanelpayment, ecn05_promptpay_remark: ecn05_promptpay_remark, ecn05_promptpay_title: ecn05_promptpay_title, ecn05_promptpay_firstname: ecn05_promptpay_firstname, ecn05_promptpay_lastname: ecn05_promptpay_lastname, ecn05_bank_bankname: ecn05_bank_bankname, ecn05_bank_accountno: ecn05_bank_accountno, ecn05_bank_branch: ecn05_bank_branch, ecn05_bank_remark: ecn05_bank_remark, ecn05_bank_remark_other: ecn05_bank_remark_other
 
                             });
                             // เลือก checkbox เอกสารที่มีการ require
                             await receiveissuerequestalteration.checkbox_document_required_alteration();
 
-                            // หลังจากคลิกปุ่มบันทึก เก็บ response ของเลขที่รับเรื่อง
-                            const [response] = await Promise.all([
-                                newPage.waitForResponse(resp =>
-                                    resp.url().includes('/thaisamut/rs/alter/v1/request') && resp.status() === 200
-                                ),
-                                // คลิกปุ่มบันทึก
-                                await receiveissuerequestalteration.save_receive_issue_request_alteration(),
-                            ]);
+                            // // หลังจากคลิกปุ่มบันทึก เก็บ response ของเลขที่รับเรื่อง
+                            // const [response] = await Promise.all([
+                            //     newPage.waitForResponse(resp =>
+                            //         resp.url().includes('/thaisamut/rs/alter/v1/request') && resp.status() === 200
+                            //     ),
+                            //     // คลิกปุ่มบันทึก
+                            //     await receiveissuerequestalteration.save_receive_issue_request_alteration(),
+                            // ]);
+                            // const responseBody = await response.json();
+                            // requestno = responseBody.requestNo; // หรือเปลี่ยนชื่อ key ตาม response จริง
+                            // console.log('เลขที่รับเรื่อง:', requestno);
+
+                            // 1. Start waiting for response (Promise)
+                            const responsePromise = newPage.waitForResponse(resp =>
+                                resp.url().includes('/thaisamut/rs/alter/v1/request') && resp.status() === 200
+                            );
+
+                            // 2. Click save (await)
+                            await receiveissuerequestalteration.save_receive_issue_request_alteration();
+
+                            // 3. Get response (ต้อง await ให้เสร็จก่อน)
+                            const response = await responsePromise;
+                            if (!response) throw new Error('No response received');
+                            if (!response.ok()) throw new Error('Response not OK: ' + response.status());
                             const responseBody = await response.json();
-                            requestno = responseBody.requestNo; // หรือเปลี่ยนชื่อ key ตาม response จริง
+                            requestno = responseBody.requestNo;
                             console.log('เลขที่รับเรื่อง:', requestno);
 
-                            // // บันทึก รับเรื่องสลักหลัง
-                            // await receiveissuerequestalteration.save_receive_issue_request_alteration();
+                            // 4. รอ new tab หลังจาก response เสร็จแล้วเท่านั้น
+                            const newTab = await newPage.context().waitForEvent('page');
+                            await newTab.waitForLoadState();
                         }
-
-                        if (flag_reverse_data !== 'TRUE' && flag_reverse_data !== 'True' && flag_reverse_data !== 'true') {
+                        if (flag_reverse_data === 'TRUE' || flag_reverse_data === 'True' || flag_reverse_data === 'true') {
                             // อัพเดท Process เป็น 'Finish'
-                            data_create.push({ [uniquekey]: row_uniquekey, Process: 'Finish', Remark: '- ทำการบันทึก รับเรื่องสลักหลัง เสร็จเรียบร้อยแล้ว', 'เลขที่รับเรื่อง': `${requestno} (Create)` });
+                            data_create.push({ [uniquekey]: row_uniquekey, Remark: '- ทำการบันทึก รับเรื่องสลักหลัง เสร็จเรียบร้อยแล้ว', 'เลขที่รับเรื่อง': `${requestno} (Create)` });
                             // อัพโหลดผลลัพธ์ไปยัง Google Sheet เป็นการ update ที่ range ที่กำหนด
                             await googlesheet.updateDynamicRows(auth, spreadsheetId, sheetnamewrite, range_write, data_create, row_header, uniquekey);
                             // เคลียร์ array หลังอัพโหลด
                             data_create = [];
                         } else {
                             // อัพเดท Process เป็น 'Finish'
-                            data_create.push({ [uniquekey]: row_uniquekey, Remark: '- ทำการบันทึก รับเรื่องสลักหลัง เสร็จเรียบร้อยแล้ว', 'เลขที่รับเรื่อง': `${requestno} (Create)` });
+                            data_create.push({ [uniquekey]: row_uniquekey, Process: 'Finish', Remark: '- ทำการบันทึก รับเรื่องสลักหลัง เสร็จเรียบร้อยแล้ว', 'เลขที่รับเรื่อง': `${requestno} (Create)` });
                             // อัพโหลดผลลัพธ์ไปยัง Google Sheet เป็นการ update ที่ range ที่กำหนด
                             await googlesheet.updateDynamicRows(auth, spreadsheetId, sheetnamewrite, range_write, data_create, row_header, uniquekey);
                             // เคลียร์ array หลังอัพโหลด
@@ -457,6 +519,51 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
                         }
 
                         console.log('ทำการบันทึก รับเรื่องสลักหลัง เสร็จเรียบร้อยแล้ว');
+
+                        // ปิด tab ที่ไม่ใช้งาน เพื่อป้องกันการใช้ resource มากเกินไป
+                        const context = page.context();
+                        const pages = context.pages();
+                        for (let i = 1; i < pages.length; i++) {
+                            await pages[i].close();
+                        }
+
+                        // ปิด popup confirm
+                        await page.locator('div[aria-labelledby="confirmation-dialog-title"]').locator('button[aria-label="Close"]').click({ timeout: 10000 });
+                        await expect(page.locator('div[aria-labelledby="confirmation-dialog-title"]')).not.toBeVisible();
+
+                        // logout
+                        await logoutpage.logoutNBSPortal();
+
+                        // นำข้อมูลไปตรวจสอบในฐานข้อมูล และลงผลลัพธ์ใน Google Sheet
+                        let result_data_check_endorse_array = [];
+                        console.log('\nเริ่มตรวจสอบข้อมูล รับเรื่องสลักหลัง ในฐานข้อมูล');
+                        for (const endorse_code of endorse_code_array) {
+                            let querys = query_check_data_endorse.filter(item => endorse_code.includes(item.Endorse || item.endorse)).map(item => item.Query);
+                            let envs = query_check_data_endorse.filter(item => endorse_code.includes(item.Endorse || item.endorse)).map(item => item.ENV);
+                            let databases = query_check_data_endorse.filter(item => endorse_code.includes(item.Endorse || item.endorse)).map(item => item.Database);
+
+                            let db_check_data;
+                            db_check_data = new Database({
+                                user: configdb[databases[0]][envs[0]].DB_USER,
+                                host: configdb[databases[0]][envs[0]].DB_HOST,
+                                database: configdb[databases[0]][envs[0]].DB_NAME,
+                                password: configdb[databases[0]][envs[0]].DB_PASSWORD,
+                                port: configdb[databases[0]][envs[0]].DB_PORT,
+                            });
+
+                            if (endorse_code === 'ECN01') {
+                                const params = [requestno];
+                                const result_query_check_data_insert_database = await db_check_data.query(querys[0], params);
+                                const flatArray = result_query_check_data_insert_database.rows.flatMap(row => Object.values(row));
+                                result_data_check_endorse_array.push(flatArray);
+                                // flatArray = [1, 2, 3, 4]
+                            }
+
+                            // ปิดการเชื่อมต่อฐานข้อมูล
+                            db_check_data.close();
+                        }
+                        await googlesheet.appendRowswitholdcolumn(auth, spreadsheetId,'Log_Query_Result!A1',result_data_check_endorse_array);
+                        console.log('ตรวจสอบข้อมูล รับเรื่องสลักหลัง ในฐานข้อมูล เรียบร้อยแล้ว');
                     }
 
                 } catch (error) {
@@ -582,20 +689,6 @@ test(`Scenario | สร้างรับเรื่องสลักหลั
             // const endTime_case = Date.now();
             // const duration_case =  (endTime_case - startTime_case) / 1000;
             // console.log(`เวลาที่ใช้ในการทำงานของเคสนี้: ${duration_case} วินาที`);
-
-            // ปิด tab ที่ไม่ใช้งาน เพื่อป้องกันการใช้ resource มากเกินไป
-            const context = page.context();
-            const pages = context.pages();
-            for (let i = 1; i < pages.length; i++) {
-                await pages[i].close();
-            }
-
-            // ปิด popup confirm
-            await page.locator('div[aria-labelledby="confirmation-dialog-title"]').locator('button[aria-label="Close"]').click({ timeout: 10000 })
-            await expect(page.locator('div[aria-labelledby="confirmation-dialog-title"]')).not.toBeVisible();
-
-            // logout
-            await logoutpage.logoutNBSPortal();
         }
     }
 

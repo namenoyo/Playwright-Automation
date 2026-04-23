@@ -3,6 +3,8 @@ const { fund_code_dictionary } = require('../../data/Unit_Linked/fund_code_dict.
 
 const { test, expect } = require('@playwright/test');
 
+import { chromium } from '@playwright/test';
+
 const { calculateYearsOnly } = require('../../utils/common.js');
 
 test('test investment order check', async ({ page }) => {
@@ -29,3 +31,12 @@ test('test investment order check', async ({ page }) => {
 
 });
 
+test('test chromium', async () => {
+    const browser = await chromium.launch({
+        channel: 'chrome',   // 👈 ใช้ Chrome ในเครื่อง
+        headless: false      // เปิด browser ให้เห็น
+    });
+
+    const page = await browser.newPage();
+    await page.goto('https://www.google.com');
+});

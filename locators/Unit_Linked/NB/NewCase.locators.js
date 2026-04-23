@@ -4,6 +4,7 @@ export const search_NewCase = (page) => ({
     newcase_inputAgentCode: page.locator('#searchCriteria_agentCode'),
     newcase_listAgentCode: (agentcode) => page.getByRole('option', { name: agentcode }),
     newcase_btnAddNewCase: page.locator('#searchCriteria_addNewCaseBtn'),
+    newcase_btnConfirmCustomerSave: page.locator('#searchCriteria_submitBtn'),
 });
 
 export const table_NewCase = (page) => ({
@@ -189,4 +190,10 @@ export const form_AddNewCase_Tab3 = (page) => ({
 export const form_AddNewCase_SaveDraft = (page) => ({
     newcase_formAddNewCase_btnSaveDraft: page.locator('#mainDialogId').getByRole('button', { name: 'บันทึกร่าง', exact: true }),
     newcase_formAddNewCase_popupSaveDraftSuccess: page.locator('#alert-dialog-model-id', { hasText: 'บันทึกข้อมูลเรียบร้อยแล้ว' }),
+});
+
+export const form_AddNewCase_Save = (page) => ({
+    newcase_formAddNewCase_btnSave: page.locator('#mainDialogId').getByRole('button', { name: 'บันทึก', exact: true }),
+    newcase_formAddNewCase_popupConfirmSave: page.locator('#show-cis-confirm-content'),
+    newcase_formAddNewCase_popupSaveSuccess: page.locator('div[class="yui3-widget-bd"]', { hasText: 'บันทึกข้อมูลเรียบร้อยแล้ว' }),
 });

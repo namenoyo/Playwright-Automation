@@ -47,21 +47,32 @@ test('Run MVY UL', async ({ page }) => {
     test.setTimeout(86400000); // 24 ชั่วโมง
 
     // ข้อมูลสำหรับทดสอบ
+    // Config Username และ Password สำหรับเข้าสู่ระบบ NBS
     const username = 'boss';
     const password = '1234';
     const policyno = 'UL00003036'; // เลขกรมธรรม์ที่ต้องการทดสอบ
+
+    // Config ENV 
     const env = 'SIT' // SIT / UAT
-    const fix_endloop = ''; // กำหนดจำนวนรอบที่ต้องการให้ทำงาน (ถ้าไม่ต้องการให้ทำงานแบบวนซ้ำ ให้กำหนดเป็นค่าว่าง '')
-    const auto_buyorder_Loyalty_Bonus = true; // กำหนดให้สร้างคำสั่งซื้ออัตโนมัติ สำหรับ กรณีเงินปันผลสะสม (Loyalty Bonus) เท่านั้น (true / false)
-    const auto_pay_bills = true; // กำหนดให้ชำระบิลอัตโนมัติ (true / false)
-    const skip_create_update_rv = false; // ข้ามการสร้าง/อัพเดท RV (true / false)
-    const skip_auto_pay_bills = false; // ข้ามการชำระบิลอัตโนมัติ (true / false)
-    const auto_pay_bills_count = 1; // จำนวนครั้งที่ต้องการจ่ายบิลอัตโนมัติ (กรณีทดสอบหลายรอบ)
     // connection database
     const db_name = 'coreul';
     const db_env = 'SIT_EDIT'; // SIT | SIT_EDIT / UAT | UAT_EDIT
 
+    const fix_endloop = ''; // กำหนดจำนวนรอบที่ต้องการให้ทำงาน (ถ้าไม่ต้องการให้ทำงานแบบวนซ้ำ ให้กำหนดเป็นค่าว่าง '')
+
+    // Config Loyalty Bonus
+    const auto_buyorder_Loyalty_Bonus = true; // กำหนดให้สร้างคำสั่งซื้ออัตโนมัติ สำหรับ กรณีเงินปันผลสะสม (Loyalty Bonus) เท่านั้น (true / false)
+    const stop_Loyalty_Bonus_after_create_rv = true; // หยุดการสร้างคำสั่งซื้ออัตโนมัติ สำหรับ กรณีเงินปันผลสะสม (Loyalty Bonus) หลังจากสร้าง RV แล้ว (true / false)
+    const skip_create_update_rv = false; // ข้ามการสร้าง/อัพเดท RV (true / false)
+
+    // Config Auto Pay Bills
+    const auto_pay_bills = true; // กำหนดให้ชำระบิลอัตโนมัติ (true / false)
+    const skip_auto_pay_bills = false; // ข้ามการชำระบิลอัตโนมัติ (true / false)
+    const auto_pay_bills_count = 1; // จำนวนครั้งที่ต้องการจ่ายบิลอัตโนมัติ (กรณีทดสอบหลายรอบ)
+
     const open_browser = false; // กำหนดให้เปิด browser เพื่อดูการทำงาน (true / false) ถ้าใช้งานบน QA Broker ให้ตั้งค่าเป็น true
+
+    const remarkcutoff_oper = 'UAT (QA)'
 
     // Login
     const loginPage = new LoginPage(page);
@@ -598,6 +609,11 @@ test('Run MVY UL', async ({ page }) => {
 
                                     check_create_rv_success = true;
                                 }
+                                if (stop_Loyalty_Bonus_after_create_rv === true) {
+                                    console.log('ทำการหยุดหลังจากสร้าง RV เนื่องจากตั้งค่า Stop Loyalty Bonus After Create RV');
+                                    endloop = 'Y';
+                                    return;
+                                }
                             }
                         }
                     }
@@ -692,9 +708,25 @@ test('Run MVY UL', async ({ page }) => {
 
                     while ((status_transaction === 'VR01' || status_transaction === 'VR02') && invoiceid_transaction === '0') {
 
+                        const transaction_date = result_check_transactionstatus.rows[0].ordrdt.toString().substring(0, 8);
+
                         // เช็คเลขธุรกรรม และ สถานะตรวจสอบคำสั่งซื้อ-ขาย สำหรับฝ่ายปฏิบัติการ
                         if (status_transaction === 'VR01' && invoiceid_transaction === '0') {
 
+                            //ตัด string เอาแค่ วันที่ 8 ตัวแรก
+                            const transaction_date = result_check_transactionstatus.rows[0].ordrdt.toString().substring(0, 8);
+
+                            console.log(`\nสร้างคำสั่งขาย oper เลขที่อ้างอิง: ${result_check_transactionstatus.rows[0].invoid}, วันที่สั่งซื้อขาย: ${transaction_date}, Transaction No: ${result_check_transactionstatus.rows[0].altnvc}`);
+
+                            // กด tab "รอสร้างคำสั่งขาย"
+                            await menubar_InvestmentOrderOper(page).investmentorderoper_btnWaitingforCreateOrder.click({ timeout: 60000 });
+                            // ค้นหาข้อมูลคำสั่งขาย
+                            await verifyInvestmentOrderBuyOperPage.search_verify_VerifyInvestmentOrderOper_Tab1({ date: transaction_date });
+                            // เลือก checkbox ตาม transaction no
+                            await verifyInvestmentOrderBuyOperPage.click_verify_VerifyInvestmentOrderOperCheckButton({ transactionno: result_check_transactionstatus.rows[0].altnvc });
+
+                            // สร้างคำสั่งขาย จากฝ่าย ปฏิบัติการ
+                            await verifyInvestmentOrderBuyOperPage.confirm_verify_VerifyInvestmentOrderOper_Tab1({ remarkcutoff_oper: remarkcutoff_oper });
 
                         } else if (status_transaction === 'VR02' && invoiceid_transaction === '0') {
 
@@ -707,7 +739,7 @@ test('Run MVY UL', async ({ page }) => {
                             // เลือก checkbox ตาม transaction no
                             await verifyInvestmentOrderSellOperPage.click_verify_VerifyInvestmentOrderOperCheckButton({ transactionno: result_check_transactionstatus.rows[0].altnvc });
                             // ยืนยันคำสั่งขาย จากฝ่าย ปฏิบัติการ
-                            await verifyInvestmentOrderSellOperPage.confirm_verify_VerifyInvestmentOrderOper();
+                            await verifyInvestmentOrderSellOperPage.confirm_verify_VerifyInvestmentOrderOper({ remarkcutoff_oper: remarkcutoff_oper});
                         }
 
                         // ดึงข้อมูลใหม่อีกครั้ง
@@ -808,25 +840,27 @@ test('Run MVY UL', async ({ page }) => {
 
                         while ((status_transaction === 'VR01' || status_transaction === 'VR02') && invoiceid_transaction === '0') {
 
+                            const transaction_date = recheck_result_check_transactionstatus_orderbuy.rows[0].ordrdt.toString().substring(0, 8);
+
                             // เช็คเลขธุรกรรม และ สถานะตรวจสอบคำสั่งซื้อ-ขาย สำหรับฝ่ายปฏิบัติการ
                             if (status_transaction === 'VR01' && invoiceid_transaction === '0') {
 
-                                console.log(`\nสร้างคำสั่งซื้อ oper เลขที่อ้างอิง: ${recheck_result_check_transactionstatus_orderbuy.rows[0].invoid}, วันที่สั่งซื้อขาย: ${recheck_result_check_transactionstatus_orderbuy.rows[0].ordrdt}, Transaction No: ${recheck_result_check_transactionstatus_orderbuy.rows[0].altnvc}`);
+                                console.log(`\nสร้างคำสั่งซื้อ oper เลขที่อ้างอิง: ${recheck_result_check_transactionstatus_orderbuy.rows[0].invoid}, วันที่สั่งซื้อขาย: ${transaction_date}, Transaction No: ${recheck_result_check_transactionstatus_orderbuy.rows[0].altnvc}`);
 
                                 // กด tab "รอสร้างคำสั่งซื้อ"
                                 await menubar_InvestmentBuyOrderOper(page).investmentorderoper_btnWaitingforCreateOrder.click({ timeout: 10000 });
                                 // ค้นหาข้อมูลคำสั่งซื้อ
-                                await verifyInvestmentOrderBuyOperPage.search_verify_VerifyInvestmentOrderOper_Tab1({ date: recheck_result_check_transactionstatus_orderbuy.rows[0].ordrdt });
+                                await verifyInvestmentOrderBuyOperPage.search_verify_VerifyInvestmentOrderOper_Tab1({ date: transaction_date });
                                 // เลือก checkbox ตาม transaction no
                                 await verifyInvestmentOrderBuyOperPage.click_verify_VerifyInvestmentOrderOperCheckButton({ transactionno: recheck_result_check_transactionstatus_orderbuy.rows[0].altnvc });
 
                                 // สร้างคำสั่งซื้อ จากฝ่าย ปฏิบัติการ
-                                await verifyInvestmentOrderBuyOperPage.confirm_verify_VerifyInvestmentOrderOper_Tab1();
+                                await verifyInvestmentOrderBuyOperPage.confirm_verify_VerifyInvestmentOrderOper_Tab1({ remarkcutoff_oper: remarkcutoff_oper });
 
                             } else if (status_transaction === 'VR02' && invoiceid_transaction === '0') {
 
                                 console.log(`\nตรวจสอบคำสั่งซื้อ oper เลขที่อ้างอิง: ${recheck_result_check_transactionstatus_orderbuy.rows[0].invoid}, วันที่สั่งซื้อขาย: ${recheck_result_check_transactionstatus_orderbuy.rows[0].ordrdt}, Transaction No: ${recheck_result_check_transactionstatus_orderbuy.rows[0].altnvc}`);
-
+                                
                                 // กด tab "ตรวจสอบและยืนยันคำสั่งซื้อประจำวัน"
                                 await menubar_InvestmentBuyOrderOper(page).investmentorderoper_btnVerifyInvestmentOrder.click({ timeout: 10000 });
                                 // ค้นหาข้อมูลคำสั่งซื้อ
@@ -834,7 +868,7 @@ test('Run MVY UL', async ({ page }) => {
                                 // เลือก checkbox ตาม transaction no
                                 await verifyInvestmentOrderBuyOperPage.click_verify_VerifyInvestmentOrderOperCheckButton({ transactionno: recheck_result_check_transactionstatus_orderbuy.rows[0].altnvc });
                                 // ยืนยันคำสั่งซื้อ จากฝ่าย ปฏิบัติการ
-                                await verifyInvestmentOrderBuyOperPage.confirm_verify_VerifyInvestmentOrderOper();
+                                await verifyInvestmentOrderBuyOperPage.confirm_verify_VerifyInvestmentOrderOper({ remarkcutoff_oper: remarkcutoff_oper });
 
                             }
 

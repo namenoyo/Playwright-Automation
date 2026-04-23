@@ -29,6 +29,7 @@ export class LoginPage {
         await this.page.fill(loginLocators.usernameInput, username);
         await this.page.fill(loginLocators.passwordInput, password);
         await this.page.click(loginLocators.buttonLogin);
+        await this.page.waitForLoadState('networkidle');
     }
 }
 
@@ -39,12 +40,14 @@ export class LoginPageSPLife {
 
     async gotoSPLife() {
         await this.page.goto('https://sp-life-sit.ochi.link/thaisamut/pub/splife/login.html');
+        await this.page.waitForLoadState('networkidle');
     }
 
     async login(username, password) {
         await this.page.fill(loginLocatorsSPLife.usernameInput, username);
         await this.page.fill(loginLocatorsSPLife.passwordInput, password);
         await this.page.click(loginLocatorsSPLife.buttonLogin);
+        await this.page.waitForLoadState('networkidle');
     }
 }
 

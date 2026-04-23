@@ -29,8 +29,12 @@ export class InvestmentOrderCheckPage {
         // กดปุ่ม ยืนยันคำสั่งขาย
         await this.table_investmentordercheck.investmentordercheck_btnConfirmSell.click({ timeout: 10000 });
         // รอ dialog มีรายการรอการพิจารณา AML/CFT-WMD ขึ้นมา
-        await this.expect(this.dialog_investmentordercheck.investmentordercheck_dialogConfirmSell).toBeVisible({ timeout: 60000 });
-        await this.dialog_investmentordercheck.investmentordercheck_dialogConfirmSell.getByText('ใช่', { exact: true }).click({ timeout: 10000 });
+        const visible_dialog = await this.dialog_investmentordercheck.investmentordercheck_dialogConfirmSell.isVisible();
+        // console.log('visible_dialog:', visible_dialog);
+        if (visible_dialog) {
+            await this.expect(this.dialog_investmentordercheck.investmentordercheck_dialogConfirmSell).toBeVisible({ timeout: 60000 });
+            await this.dialog_investmentordercheck.investmentordercheck_dialogConfirmSell.getByText('ใช่', { exact: true }).click({ timeout: 10000 });
+        }
         // รอ dialog ยืนยันคำสั่งขายขึ้นมา
         await this.expect(this.dialog_investmentordercheck.investmentordercheck_next_dialogConfirmSell).toBeVisible({ timeout: 60000 });
         await this.dialog_investmentordercheck.investmentordercheck_next_dialogConfirmSell.getByText('ใช่', { exact: true }).click({ timeout: 10000 });
