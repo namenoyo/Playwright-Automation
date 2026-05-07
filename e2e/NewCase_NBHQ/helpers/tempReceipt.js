@@ -279,12 +279,26 @@ await page.goto(borrowUrl, {
 
   await scanInput.click();
   await scanInput.fill(tempReceiptNo);
-  await scanInput.press('Enter');
+
+  // รอข้อมูล
+  const [enter_temp_receipt] = await Promise.all([
+    page.waitForResponse(res =>
+      res.url().includes('/nbsweb/secure/receipt/borrow/v3-borrow-list2.html') && res.status() === 200
+    ),
+    await scanInput.press('Enter')
+  ]);
 
   await page.waitForTimeout(800);
 
-  const okBtn = page.locator('#btok');
-  await okBtn.waitFor({ state: 'visible', timeout: 15000 });
+  // const okBtn = await page.locator('#btok');
+  // await okBtn.waitFor({ state: 'visible', timeout: 15000 });
+  // await okBtn.click();
+  await page.on('dialog', async dialog => {
+    console.log('Dialog message:', dialog.message());
+
+    await dialog.accept();
+  });
+  await page.locator('#btok').click();
 
   const savePromise = page.waitForResponse(
     res =>
@@ -293,7 +307,7 @@ await page.goto(borrowUrl, {
     { timeout: 30000 }
   ).catch(() => null);
 
-  await okBtn.click();
+  
   await savePromise;
 
   await page.waitForTimeout(1000);

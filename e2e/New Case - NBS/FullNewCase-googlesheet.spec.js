@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 const { GoogleSheet } = require('../../utils/google-sheet-OAuth.helper');
 
+const { generateTempReceipt } = require('../../e2e/NewCase_NBHQ/helpers/tempReceipt');
+
 const pdfParse = require('pdf-parse');
 
 const Result = [];
@@ -39,10 +41,6 @@ test(`บันทึกเคสใหม่แบบออกกรม์`, as
 
     // เตรียมตัวแปรเก็บผลลัพธ์
     let data_create = [];
-
-    await test.step('เก็บตัวแปรทั้งหมด', async () => {
-
-    });
 
     // ชื่อ header key สำหรับการอ้างอิงข้อมูล
     const uniquekey = 'No';
@@ -127,6 +125,23 @@ test(`บันทึกเคสใหม่แบบออกกรม์`, as
 
     if (teststatus === 'Ready for Test' || teststatus === 'Ready for Retest' || teststatus === 'Inprogress') {
       try {
+
+        // เช็คว่ามีใบรับเงินชั่วคราวหรือยัง ถ้ายังไม่มีให้ทำ process ขอใบขอรับเงินชั่วคราว
+        if (temporaryReceipt === '') {
+          const tempno = await generateTempReceipt(page, { 
+            environment: system,
+            branch: username,
+            agentCode: agentCode 
+          });
+
+          // อัพเดท Status เป็น In Progress
+          data_create.push({ [uniquekey]: row_uniquekey, ["เลขใบรับเงินชั่วคราว"]: tempno });
+          // อัพโหลดผลลัพธ์ไปยัง Google Sheet เป็นการ update ที่ range ที่กำหนด
+          await googlesheet.updateDynamicRows(auth, spreadsheetId, sheetnamewrite, range_write, data_create, row_header, uniquekey);
+          // เคลียร์ array หลังอัพโหลด
+          data_create = [];
+
+        }
 
         // อัพเดท Status เป็น In Progress
         data_create.push({ [uniquekey]: row_uniquekey, ["Test Status"]: 'Inprogress', Remark: '' });
@@ -694,10 +709,10 @@ test(`บันทึกเคสใหม่แบบออกกรม์`, as
           // เติม 0 ด้านหน้าให้ครบ 8 หลัก
           documentNo = documentNo.padStart(8, '0');
 
-          // console.log('เลขที่:', documentNo);
+          console.log('เลขที่:', documentNo);
 
-          // // ปิด tab
-          // await newPage.close();
+          // ปิด tab
+          await newPage.close();
 
           // อัพเดท Status เป็น Done
           data_create.push({ [uniquekey]: row_uniquekey, ["เลขรับฝาก"]: documentNo });
