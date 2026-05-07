@@ -420,7 +420,7 @@ if (!claimed) {
      
       const tempNo = String(finalData.tempReceiptNo || '').trim();
 
-if (!tempNo) {
+if (!tempNo && policyType === 'ORD') {  //จะเข้าโฟลวเบิกใบรับเงินชั่วคราวต่อเมื่อเป็น ORD
   console.log('⚠️ tempReceiptNo ว่าง → run generate flow');
 
   const generatedTempReceiptNo = await generateTempReceipt(page, finalData);
@@ -1700,7 +1700,6 @@ else if  // ===== FLOW PA รหัสใบคำขอ PST-P08-0012 =====
   await mandatoryFillTab(page, currentProvince, '#currentProvinceCode', 'ที่อยู่ปัจจุบัน-จังหวัด');
   await mandatoryFillTab(page, currentDistrict, '#currentDistrictCode', 'ที่อยู่ปัจจุบัน-อำเภอ/เขต'); 
   await mandatoryFillTab(page, currentSubDistrict, '#currentSubDistrictCode', 'ที่อยู่ปัจจุบัน-ตำบล/แขวง');
-
   }
 
   // // =============
@@ -1833,8 +1832,8 @@ else if  // ===== FLOW PA รหัสใบคำขอ PST-P08-0012 =====
     
     //   await page.waitForTimeout(500);
     // }
-  await mandatoryFill(page, emailVal, '#currentEmail', 'อีเมลปัจจุบัน');
-  await mandatoryFill(page, emailVal, '#registerEmail', 'อีเมล ทะเบียนบ้าน');
+  await mandatoryFill(page, email, '#currentEmail', 'อีเมลปัจจุบัน');
+  await mandatoryFill(page, email, '#registerEmail', 'อีเมล ทะเบียนบ้าน');
 
     if (paperOrElectronic === 'Paper') {
       // Category รูปแบบกรมธรรม์
@@ -1928,22 +1927,146 @@ else if  // ===== FLOW PA รหัสใบคำขอ PST-P08-0012 =====
 
     //แบบประกันปกติ
     else {
-      await page.getByRole('textbox', { name: 'ชื่อแบบประกันภัย *' }).click();
-      await page.getByRole('textbox', { name: 'ชื่อแบบประกันภัย *' }).type(policyName, { delay: 100 });
+      // await page.getByRole('textbox', { name: 'ชื่อแบบประกันภัย *' }).click();
+      // await page.getByRole('textbox', { name: 'ชื่อแบบประกันภัย *' }).type(policyName, { delay: 100 });
+      // await page.waitForTimeout(1000);
+      // await page.getByRole('textbox', { name: 'ชื่อแบบประกันภัย *' }).press('Tab');
+      // await page.waitForTimeout(1000);
+
+      const policyNameInput = page.getByRole('textbox', {  name: 'ชื่อแบบประกันภัย *',  });
+
+      await policyNameInput.click();
+
+      await policyNameInput.fill('');
+
+      await policyNameInput.type(policyName, {
+        delay: 100,
+      });
+
       await page.waitForTimeout(1000);
-      await page.getByRole('textbox', { name: 'ชื่อแบบประกันภัย *' }).press('Tab');
+
+      await policyNameInput.press('Tab');
+
       await page.waitForTimeout(1000);
+
+      // ✅ verify react-select
+    let actualPolicyName = await policyNameInput
+  .inputValue()
+  .catch(() => '');
+
+if (!String(actualPolicyName || '').trim()) {
+  const policyContainer = policyNameInput.locator(
+    'xpath=ancestor::div[contains(@class,"container")][1]'
+  );
+
+  actualPolicyName = await policyContainer
+    .locator('div[class*="singleValue"]')
+    .first()
+    .innerText()
+    .catch(() => '');
+  }
+  
+  actualPolicyName = String(actualPolicyName || '').trim();
+  
+  console.log('🔎 policyName actual =', actualPolicyName);
+  
+  if (!actualPolicyName) {
+    throw new Error(
+      `❌ ชื่อแบบประกันภัยไม่ถูกเลือกหรือ fill ไม่สำเร็จ: ${policyName}`
+    );
+  }
       // await expect(page.getByText('กรุณารอสักครู่...')).toBeVisible({ timeout: 60000 });
       // await expect(page.getByText('กรุณารอสักครู่...')).not.toBeVisible({ timeout: 60000 });
 
       await waitOptionalLoading(page);
 
-      await page.getByRole('textbox', { name: 'ทุนประกันภัย *' }).type(insuredAmount, { delay: 100 });
+      // await page.getByRole('textbox', { name: 'ทุนประกันภัย *' }).type(insuredAmount, { delay: 100 });
+      // await page.waitForTimeout(1000);
+      // await page.getByRole('textbox', { name: 'ทุนประกันภัย *' }).press('Tab');
+      //===================
+      // ระบุทุนประกันภัย 
+      //==================
+      const insuredAmountRaw = String(insuredAmount || '').trim();
+
+      // ✅ ลบทุกอย่างที่ไม่ใช่ตัวเลข
+      const insuredAmountNumber = Number(
+        insuredAmountRaw.replace(/[^\d]/g, '')
+      );
+
+      // ✅ format กลับเป็น comma
+      const insuredAmountFormatted =
+        insuredAmountNumber.toLocaleString('en-US');
+
+      console.log('💰 insuredAmountFormatted =', insuredAmountFormatted);
+
+      const insuredAmountInput = page.getByRole('textbox', {
+        name: 'ทุนประกันภัย *',
+      });
+
+      await insuredAmountInput.click();
+
+      await insuredAmountInput.fill('');
+
+      await insuredAmountInput.type(
+        insuredAmountFormatted,
+        { delay: 100 }
+      );
+
       await page.waitForTimeout(1000);
-      await page.getByRole('textbox', { name: 'ทุนประกันภัย *' }).press('Tab');
-      
+
+      await insuredAmountInput.press('Tab');
+      //===================
+
       await waitOptionalLoading(page);
 
+      //===================
+      // ระบุทุดชดเชย
+      //==================
+      // const premiumVal = String(premium || '').trim();
+
+      // const compensationInput = page.getByRole('textbox', {
+      //   name: 'ทุนชดเชย *',
+      // });
+
+      // if (premiumVal !== '') {
+
+      //   await compensationInput.click();
+
+      //   // ===== กรณี Any =====
+      //   if (premiumVal.toLowerCase() === 'any') {
+
+      //     console.log('ℹ️ premium = Any → เลือกรายการแรก');
+
+      //     await page.waitForTimeout(500);
+
+      //     await page.keyboard.press('ArrowDown');
+      //     await page.waitForTimeout(300);
+
+      //     await page.keyboard.press('Enter');
+      //     await page.waitForTimeout(500);
+
+      //   }
+
+      //   // ===== กรณีมีค่าปกติ =====
+      //   else {
+
+      //     await compensationInput.type(premiumVal, {
+      //       delay: 100,
+      //     });
+
+      //     await page.waitForTimeout(1000);
+
+      //     await compensationInput.press('Tab');
+      //   }
+      // }
+      // else {
+
+      //   console.log('ℹ️ ไม่มีการระบุทุนชดเชย');
+
+      // }
+      //===================
+      // ระบุทุดชดเชย
+      //==================
       const premiumVal = String(premium || '').trim();
 
       const compensationInput = page.getByRole('textbox', {
@@ -1952,40 +2075,92 @@ else if  // ===== FLOW PA รหัสใบคำขอ PST-P08-0012 =====
 
       if (premiumVal !== '') {
 
-        await compensationInput.click();
+  // ✅ เช็ค disabled/readOnly
+  const isDisabledOrReadonly = await compensationInput.evaluate(el => {
+    return el.disabled || el.readOnly;
+  }).catch(() => false);
 
-        // ===== กรณี Any =====
-        if (premiumVal.toLowerCase() === 'any') {
+  // ✅ อ่านค่าปัจจุบัน
+  let currentValue = await compensationInput
+    .inputValue()
+    .catch(() => '');
 
-          console.log('ℹ️ premium = Any → เลือกรายการแรก');
+  // ✅ fallback สำหรับ react-select
+  if (!String(currentValue || '').trim()) {
 
-          await page.waitForTimeout(500);
+    const compensationContainer = compensationInput.locator(
+      'xpath=ancestor::div[contains(@class,"css-1phiq9s-container")][1]'
+    );
 
-          await page.keyboard.press('ArrowDown');
-          await page.waitForTimeout(300);
+    currentValue = await compensationContainer
+      .locator('div[class*="singleValue"]')
+      .first()
+      .innerText()
+      .catch(() => '');
+  }
 
-          await page.keyboard.press('Enter');
-          await page.waitForTimeout(500);
+  currentValue = String(currentValue || '').trim();
 
-        }
+  // ✅ ถ้ามีค่าอยู่แล้ว หรือ disabled → ข้าม
+  if (
+    isDisabledOrReadonly ||
+    currentValue !== ''
+  ) {
 
-        // ===== กรณีมีค่าปกติ =====
-        else {
+    console.log(
+      `ℹ️ ข้ามทุนชดเชย | disabled=${isDisabledOrReadonly} | current="${currentValue}"`
+    );
 
-          await compensationInput.type(premiumVal, {
-            delay: 100,
-          });
+  } else {
 
-          await page.waitForTimeout(1000);
+    await compensationInput.click();
 
-          await compensationInput.press('Tab');
-        }
-      }
-      else {
+    // ===== กรณี Any =====
+    if (premiumVal.toLowerCase() === 'any') {
 
-        console.log('ℹ️ ไม่มีการระบุทุนชดเชย');
+      console.log('ℹ️ premium = Any → เลือกรายการแรก');
 
-}
+      await page.waitForTimeout(500);
+
+      await page.keyboard.press('ArrowDown');
+      await page.waitForTimeout(300);
+
+      await page.keyboard.press('Enter');
+
+      await page.waitForTimeout(500);
+
+    }
+
+    // ===== กรณีมีค่าปกติ =====
+    else {
+
+      // ✅ normalize ตัวเลข
+      const premiumNumber = Number(
+        premiumVal.replace(/[^\d]/g, '')
+      );
+
+      // ✅ format comma
+      const premiumFormatted =
+        premiumNumber.toLocaleString('en-US');
+
+      console.log('💰 premiumFormatted =', premiumFormatted);
+
+      await compensationInput.fill('');
+
+      await compensationInput.type(
+        premiumFormatted,
+        { delay: 100 }
+      );
+
+      await page.waitForTimeout(1000);
+
+      await compensationInput.press('Tab');
+    }
+  }
+    }
+    else {
+  console.log('ℹ️ ไม่มีการระบุทุนชดเชย');
+    }
       // await page.waitForTimeout(3000);
       // await expect(page.getByText('กรุณารอสักครู่...')).toBeVisible({ timeout: 60000 });
       // await expect(page.getByText('กรุณารอสักครู่...')).not.toBeVisible({ timeout: 60000 });
@@ -1996,187 +2171,16 @@ else if  // ===== FLOW PA รหัสใบคำขอ PST-P08-0012 =====
       // await page.getByRole('textbox', { name: 'งวดการชำระ *' }).press('Tab');
       // await page.waitForTimeout(1000);
       //แบบประกันหายเลือกกดอีกครั้ง
-      await page.getByRole('textbox', { name: 'ชื่อแบบประกันภัย *' }).click();
-      await page.getByRole('textbox', { name: 'ชื่อแบบประกันภัย *' }).type(policyName, { delay: 100 });
-      await page.waitForTimeout(1000);
-      await page.getByRole('textbox', { name: 'ชื่อแบบประกันภัย *' }).press('Tab');
-      await page.waitForTimeout(1000);
+      // await page.getByRole('textbox', { name: 'ชื่อแบบประกันภัย *' }).click();
+      // await page.getByRole('textbox', { name: 'ชื่อแบบประกันภัย *' }).type(policyName, { delay: 100 });
+      // await page.waitForTimeout(1000);
+      // await page.getByRole('textbox', { name: 'ชื่อแบบประกันภัย *' }).press('Tab');
+      // await page.waitForTimeout(1000);
     }
     console.log("Pass Main Insurance")
     const elapsedSec5 = ((Date.now() - startTime) / 1000).toFixed(2);
     console.log(`⏱️ ใช้เวลาไป ${elapsedSec5}s`);
-    //A18 พัง
-    // await page.getByRole('textbox', { name: 'งวดการชำระ *' }).click();
-    // await page.getByRole('textbox', { name: 'งวดการชำระ *' }).fill(paymentPeriod);
-    // await page.getByRole('textbox', { name: 'งวดการชำระ *' }).press('Tab');
-    //await page.waitForTimeout(5000);
-
-
     
-    // เก็บจำนวนสัญญาเพิ่มเติม
-  // let addedRiderCount = 0;
-
-  // // 🔥 check ปุ่มเพิ่ม rider ก่อน
-  // const addRiderBtn = page.getByRole('button', { name: 'เพิ่มสัญญาเพิ่มเติม', exact: true });
-
-  // if (riderList.length > 0) {
-  // const isVisible = await addRiderBtn.isVisible().catch(() => false);
-
-  // if (!isVisible) {
-  //   throw new Error(
-  //     `❌ ต้องมี Rider (${riderList.length}) แต่ไม่พบปุ่ม "เพิ่มสัญญาเพิ่มเติม"`
-  //     );
-  //   }
-  // }
-
-  // // เริ่มทำการ loop เพิ่มสัญญาเพิ่มเติมตามข้อมูลจาก write-result.js > buildRiders()
-  // for (const rider of riderList) {
-  // const riderName = String(rider.riderName || rider.riderCode || '').trim();
-  // const riderAmount = String(rider.riderCoverage || rider.riderPremium || '').trim();
-
-  // if (!riderName) {
-  //   throw new Error(`❌ Rider ไม่มีชื่อ: ${JSON.stringify(rider)}`);
-  // }
-
-  // if (!riderAmount) {
-  //   throw new Error(`❌ Rider ${riderName} ไม่มีทุนหรือเบี้ย`);
-  // }
-
-  // // 🔥 check ปุ่มทุกครั้งก่อนกด (กัน UI bug)
-  // const addRiderBtn = page.getByRole('button', { name: 'เพิ่มสัญญาเพิ่มเติม', exact: true });
-
-  // if (!(await addRiderBtn.isVisible().catch(() => false))) {
-  //   throw new Error(`❌ ปุ่มเพิ่ม Rider หายระหว่างทำงาน (rider=${riderName})`);
-  // }
-
-  // await page.waitForTimeout(1500);
-  // await addRiderBtn.click();
-
-  // const riderNameInput = page.getByRole('textbox', { name: 'ชื่อสัญญาเพิ่มเติม *' });
-  // await riderNameInput.click();
-  // await riderNameInput.fill(riderName);
-  // await riderNameInput.press('Tab');
-
-  // // await page.waitForTimeout(1000);
-  // // await page.getByText('กรุณาเลือก').click();
-
-  // await page.waitForTimeout(1000);
-
-  // try {
-
-  // await page.getByText('กรุณาเลือก').click({
-  //   timeout: 10000,
-  // });
-
-  // } catch (err) {
-
-  // throw new Error(
-  //   `❌ Rider ${riderName} เลือกทุน/แผนความคุ้มครองไม่สำเร็จ ภายใน 10 วินาที`
-  // );
-  // }
-
-  // // const riderAmountInput = page.getByRole('textbox', {
-  // //   name: 'ทุนประกันภัย/แผนความคุ้มครอง *',
-  // // });
-
-  // // await riderAmountInput.click();
-  // // await riderAmountInput.fill(riderAmount);
-  // // await riderAmountInput.press('Tab');
-
-  // const riderAmountInput = page.getByRole('textbox', {
-  // name: 'ทุนประกันภัย/แผนความคุ้มครอง *',
-  // });
-
-  // // await riderAmountInput.click();
-
-  // try {
-
-  // await riderAmountInput.click({
-  //   timeout: 10000,
-  // });
-
-  // } catch (err) {
-
-  // throw new Error(
-  //   `❌ Rider ${riderName} ไม่เลือกทุนประกันภัย/แผนความคุ้มครองได้ ภายใน 10 วินาที`
-  // );
-  // }
-
-  // if (riderAmount.toLowerCase() === 'any') {
-
-  // console.log(`ℹ️ Rider ${riderName} ใช้ Any → เลือกรายการแรกจาก dropdown`);
-
-  // await page.waitForTimeout(500);
-
-  // await page.keyboard.press('ArrowDown');
-  // await page.waitForTimeout(300);
-
-  // await page.keyboard.press('Enter');
-  // await page.waitForTimeout(500);
-
-  // } else {
-
-  // await riderAmountInput.fill(riderAmount);
-  // await riderAmountInput.press('Tab');
-
-  // }
-
-
-  // await page.waitForTimeout(1500);
-
-  // const addBtn = page.getByRole('button', { name: 'เพิ่ม' });
-
-  // // ✅ รอให้ปุ่ม เพิ่ม กดได้ ภายใน 10 วิ
-  // try {
-  // await addBtn.waitFor({
-  //   state: 'visible',
-  //   timeout: 10000,
-  // });
-
-  // await expect(addBtn).toBeEnabled({
-  //   timeout: 10000,
-  // });
-
-  // } catch {
-  // throw new Error(
-  //   `❌ ไม่สามารถกด เพิ่ม Rider ${riderName} คาดว่าหาทุนไม่พบ`
-  // );
-  // }
-
-  // // await addBtn.click();
-  // // await page.waitForTimeout(1000);
-
-  // // addedRiderCount++;
-
-  // await addBtn.click();
-  // await page.waitForTimeout(1000);
-
-  // // ✅ ถ้ากดเพิ่มแล้ว dialog ยังไม่ปิด + มี error สีแดง แปลว่าเพิ่ม Rider ไม่สำเร็จ
-  // const riderDialogStillOpen = await page
-  // .getByText('สัญญาเพิ่มเติม', { exact: true })
-  // .isVisible()
-  // .catch(() => false);
-
-  // const riderCoverageError = await page
-  // .getByText('กรุณาระบุ ทุนประกันภัย/แผนความคุ้มครอง')
-  // .isVisible()
-  // .catch(() => false);
-
-  // if (riderDialogStillOpen && riderCoverageError) {
-  // throw new Error(
-  //   `❌ Rider ${riderName} เพิ่มไม่สำเร็จ: ไม่พบทุนประกันภัย/แผนความคุ้มครอง หรือไม่ได้เลือกทุน`
-  // );
-  // }
-
-  // // ✅ กันเคส dialog ยังเปิดค้าง แม้ไม่เจอข้อความ error
-  // if (riderDialogStillOpen) {
-  // throw new Error(
-  //   `❌ Rider ${riderName} เพิ่มไม่สำเร็จ: หน้าต่างสัญญาเพิ่มเติมยังไม่ปิดหลังจากกดเพิ่ม`
-  // );
-  // }
-
-  // addedRiderCount++;
-  // }
     console.log("Pass Rider")
     const elapsedSec6 = ((Date.now() - startTime) / 1000).toFixed(2);
     console.log(`⏱️ ใช้เวลาไป ${elapsedSec6}s`);
@@ -2198,43 +2202,7 @@ else if  // ===== FLOW PA รหัสใบคำขอ PST-P08-0012 =====
       const insuSpePremium = parseFloat(draftPremium3[insuMainIndex + 8]?.replace(/,/g, '')) || 0;
       const insuCommis = draftPremium3[insuMainIndex + 12];
 
-      // // ✅ รวมเบี้ยหลักกับเบี้ยพิเศษหลักก่อน
-      // filledPay = insuPremium + insuSpePremium;
-      // const riderConfigsForCheck = [...riderList];
-
-  // if (policyName.includes('โอเชี่ยนไลฟ์ โอชิ แพลน 18/10')) {
-  // riderConfigsForCheck.unshift({
-  //   riderName: 'CPA.2.13',
-  //   riderCoverage: '10000',
-  // });
-  // }
-
-  // const displayedRiders = [];
-  // let lastRiderIndex = insuMainIndex;
-
-  // for (const riderConfig of riderConfigsForCheck) {
-  //       const riderNameIndex = draftPremium3.findIndex((text, index) => {
-  //         // ค้นหาข้อความชื่อ rider ที่อยู่หลังจากตำแหน่งของ rider ตัวล่าสุด
-  //         return index > lastRiderIndex && text.includes(riderConfig.riderName);
-  //       });
-
-  //       if (riderNameIndex !== -1) {
-  //         const riderPremium = parseFloat(draftPremium3[riderNameIndex + 6]?.replace(/,/g, '')) || 0;
-  //         const riderSpePremium = parseFloat(draftPremium3[riderNameIndex + 8]?.replace(/,/g, '')) || 0;
-
-  //         const rider = {
-  //           name: draftPremium3[riderNameIndex],
-  //           money: draftPremium3[riderNameIndex + 4],
-  //           premium: riderPremium,
-  //           spePremium: riderSpePremium,
-  //           commis: draftPremium3[riderNameIndex + 12],
-  //         };
-  //         displayedRiders.push(rider);
-  //         lastRiderIndex = riderNameIndex;
-  //         // ✅ รวมเบี้ยของ Rider ทุกตัวด้วย
-  //         filledPay += riderPremium + riderSpePremium;
-  //       }
-  //     }
+      
 
       // ค้นหา index ของข้อความ "รวมทั้งหมด"
       const premiumPayKeywordIndex = draftPremium3.findIndex((text, index) => {
@@ -2253,16 +2221,6 @@ else if  // ===== FLOW PA รหัสใบคำขอ PST-P08-0012 =====
       console.log(`เบี้ยประกันภัยหลัก: ${insuPremium}`);
       console.log(`เบี้ยเพิ่มพิเศษหลัก: ${insuSpePremium}`);
       console.log(`ค่าบำเหน็จหลัก: ${insuCommis}`);
-     
-  //       console.log(`จำนวนสัญญาเพิ่มเติมทั้งหมด: ${displayedRiders.length} รายการ`);
-  // displayedRiders.forEach((rider, index) => {
-  //         console.log(`Rider ตัวที่ ${index + 1}: ${rider.name}`);
-  //         console.log(`  - จำนวนเงินเอาประกันภัย: ${rider.money}`);
-  //         console.log(`  - เบี้ยประกันภัย: ${rider.premium}`);
-  //         console.log(`  - เบี้ยเพิ่มพิเศษ: ${rider.spePremium}`);
-  //         console.log(`  - ค่าบำเหน็จ: ${rider.commis}`);
-  //       });
-  //       console.log('-------------------------------');
       console.log(`ค่า Premium ที่ชำระที่ยังไม่รวมเบี้ยเพิ่มพิเศษ: ${premiumPay}`);
       console.log(`✅ รวมเบี้ยทั้งหมด (filledPay) คือค่าเบี้ย หลัก บวก rider ที่ซื้อเท่านั้น ไม่ได้คิด bundle ที่แถมมา: ${filledPay}`);
     } else {
@@ -2272,142 +2230,7 @@ else if  // ===== FLOW PA รหัสใบคำขอ PST-P08-0012 =====
     const elapsedSec7 = ((Date.now() - startTime) / 1000).toFixed(2);
     console.log(`⏱️ ใช้เวลาไป ${elapsedSec7}s`);
     console.log('-------------------------------');
-    //Error Premium Check
-    //const cells = await page.$$eval('td.MuiTableCell-root.MuiTableCell-body', els => els.map(e => e.innerText));
-    //console.log(JSON.stringify(cells, null, 2));
-
-    //แสดงแค่บางอัน 290 more items
-    //const supermapone = await page.locator('td.MuiTableCell-body.MUIDataTableBodyCell-root-58').allTextContents();
-    //console.log('ค่าเบี้ยทั้งหมด:td.MuiTableCell-root.MuiTableCell-body.MUIDataTableBodyCell-root-58', supermapone);
-
-  // =============
-  // Category การชำระเบี้ยประกันภัย
-  // =============
-   
-  const payerTypeVal = String(payerType || '').trim();
-
-  let payerValue = '';
-
-  if (payerTypeVal === 'ชำระเอง') {
-  payerValue = '1';
-  // } else if (payerTypeVal === 'ผู้อื่น(โปรดระบุรายละเอียด)') {
-  } else if (payerTypeVal === 'ผู้อื่น') {
-  payerValue = '2';
-  } else {
-  throw new Error(`❌ payerType ไม่ถูกต้อง: ${payerTypeVal}`);
-  }
-
-  const payerInput = page.locator(`input[name="payerCode"][value="${payerValue}"]`);
-  await payerInput.waitFor({ state: 'attached', timeout: 5000 });
-
-  // ใช้ evaluate เป็นตัวจบ เพราะ MUI click แล้ว state ไม่เปลี่ยน
-  await page.evaluate((val) => {
-  const el = document.querySelector(`input[name="payerCode"][value="${val}"]`);
-  if (!el) throw new Error(`ไม่พบ payerCode value=${val}`);
-
-  el.click();
-  el.checked = true;
-  el.dispatchEvent(new Event('input', { bubbles: true }));
-  el.dispatchEvent(new Event('change', { bubbles: true }));
-  }, payerValue);
-
-  await page.waitForTimeout(300);
-
-  if (!(await payerInput.isChecked())) {
-  throw new Error(`❌ เลือก payerType ไม่สำเร็จ: ${payerTypeVal}`);
-  }
-
-  console.log(`✅ เลือก payerType: ${payerTypeVal}`);
-
-
-  // ==================================================
-  // 🔥 กรณี "ผู้อื่น" → กรอกข้อมูลเพิ่ม
-  // ==================================================
-  if (payerValue === '2') {
-
-  console.log('👤 payerType = ผู้อื่น → กรอกข้อมูลผู้ชำระเบี้ย');
-
-  // ===== ผู้ชำระเบี้ยประกันภัย-คำนำหน้า =====
-  await optionalFillTab(page, payerPrefix, '#payerTitleCode', 'ผู้ชำระเบี้ยประกันภัย-คำนำหน้า');
-  await optionalFill(page, payerName, '#payerName', 'ผู้ชำระเบี้ยประกันภัย-ชื่อ');
-  await optionalFill(page, payerSurname, '#payerSurname', 'ผู้ชำระเบี้ยประกันภัย-นามสกุล');
-  await optionalFill(page, payerAge, '#payerAge', 'ผู้ชำระเบี้ยประกันภัย-อายุ');
-  await mandatoryFillTab(page, payerUseAddressType, '#useAddressTypeCode', 'ผู้ชำระเบี้ยประกันภัย-ใช้ตามที่อยู่');
-  await optionalFill(page, payerHouseNo, '#houseNo', 'ผู้ชำระเบี้ยประกันภัย-เลขที่');
-  await optionalFill(page, payerMoo, '#village', 'ผู้ชำระเบี้ยประกันภัย-หมู่ที่');
-  await optionalFill(page, payerVillage, '#building', 'ผู้ชำระเบี้ยประกันภัย-หมู่บ้าน/อาคาร');
-  await optionalFill(page, payerSoi, '#alley', 'ผู้ชำระเบี้ยประกันภัย-ตรอก/ซอย');
-  await optionalFill(page, payerRoad, '#road', 'ผู้ชำระเบี้ยประกันภัย-ถนน');
-  await mandatoryFillTab(page, payerProvince, '#provinceCode', 'ผู้ชำระเบี้ยประกันภัย-จังหวัด');
-  await optionalFillTab(page, payerDistrict, '#districtCode', 'ผู้ชำระเบี้ยประกันภัย-อำเภอ/เขต');
-  await optionalFillTab(page, payerSubDistrict, '#subDistrictCode', 'ผู้ชำระเบี้ยประกันภัย-ตำบล/แขวง');
-  await optionalFillTab(page, payerMobile, '#section-payment #mobileNo', 'ผู้ชำระเบี้ยประกันภัย-โทรศัพท์มือถือ');
-  await optionalFillTab(page, payerRelation, '#relationCode', 'ความสัมพันธ์กับผู้ขอเอาประกัน');
-  await page.waitForTimeout(500);
-  // ===== ผู้ชำระเบี้ยประกันภัย-เอกสารที่ใช้แสดง =====
-  await optionalFillTab(page, payerDocument, '#section-payment #documentCode', 'ผู้ชำระเบี้ยประกันภัย-เอกสารที่ใช้แสดง');
-  // ===== ผู้ชำระเบี้ยประกันภัย-เลขที่บัตร =====
-  await optionalFillTab(page, payerCardNo, '#section-payment #cardNo', 'ผู้ชำระเบี้ยประกันภัย-เลขที่บัตร');
-  // ===== ผู้ชำระเบี้ยประกันภัย-อาชีพ =====
-  await optionalFillTab(page, payerOccupation, '#section-payment #occupationCode', 'ผู้ชำระเบี้ยประกันภัย-อาชีพ');
-  }
-
-  // =============
-  const finalTempReceiptNo = String(finalData.tempReceiptNo || tempReceiptNo || '').trim();
-
-  await page.getByRole('textbox', { name: 'เลขที่ใบรับเงินชั่วคราว *' }).click();
-  await page.getByRole('textbox', { name: 'เลขที่ใบรับเงินชั่วคราว *' }).fill(finalTempReceiptNo);
-  await page.getByRole('textbox', { name: 'เลขที่ใบรับเงินชั่วคราว *' }).press('Tab');
-
-  await page.waitForTimeout(1000);
-  await page.getByText('โอนเงินเจ้าของบัญชีเงินฝาก').first().click();
-  await mandatoryFillTab(page,'ธนาคารกรุงเทพ', '#payinBankAccountCode','ธนาคารโอน');
-  await mandatoryFill(page,'ออโตเมทดาต้า', '#payinBranch','สาขาโอน');
-  await mandatoryFill(page,'1234567890', '#bankAccountNo','เลขที่บัญชีโอน');
-   
-  
-
     
-    const prefix = cusTitlePrefix || '';
-    const name = cusName || '';
-    const surname = cusSurname || '';
-
-    const fullName = `${prefix}${name} ${surname}`.trim();
-    // await page.getByRole('textbox', { name: 'ชื่อบัญชี *' }).fill(fullName);
-    const el = page.getByRole('textbox', { name: 'ชื่อบัญชี *' });
-
-    await el.waitFor({ state: 'visible', timeout: 5000 });
-    await el.click();
-    await el.fill(fullName);
-
-    // 🔍 log ค่าใน input จริง
-    const actualValue = await el.inputValue();
-
-    console.log('✅ Mandatory Fill ชื่อบัญชีโอน:', fullName);
-
-  // 🔥 เก็บค่าจาก <p> ไว้ในตัวแปร
-  const totalAmount = (
-  await page
-    .locator('tr', { hasText: 'รวมทั้งหมด' })
-    .locator('td')
-    .nth(9)
-    .locator('p.MuiTypography-body1')
-    .innerText()
-  ).replace(/,/g, '');
-
-  console.log('💰 ยอดเงินรวมสุทธิ =', totalAmount);
-
-  // 🔥 เอาไปใช้กับ mandatoryFill
-  await mandatoryFill(
-  page,
-  totalAmount,
-  '#amount4',
-  'จำนวนเงินโอน'
-  );
-
-    await page.waitForTimeout(1000);
-    await page.getByText('รับเช็คทางไปรษณีย์').first().click();
-    await page.waitForTimeout(1000);
 
    // Category จัดการผู้รับผลประโยชน์
   const numBeneInt = parseInt(numBene, 10);
@@ -2428,32 +2251,39 @@ else if  // ===== FLOW PA รหัสใบคำขอ PST-P08-0012 =====
   }
 
   await page.getByRole('button', { name: 'เพิ่มผู้รับประโยชน์' }).click();
-
-  // ความสัมพันธ์
-  await page.getByRole('textbox', { name: 'ความสัมพันธ์ *' }).click();
-  await page.getByRole('textbox', { name: 'ความสัมพันธ์ *' }).fill(beneItem.beneRela);
-  await page.getByRole('textbox', { name: 'ความสัมพันธ์ *' }).press('Tab');
   await page.waitForTimeout(500);
 
+  // ความสัมพันธ์
+  // await page.getByRole('textbox', { name: 'ความสัมพันธ์ *' }).click();
+  // await page.getByRole('textbox', { name: 'ความสัมพันธ์ *' }).fill(beneItem.beneRela);
+  // await page.getByRole('textbox', { name: 'ความสัมพันธ์ *' }).press('Tab');
+  
+  await mandatoryFillTab(page, beneItem.beneRela, '#beneficiaryRelationCode', 'ความสัมพันธ์ผู้รับประโยชน์');
+  await page.waitForTimeout(500);
   // คำนำหน้า
-  await page.getByRole('textbox', { name: 'คำนำหน้า *' }).click();
-  await page.getByRole('textbox', { name: 'คำนำหน้า *' }).fill(beneItem.benePrefix);
-  await page.getByRole('textbox', { name: 'คำนำหน้า *' }).press('Tab');
+  // await page.getByRole('textbox', { name: 'คำนำหน้า *' }).click();
+  // await page.getByRole('textbox', { name: 'คำนำหน้า *' }).fill(beneItem.benePrefix);
+  // await page.getByRole('textbox', { name: 'คำนำหน้า *' }).press('Tab');
+
+  await mandatoryFillTab(page, beneItem.benePrefix, '#beneficiaryTitleCode', 'คำนำหน้าผู้รับประโยชน์');
   await page.waitForTimeout(500);
 
   // ชื่อ
-  await page.getByRole('textbox', { name: 'ชื่อ *' }).click();
-  await page.getByRole('textbox', { name: 'ชื่อ *' }).fill(beneItem.beneName);
+  // await page.getByRole('textbox', { name: 'ชื่อ *' }).click();
+  // await page.getByRole('textbox', { name: 'ชื่อ *' }).fill(beneItem.beneName);
+  await mandatoryFillTab(page, beneItem.beneName, '#beneficiaryName', 'ชื่อผู้รับประโยชน์');
   await page.waitForTimeout(500);
 
   // นามสกุล
-  await page.getByLabel('จัดการผู้รับประโยชน์').locator('div').filter({ hasText: /^นามสกุล$/ }).nth(1).click();
-  await page.getByRole('textbox', { name: 'นามสกุล', exact: true }).fill(beneItem.beneSurname);
+  // await page.getByLabel('จัดการผู้รับประโยชน์').locator('div').filter({ hasText: /^นามสกุล$/ }).nth(1).click();
+  // await page.getByRole('textbox', { name: 'นามสกุล', exact: true }).fill(beneItem.beneSurname);
+  await optionalFillTab(page, beneItem.beneSurname, '#beneficiarySurname', 'นามสกุลผู้รับประโยชน์');
   await page.waitForTimeout(500);
 
   // อายุ
-  await page.getByRole('textbox', { name: 'อายุ *' }).click();
-  await page.getByRole('textbox', { name: 'อายุ *' }).fill(beneItem.beneAge);
+  // await page.getByRole('textbox', { name: 'อายุ *' }).click();
+  // await page.getByRole('textbox', { name: 'อายุ *' }).fill(beneItem.beneAge);
+  await mandatoryFillTab(page, beneItem.beneAge, '#beneficiaryAge', 'อายุผู้รับประโยชน์');
   await page.waitForTimeout(500);
 
   // เฉลี่ยสัดส่วนผลประโยชน์เท่าๆกัน
@@ -2481,84 +2311,45 @@ else if  // ===== FLOW PA รหัสใบคำขอ PST-P08-0012 =====
     const elapsedSec8 = ((Date.now() - startTime) / 1000).toFixed(2);
     console.log(`⏱️ ใช้เวลาไป ${elapsedSec8}s`);
     // Category คำแถลง
-    await page.getByText('เลือกคำแถลงเป็น ไม่เคย/ไม่มี/ไม่เปลี่ยน/ไม่เป็น/ไม่สูบ/ไม่ดื่ม ทั้งหมด').first().click();
-    await page.waitForTimeout(1000);
+    // await page.getByText('เลือกคำแถลงเป็น ไม่เคย/ไม่มี/ไม่เปลี่ยน/ไม่เป็น/ไม่สูบ/ไม่ดื่ม ทั้งหมด').first().click();
+    // await page.waitForTimeout(1000);
 
-    // const ageInt = parseInt(age, 10);
-    // // const gender = gender; // "ชาย" หรือ "หญิง"
-    // let randomHeight, randomWeight;
-    // // ----------- ตารางเกณฑ์ตามอายุ ----------- //
-    // const maleData = {
-    //   0: { h: [71, 78], w: [3, 9] },
-    //   1: { h: [72, 79], w: [9, 11] },
-    //   2: { h: [85, 93], w: [11, 13] },
-    //   3: { h: [90, 100], w: [13, 17] },
-    //   4: { h: [96, 108], w: [14, 19] },
-    //   5: { h: [102, 115], w: [15, 22] },
-    //   6: { h: [108, 121], w: [17, 25] },
-    //   7: { h: [113, 127], w: [19, 28] },
-    //   8: { h: [118, 133], w: [20, 32] },
-    //   9: { h: [122, 138], w: [22, 36] },
-    //   10: { h: [127, 143], w: [24, 40] },
-    //   11: { h: [131, 149], w: [26, 45] },
-    //   12: { h: [136, 156], w: [29, 50] },
-    //   13: { h: [141, 164], w: [32, 51] },
-    //   14: { h: [148, 170], w: [36, 58] },
-    //   15: { h: [154, 173], w: [41, 61] },
-    //   16: { h: [159, 175], w: [44, 64] },
-    //   17: { h: [161, 177], w: [55, 65] },
-    //   18: { h: [162, 177], w: [55, 66] },
-    //   19: { h: [162, 177], w: [55, 67] },
-    // };
-    // const femaleData = {
-    //   0: { h: [68, 77], w: [8, 10] },
-    //   1: { h: [69, 78], w: [8, 10] },
-    //   2: { h: [80, 89], w: [10, 13] },
-    //   3: { h: [89, 99], w: [12, 16] },
-    //   4: { h: [95, 106], w: [13, 19] },
-    //   5: { h: [102, 112], w: [15, 21] },
-    //   6: { h: [108, 120], w: [17, 24] },
-    //   7: { h: [113, 126], w: [18, 28] },
-    //   8: { h: [117, 132], w: [20, 32] },
-    //   9: { h: [122, 139], w: [22, 37] },
-    //   10: { h: [128, 146], w: [24, 42] },
-    //   11: { h: [133, 152], w: [27, 46] },
-    //   12: { h: [139, 156], w: [30, 50] },
-    //   13: { h: [144, 160], w: [33, 53] },
-    //   14: { h: [147, 162], w: [37, 55] },
-    //   15: { h: [149, 163], w: [39, 56] },
-    //   16: { h: [150, 164], w: [41, 57] },
-    //   17: { h: [150, 164], w: [41, 57] },
-    //   18: { h: [150, 164], w: [41, 57] },
-    //   19: { h: [150, 164], w: [41, 57] },
-    // };
-    // // ----------- เลือกเพศที่ใช้ ----------- //
-    // const dataMap = gender === "ชาย" ? maleData : femaleData;
-    // // fallback สำหรับเกิน 19 ปี
-    // let data;
-    // if (ageInt <= 19) {
-    //   data = dataMap[ageInt];
-    // } else {
-    //   // fallback แยกเพศ
-    //   data = gender === "ชาย" ? { h: [162, 177], w: [55, 67] } : { h: [150, 164], w: [41, 57] };
-    // }
-    // // ----------- สุ่มส่วนสูง/น้ำหนัก ----------- //
-    // // ตัวแปรเดิม
-    // randomHeight = Math.floor(Math.random() * (data.h[1] - data.h[0] + 1)) + data.h[0];
-    // randomWeight = Math.floor(Math.random() * (data.w[1] - data.w[0] + 1)) + data.w[0];
-    // // สร้างตัวแปรใหม่เป็น string
-    // const randomHeightStr = String(randomHeight);
-    // const randomWeightStr = String(randomWeight);
-  // await mandatoryFill(page, height, '#bmiHeight', 'ส่วนสูง');
+    // await page.getByText('เลือกการรับรองสถานะและคำยินยอมและตกลงปฏิบัติตามกฎหมาย FATCA ไม่มี/ไม่เป็น').first().click();
+    // await page.waitForTimeout(1000);
+    // await page.getByText('ไม่มีความประสงค์').first().click();
+    // await page.waitForTimeout(1000);
+    // await page.getByText('ไม่ยินยอม').first().click();
+    // await page.waitForTimeout(1000);
+   console.log('🩺 เลือกคำแถลงทั้งหมด');
+
+  // ข้อ 4 → ไม่มี
+  await page
+    .locator('input[name="insureHistoryCompanyAnswer"]')
+    .first()
+    .check({ force: true });
   
-  // await mandatoryFill(page, weight, '#bmiWeight', 'น้ำหนัก');
+  // ข้อ 5 → ไม่เคย
+  await page
+    .locator('input[name="paHealthDeclarationAnswer"]')
+    .first()
+    .check({ force: true });
+  
+  // ภาษี → ไม่มีความประสงค์
+  await page
+    .locator('input[name="taxAnswer"]')
+    .nth(1)
+    .check({ force: true });
+  
+  // การตลาด → ไม่ยินยอม
+  await page
+    .locator('input[name="consentAnswer"]')
+    .nth(1)
+    .check({ force: true });
+  
+  await page.waitForTimeout(500);
+  
+  console.log('✅ เลือกคำแถลงเรียบร้อย');
 
-    await page.getByText('เลือกการรับรองสถานะและคำยินยอมและตกลงปฏิบัติตามกฎหมาย FATCA ไม่มี/ไม่เป็น').first().click();
-    await page.waitForTimeout(1000);
-    await page.getByText('ไม่มีความประสงค์').first().click();
-    await page.waitForTimeout(1000);
-    await page.getByText('ไม่ยินยอม').first().click();
-    await page.waitForTimeout(1000);
 
 
     if (ageInt < 21) {
