@@ -6,7 +6,11 @@ export async function generateTempReceipt(page, finalData) {
 
   await page.goto(url);
 
-  await page.locator('#username').fill('0001');
+  if (finalData.username === '') {
+    await page.locator('#username').fill('0001');
+  } else {
+    await page.locator('#username').fill(finalData.username);
+  }
   await page.locator('#password').fill('12');
   await page.getByRole('button', { name: 'Login' }).click();
 
@@ -28,18 +32,19 @@ export async function generateTempReceipt(page, finalData) {
     console.log('⏳ พบ popup กำลังปรับปรุงข้อมูลเครดิตตัวแทน...');
     await creditLoadingPopup.waitFor({ state: 'hidden', timeout: 30000 });
     console.log('✅ popup หายแล้ว');
-  } catch {
+  } catch (e) {
     console.log('ℹ️ ไม่พบ popup กำลังปรับปรุงข้อมูลเครดิตตัวแทน...');
+    throw e;
   }
 
   await agencyInput.click();
 
-  await page.waitForResponse(
-    res =>
-      res.url().includes('/combine2/receipt/borrow/v3-borrow-listAgent.html') &&
-      res.status() === 200,
-    { timeout: 30000 }
-  );
+  // await page.waitForResponse(
+  //   res =>
+  //     res.url().includes('/combine2/receipt/borrow/v3-borrow-listAgent.html') &&
+  //     res.status() === 200,
+  //   { timeout: 30000 }
+  // );
 
   console.log('✅ listAgent โหลดเสร็จแล้ว');
 
