@@ -400,12 +400,37 @@ if (riderList.length !== expectedRiderCount) {
 
 const benes = finalData.bene || [];
 
+
+const agentParts = String(agentName || '')
+  .trim()
+  .split(' ')
+  .filter(Boolean);
+
+const agentFirstName =
+  agentParts.slice(0, -1).join(' ') || '';
+
+const agentLastName =
+  agentParts.slice(-1).join('') || '';
+
+console.log('agentFirstName =', agentFirstName);
+console.log('agentLastName =', agentLastName);
+
+function getThaiBuddhistDate(date = new Date()) {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear() + 543;
+  return `${day}/${month}/${year}`;
+}
+
+const currentDate = getThaiBuddhistDate();
+
     console.log(`🚀 เริ่มรันใบคำขอที่ [${idx}] - ${applicationNo} | 🙍🏻‍♂️ ${RUN_CREATE_BY} `);
 
     const startTime = Date.now();
     let status = 'FAIL';
     let remark = '';
     let depositReceiptNo = '';
+    let totalAmount = '';
 
     const claimed = await claimCase(no, RUN_CREATE_BY);
 if (!claimed) {
@@ -509,14 +534,14 @@ if       // ===== FLOW ORD รหัสใบคำขอ 02052 =====
     await page.getByLabel('คำนำหน้า').press('Tab');
 
     // Function to get the current date in Thai Buddhist year format
-    function getThaiBuddhistDate(date = new Date()) {
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear() + 543;
-  return `${day}/${month}/${year}`;
-  }
+  //   function getThaiBuddhistDate(date = new Date()) {
+  // const day = String(date.getDate()).padStart(2, '0');
+  // const month = String(date.getMonth() + 1).padStart(2, '0');
+  // const year = date.getFullYear() + 543;
+  // return `${day}/${month}/${year}`;
+  // }
 
-  const currentDate = getThaiBuddhistDate();
+  // const currentDate = getThaiBuddhistDate();
 
   const inputBirthDate = String(finalData.birthDate || '').trim();
 
@@ -608,12 +633,12 @@ if       // ===== FLOW ORD รหัสใบคำขอ 02052 =====
     agentNamePart = agentDisplay.replace(/^\d+\s*/, '').trim();
   }
 
-  const agentParts = agentNamePart.split(' ').filter(Boolean);
-  const agentFirstName = agentParts.slice(0, -1).join(' ') || '';
-  const agentLastName = agentParts.slice(-1).join('') || '';
+  // const agentParts = agentNamePart.split(' ').filter(Boolean);
+  // const agentFirstName = agentParts.slice(0, -1).join(' ') || '';
+  // const agentLastName = agentParts.slice(-1).join('') || '';
 
-  console.log('agentFirstName =', agentFirstName);
-  console.log('agentLastName =', agentLastName);
+  // console.log('agentFirstName =', agentFirstName);
+  // console.log('agentLastName =', agentLastName);
 
    // Category รหัสสถาบัน/ คู่ค้า
     await mandatoryFillTab(page, partnerNo, '#orgCode', 'Partner Code');
@@ -661,12 +686,12 @@ if       // ===== FLOW ORD รหัสใบคำขอ 02052 =====
   await mandatoryFillTab(page, registerProvince, '#registerProvinceCode', 'ที่อยู่ตามทะเบียนบ้าน-จังหวัด');
   await mandatoryFillTab(page, registerDistrict, '#registerDistrictCode', 'ที่อยู่ตามทะเบียนบ้าน-อำเภอ/เขต');    
   await mandatoryFillTab(page, registerSubDistrict, '#registerSubDistrictCode', 'ที่อยู่ตามทะเบียนบ้าน-ตำบล/แขวง');    
-
+  await page.waitForTimeout(1000);
   // =============
   // ที่อยู่ปัจจุบัน
   // =============
   // // ===== เงื่อนไข: ถ้า "ที่อยู่ปัจจุบัน ไม่ใช่ ที่อยู่ตามทะเบียนบ้าน"  =====
-  await mandatoryFill(page, currentUseAddressType, '#currentUseAddressTypeCode', 'ที่อยู่ปัจจุบัน-ใช้ตามที่อยู่');
+  await mandatoryFillTab(page, currentUseAddressType, '#currentUseAddressTypeCode', 'ที่อยู่ปัจจุบัน-ใช้ตามที่อยู่');
   if (currentUseAddressType !== 'ที่อยู่ตามทะเบียนบ้านของผู้เอาประกัน') {
     console.log('🏠 ระบุที่อยู่ปัจจุบันเอง');
 
@@ -791,17 +816,34 @@ if       // ===== FLOW ORD รหัสใบคำขอ 02052 =====
   await optionalFill(page, homePhone, '#currentHomePhoneNo', 'โทรศัพท์บ้าน');
   await optionalFillTab(page, workPhone, '#currentWorkPhoneNo', 'โทรศัพท์ที่ทำงาน');
   await optionalFillTab(page, workPhoneExt, '#currentWorkPhoneNoExt', 'ต่อ');
-    // Email
-    const emailVal = String(email || '').trim();
+   
 
-    if (emailVal !== '') {
-      const emailInput = page.locator('#registerEmail');
-    
-      await emailInput.click();
-      await emailInput.fill(emailVal);
-    
-      await page.waitForTimeout(500);
-    }
+    // Email
+  const emailVal = String(email || '').trim();
+
+  if (emailVal !== '') {
+  try {
+    const emailInput = page.locator('#registerEmail');
+    await emailInput.waitFor({
+      state: 'visible',
+      timeout: 5000,
+    });
+    await emailInput.click();
+    await emailInput.fill(emailVal);
+    console.log('✅ fill #registerEmail success');
+   } catch {
+    console.log('⚠️ #registerEmail ไม่เจอ → fallback #currentEmail');
+    const emailInputFallback = page.locator('#currentEmail');
+    await emailInputFallback.waitFor({
+      state: 'visible',
+      timeout: 5000,
+    });
+    await emailInputFallback.click();
+    await emailInputFallback.fill(emailVal);
+    console.log('✅ fill #currentEmail success');
+  }
+  await page.waitForTimeout(500);
+  }
 
 
     if (paperOrElectronic === 'Paper') {
@@ -1279,7 +1321,7 @@ if       // ===== FLOW ORD รหัสใบคำขอ 02052 =====
       console.log('✅ Mandatory Fill ชื่อบัญชีโอน:', fullName);
 
   // 🔥 เก็บค่าจาก <p> ไว้ในตัวแปร
-  const totalAmount = (
+   totalAmount = (
     await page
       .locator('tr', { hasText: 'รวมทั้งหมด' })
       .locator('td')
@@ -1354,10 +1396,27 @@ if       // ===== FLOW ORD รหัสใบคำขอ 02052 =====
     await page.waitForTimeout(1000);
 
     // ที่อยู่ปัจจุบัน ดึงค่าจากทะเบียนบ้าน
-    await page.getByRole('dialog', { name: 'จัดการผู้รับประโยชน์ Close' }).locator('#useAddressTypeCode').click();
-    await page.getByRole('dialog', { name: 'จัดการผู้รับประโยชน์ Close' }).locator('#useAddressTypeCode').fill('ที่อยู่ปัจจุบ');
-    await page.getByRole('dialog', { name: 'จัดการผู้รับประโยชน์ Close' }).locator('#useAddressTypeCode').press('Tab');
-    await page.waitForTimeout(1000);
+    // await page.getByRole('dialog', { name: 'จัดการผู้รับประโยชน์ Close' }).locator('#useAddressTypeCode').click();
+    // await page.getByRole('dialog', { name: 'จัดการผู้รับประโยชน์ Close' }).locator('#useAddressTypeCode').fill('ที่อยู่ปัจจุบ');
+    // await page.getByRole('dialog', { name: 'จัดการผู้รับประโยชน์ Close' }).locator('#useAddressTypeCode').press('Tab');
+    
+    const useAddressInput = page
+  .getByRole('dialog', { name: 'จัดการผู้รับประโยชน์ Close' })
+  .locator('#useAddressTypeCode');
+
+  await useAddressInput.waitFor({
+  state: 'visible',
+  timeout: 10000,
+  });
+  await useAddressInput.click({
+  force: true,
+  });
+  await page.waitForTimeout(500);
+  await page.keyboard.press('ArrowDown');
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(1000);
+
 
     // เพิ่มแต่ละคน
     await page.getByRole('button', { name: 'บันทึก(เพิ่ม)' }).click();
@@ -1523,14 +1582,14 @@ else if  // ===== FLOW PA รหัสใบคำขอ PST-P08-0012 =====
   await page.getByLabel('คำนำหน้า').press('Tab');
 
   // Function to get the current date in Thai Buddhist year format
-  function getThaiBuddhistDate(date = new Date()) {
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear() + 543;
-  return `${day}/${month}/${year}`;
-  }
+  // function getThaiBuddhistDate(date = new Date()) {
+  // const day = String(date.getDate()).padStart(2, '0');
+  // const month = String(date.getMonth() + 1).padStart(2, '0');
+  // const year = date.getFullYear() + 543;
+  // return `${day}/${month}/${year}`;
+  // }
 
-  const currentDate = getThaiBuddhistDate();
+  // const currentDate = getThaiBuddhistDate();
 
   const inputBirthDate = String(finalData.birthDate || '').trim();
 
@@ -1622,12 +1681,12 @@ else if  // ===== FLOW PA รหัสใบคำขอ PST-P08-0012 =====
       agentNamePart = agentDisplay.replace(/^\d+\s*/, '').trim();
   }
 
-  const agentParts = agentNamePart.split(' ').filter(Boolean);
-  const agentFirstName = agentParts.slice(0, -1).join(' ') || '';
-  const agentLastName = agentParts.slice(-1).join('') || '';
+  // const agentParts = agentNamePart.split(' ').filter(Boolean);
+  // const agentFirstName = agentParts.slice(0, -1).join(' ') || '';
+  // const agentLastName = agentParts.slice(-1).join('') || '';
 
-  console.log('agentFirstName =', agentFirstName);
-  console.log('agentLastName =', agentLastName);
+  // console.log('agentFirstName =', agentFirstName);
+  // console.log('agentLastName =', agentLastName);
 
   //  // Category รหัสสถาบัน/ คู่ค้า
     await mandatoryFillTab(page, partnerNo, '#orgCode', 'Partner Code');
@@ -1682,12 +1741,12 @@ else if  // ===== FLOW PA รหัสใบคำขอ PST-P08-0012 =====
   await mandatoryFillTab(page, registerProvince, '#registerProvinceCode', 'ที่อยู่ตามทะเบียนบ้าน-จังหวัด');
   await mandatoryFillTab(page, registerDistrict, '#registerDistrictCode', 'ที่อยู่ตามทะเบียนบ้าน-อำเภอ/เขต');    
   await mandatoryFillTab(page, registerSubDistrict, '#registerSubDistrictCode', 'ที่อยู่ตามทะเบียนบ้าน-ตำบล/แขวง');    
-
+  await page.waitForTimeout(1000);
   // =============
   // ที่อยู่ปัจจุบัน
   // =============
   // // ===== เงื่อนไข: ถ้า "ที่อยู่ปัจจุบัน ไม่ใช่ ที่อยู่ตามทะเบียนบ้าน"  =====
-  await mandatoryFill(page, currentUseAddressType, '#currentUseAddressTypeCode', 'ที่อยู่ปัจจุบัน-ใช้ตามที่อยู่');
+  await mandatoryFillTab(page, currentUseAddressType, '#currentUseAddressTypeCode', 'ที่อยู่ปัจจุบัน-ใช้ตามที่อยู่');
   if (currentUseAddressType !== 'ที่อยู่ตามทะเบียนบ้านของผู้เอาประกัน') {
     console.log('🏠 ระบุที่อยู่ปัจจุบันเอง');
 
@@ -1821,17 +1880,7 @@ else if  // ===== FLOW PA รหัสใบคำขอ PST-P08-0012 =====
   await optionalFill(page, homePhone, '#registerHomePhoneNo', 'โทรศัพท์บ้าน ทะเบียนบ้าน');
   
   // await optionalFillTab(page, workPhone, '#currentHomePhoneNo', 'โทรศัพท์ที่ทำงาน');
-    // Email
-    // const emailVal = String(email || '').trim();
-
-    // if (emailVal !== '') {
-    //   // const emailInput = page.getByText('อีเมล').nth(1);
-    // const emailInput = page.locator('#registerEmail');
-    //   await emailInput.click();
-    //   await emailInput.fill(emailVal);
-    
-    //   await page.waitForTimeout(500);
-    // }
+   
   await mandatoryFill(page, email, '#currentEmail', 'อีเมลปัจจุบัน');
   await mandatoryFill(page, email, '#registerEmail', 'อีเมล ทะเบียนบ้าน');
 
@@ -2229,9 +2278,25 @@ if (!String(actualPolicyName || '').trim()) {
     console.log("Pass Display Insurance Money")
     const elapsedSec7 = ((Date.now() - startTime) / 1000).toFixed(2);
     console.log(`⏱️ ใช้เวลาไป ${elapsedSec7}s`);
-    console.log('-------------------------------');
+    
     
 
+// 🔥 เก็บยอด เบี้ยประกันภัยรวมทั้งหมด
+const premiumSummaryBlock = page
+  .getByText('เบี้ยประกันภัยรวมทั้งหมด')
+  .locator('..')
+  .locator('..');
+
+totalAmount = (
+  await premiumSummaryBlock
+    .locator('div.MuiGrid-grid-xs-1 p.MuiTypography-body1')
+    .first()
+    .innerText()
+).replace(/,/g, '').trim();
+
+console.log('💰 ยอดเงินรวมสุทธิ =', totalAmount);
+
+  console.log('-------------------------------');
    // Category จัดการผู้รับผลประโยชน์
   const numBeneInt = parseInt(numBene, 10);
 
@@ -2291,9 +2356,25 @@ if (!String(actualPolicyName || '').trim()) {
   await page.waitForTimeout(1000);
 
   // ที่อยู่ปัจจุบัน ดึงค่าจากทะเบียนบ้าน
-  await page.getByRole('dialog', { name: 'จัดการผู้รับประโยชน์ Close' }).locator('#useAddressTypeCode').click();
-  await page.getByRole('dialog', { name: 'จัดการผู้รับประโยชน์ Close' }).locator('#useAddressTypeCode').fill('ที่อยู่ปัจจุบ');
-  await page.getByRole('dialog', { name: 'จัดการผู้รับประโยชน์ Close' }).locator('#useAddressTypeCode').press('Tab');
+  // await page.getByRole('dialog', { name: 'จัดการผู้รับประโยชน์ Close' }).locator('#useAddressTypeCode').click();
+  // await page.getByRole('dialog', { name: 'จัดการผู้รับประโยชน์ Close' }).locator('#useAddressTypeCode').fill('ที่อยู่ปัจจุบ');
+  // await page.getByRole('dialog', { name: 'จัดการผู้รับประโยชน์ Close' }).locator('#useAddressTypeCode').press('Tab');
+
+  const useAddressInput = page
+  .getByRole('dialog', { name: 'จัดการผู้รับประโยชน์ Close' })
+  .locator('#useAddressTypeCode');
+
+  await useAddressInput.waitFor({
+  state: 'visible',
+  timeout: 10000,
+  });
+  await useAddressInput.click({
+  force: true,
+  });
+  await page.waitForTimeout(500);
+  await page.keyboard.press('ArrowDown');
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Enter');
   await page.waitForTimeout(1000);
 
   // เพิ่มแต่ละคน
@@ -2310,89 +2391,98 @@ if (!String(actualPolicyName || '').trim()) {
     console.log("Pass Beneficiary")
     const elapsedSec8 = ((Date.now() - startTime) / 1000).toFixed(2);
     console.log(`⏱️ ใช้เวลาไป ${elapsedSec8}s`);
-    // Category คำแถลง
-    // await page.getByText('เลือกคำแถลงเป็น ไม่เคย/ไม่มี/ไม่เปลี่ยน/ไม่เป็น/ไม่สูบ/ไม่ดื่ม ทั้งหมด').first().click();
-    // await page.waitForTimeout(1000);
+    //=============
+    // Helper Category คำแถลง
+    //=============
+    async function forceRadio(page, name, value, label) {
+    await page.evaluate(({ name, value }) => {
+    const el = document.querySelector(`input[name="${name}"][value="${value}"]`);
 
-    // await page.getByText('เลือกการรับรองสถานะและคำยินยอมและตกลงปฏิบัติตามกฎหมาย FATCA ไม่มี/ไม่เป็น').first().click();
-    // await page.waitForTimeout(1000);
-    // await page.getByText('ไม่มีความประสงค์').first().click();
-    // await page.waitForTimeout(1000);
-    // await page.getByText('ไม่ยินยอม').first().click();
-    // await page.waitForTimeout(1000);
-   console.log('🩺 เลือกคำแถลงทั้งหมด');
-
-  // ข้อ 4 → ไม่มี
-  await page
-    .locator('input[name="insureHistoryCompanyAnswer"]')
-    .first()
-    .check({ force: true });
-  
-  // ข้อ 5 → ไม่เคย
-  await page
-    .locator('input[name="paHealthDeclarationAnswer"]')
-    .first()
-    .check({ force: true });
-  
-  // ภาษี → ไม่มีความประสงค์
-  await page
-    .locator('input[name="taxAnswer"]')
-    .nth(1)
-    .check({ force: true });
-  
-  // การตลาด → ไม่ยินยอม
-  await page
-    .locator('input[name="consentAnswer"]')
-    .nth(1)
-    .check({ force: true });
-  
-  await page.waitForTimeout(500);
-  
-  console.log('✅ เลือกคำแถลงเรียบร้อย');
-
-
-
-    if (ageInt < 21) {
-      // ถ้าอายุต่ำกว่า 15 ปี ให้กรอกข้อมูลผู้ปกครอง
-      console.log(`ผู้เอาประกันอายุ ${age} ปี, ต้องกรอกข้อมูลผู้ปกครอง`);
-
-      // ตัวอย่างการกรอกข้อมูลผู้ปกครอง
-      await page.getByText('คำนำหน้า').nth(6).click();
-      //await page.locator('div.css-2opkg5-control.css-tntsk8').click();
-      await page.locator('#consentTitleCode').fill('นาย');
-      await page.locator('#consentTitleCode').press('Tab');
-      await page.waitForTimeout(100);
-      await page.locator('#consentName').click();
-      await page.locator('#consentName').fill('สำหรับเด็ก');
-      await page.locator('#consentName').press('Tab');
-      await page.waitForTimeout(100);
-      await page.locator('#consentSurname').click();
-      await page.locator('#consentSurname').fill('ที่อายุไม่ถึง');
-      await page.locator('#consentSurname').press('Tab');
-      await page.waitForTimeout(100);
+    if (!el) {
+      throw new Error(`ไม่พบ radio name=${name} value=${value}`);
     }
 
-    await page.getByText('ใช่/Yes').first().click();
-    await page.waitForTimeout(1000);
-    await page.getByRole('textbox', { name: 'เมือง / City *' }).click();
-    await page.waitForTimeout(1000);
-    await page.getByRole('textbox', { name: 'เมือง / City *' }).fill('กทม');
+    el.checked = true;
+    el.click();
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  }, { name, value });
 
-    //ส่งพิจารณา
-    //await page.getByText('ส่งพิจารณาทุกกรณี ระบุเหตุผลในการขออนุมัติ').click();
-    //await page.locator('#uwReason').click();
-    //await page.waitForTimeout(2000);
+  await page.waitForTimeout(300);
 
-    // await page.locator('#uwReason').click();
-    // await page.waitForTimeout(500);
+  const checked = await page
+    .locator(`input[name="${name}"][value="${value}"]`)
+    .isChecked()
+    .catch(() => false);
 
-    // await page.locator('#uwReason').fill('ส่ง underwrite');
-    // await page.waitForTimeout(300);
-    // await page.locator('#uwReason').press('Tab');
-    // await page.waitForTimeout(2000);
-    console.log("Pass All checkbox")
-    const elapsedSec9 = ((Date.now() - startTime) / 1000).toFixed(2);
-    console.log(`⏱️ ใช้เวลาไป ${elapsedSec9}s`);
+  if (!checked) {
+    throw new Error(`❌ เลือก ${label} ไม่สำเร็จ`);
+  }
+
+  console.log(`✅ เลือก ${label}`);
+  }
+ //===== เลือกคำแถลง
+  console.log('🩺 เลือกคำแถลงทั้งหมด');
+
+  // ข้อ 4 = ไม่มี
+  await page
+  .locator('input[name="insureHistoryCompanyAnswer"][value="N"]')
+  .click({ force: true });
+
+  await page.waitForTimeout(300);
+
+
+  // ข้อ 5 = ไม่เคย
+  await page
+  .locator('input[name="paHealthDeclarationAnswer"][value="N"]')
+  .click({ force: true });
+
+  await page.waitForTimeout(300);
+
+// ภาษี = ไม่มีความประสงค์
+  await page
+  .locator('input[name="taxAnswer"][value="N"]')
+  .click({ force: true });
+
+  await page.waitForTimeout(300);
+
+  // การตลาด = ไม่ยินยอม
+  await page
+  .locator('input[name="consentAnswer"][value="N"]')
+  .click({ force: true });
+  await page.waitForTimeout(500);
+  
+  console.log('📎 ตรวจ checkbox ที่ required');
+
+  const requiredCheckboxLabels = page.locator(
+    'label.MuiFormControlLabel-root:has(span[style*="red"])'
+  );
+
+  const requiredCount = await requiredCheckboxLabels.count();
+
+  console.log(`📌 พบ required checkbox = ${requiredCount}`);
+
+  for (let i = 0; i < requiredCount; i++) {
+
+    const label = requiredCheckboxLabels.nth(i);
+
+    const checkbox = label.locator('input[type="checkbox"]');
+
+    const checked = await checkbox.isChecked().catch(() => false);
+
+    if (!checked) {
+
+      await label.click({ force: true });
+
+      console.log(`✅ checked required checkbox index=${i}`);
+
+      await page.waitForTimeout(300);
+    }
+  }
+
+console.log('✅ checked required checkbox ครบแล้ว');
+
+  console.log('✅ เลือกคำแถลงทั้งหมดเรียบร้อย');
 
     await page.getByRole('button', { name: 'บันทึก', exact: true }).click();
     await page.waitForTimeout(1000);
@@ -2419,14 +2509,14 @@ else if  // ===== FLOW IND รหัสใบคำขอ 02052 =====
   await page.getByLabel('คำนำหน้า').press('Tab');
 
   // Function to get the current date in Thai Buddhist year format
-  function getThaiBuddhistDate(date = new Date()) {
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear() + 543;
-  return `${day}/${month}/${year}`;
-  }
+  // function getThaiBuddhistDate(date = new Date()) {
+  // const day = String(date.getDate()).padStart(2, '0');
+  // const month = String(date.getMonth() + 1).padStart(2, '0');
+  // const year = date.getFullYear() + 543;
+  // return `${day}/${month}/${year}`;
+  // }
 
-  const currentDate = getThaiBuddhistDate();
+  // const currentDate = getThaiBuddhistDate();
 
   const inputBirthDate = String(finalData.birthDate || '').trim();
 
@@ -2518,13 +2608,12 @@ else if  // ===== FLOW IND รหัสใบคำขอ 02052 =====
       agentNamePart = agentDisplay.replace(/^\d+\s*/, '').trim();
   }
 
-  const agentParts = agentNamePart.split(' ').filter(Boolean);
-  const agentFirstName = agentParts.slice(0, -1).join(' ') || '';
-  const agentLastName = agentParts.slice(-1).join('') || '';
+  // const agentParts = agentNamePart.split(' ').filter(Boolean);
+  // const agentFirstName = agentParts.slice(0, -1).join(' ') || '';
+  // const agentLastName = agentParts.slice(-1).join('') || '';
 
-  console.log('agentFirstName =', agentFirstName);
-  console.log('agentLastName =', agentLastName);
-
+  // console.log('agentFirstName =', agentFirstName);
+  // console.log('agentLastName =', agentLastName);
 
 
   //  // Category รหัสสถาบัน/ คู่ค้า
@@ -2577,12 +2666,12 @@ else if  // ===== FLOW IND รหัสใบคำขอ 02052 =====
   await mandatoryFillTab(page, registerProvince, '#registerProvinceCode', 'ที่อยู่ตามทะเบียนบ้าน-จังหวัด');
   await mandatoryFillTab(page, registerDistrict, '#registerDistrictCode', 'ที่อยู่ตามทะเบียนบ้าน-อำเภอ/เขต');    
   await mandatoryFillTab(page, registerSubDistrict, '#registerSubDistrictCode', 'ที่อยู่ตามทะเบียนบ้าน-ตำบล/แขวง');    
-
+  await page.waitForTimeout(1000);
   // =============
   // ที่อยู่ปัจจุบัน
   // =============
   // // ===== เงื่อนไข: ถ้า "ที่อยู่ปัจจุบัน ไม่ใช่ ที่อยู่ตามทะเบียนบ้าน"  =====
-  await mandatoryFill(page, currentUseAddressType, '#currentUseAddressTypeCode', 'ที่อยู่ปัจจุบัน-ใช้ตามที่อยู่');
+  await mandatoryFillTab(page, currentUseAddressType, '#currentUseAddressTypeCode', 'ที่อยู่ปัจจุบัน-ใช้ตามที่อยู่');
   if (currentUseAddressType !== 'ที่อยู่ตามทะเบียนบ้านของผู้เอาประกัน') {
     console.log('🏠 ระบุที่อยู่ปัจจุบันเอง');
 
@@ -2709,17 +2798,33 @@ else if  // ===== FLOW IND รหัสใบคำขอ 02052 =====
   await optionalFill(page, homePhone, '#currentHomePhoneNo', 'โทรศัพท์บ้าน');
   await optionalFillTab(page, workPhone, '#currentWorkPhoneNo', 'โทรศัพท์ที่ทำงาน');
   await optionalFillTab(page, workPhoneExt, '#currentWorkPhoneNoExt', 'ต่อ');
-    // Email
-    const emailVal = String(email || '').trim();
+  
+    // // Email
+  const emailVal = String(email || '').trim();
+  if (emailVal !== '') {
+  try {
+    const emailInput = page.locator('#registerEmail');
+    await emailInput.waitFor({
+      state: 'visible',
+      timeout: 5000,
+    });
 
-    if (emailVal !== '') {
-      const emailInput = page.locator('#registerEmail');
-    
-      await emailInput.click();
-      await emailInput.fill(emailVal);
-    
-      await page.waitForTimeout(500);
-    }
+    await emailInput.click();
+    await emailInput.fill(emailVal);
+    console.log('✅ fill #registerEmail success');
+  } catch {
+    console.log('⚠️ #registerEmail ไม่เจอ → fallback #currentEmail');
+    const emailInputFallback = page.locator('#currentEmail');
+    await emailInputFallback.waitFor({
+      state: 'visible',
+      timeout: 5000,
+    });
+    await emailInputFallback.click();
+    await emailInputFallback.fill(emailVal);
+    console.log('✅ fill #currentEmail success');
+  }
+  await page.waitForTimeout(500);
+  }
 
 
     if (paperOrElectronic === 'Paper') {
@@ -3205,8 +3310,6 @@ else if  // ===== FLOW IND รหัสใบคำขอ 02052 =====
   await mandatoryFill(page,'ออโตเมทดาต้า', '#payinBranch','สาขาโอน');
   await mandatoryFill(page,'1234567890', '#bankAccountNo','เลขที่บัญชีโอน');
    
-  
-
     
     const prefix = cusTitlePrefix || '';
     const name = cusName || '';
@@ -3226,7 +3329,7 @@ else if  // ===== FLOW IND รหัสใบคำขอ 02052 =====
     console.log('✅ Mandatory Fill ชื่อบัญชีโอน:', fullName);
 
   // 🔥 เก็บค่าจาก <p> ไว้ในตัวแปร
-  const totalAmount = (
+  totalAmount = (
   await page
     .locator('tr', { hasText: 'รวมทั้งหมด' })
     .locator('td')
@@ -3301,9 +3404,17 @@ else if  // ===== FLOW IND รหัสใบคำขอ 02052 =====
   await page.waitForTimeout(1000);
 
   // ที่อยู่ปัจจุบัน ดึงค่าจากทะเบียนบ้าน
-  await page.getByRole('dialog', { name: 'จัดการผู้รับประโยชน์ Close' }).locator('#useAddressTypeCode').click();
-  await page.getByRole('dialog', { name: 'จัดการผู้รับประโยชน์ Close' }).locator('#useAddressTypeCode').fill('ที่อยู่ปัจจุบ');
-  await page.getByRole('dialog', { name: 'จัดการผู้รับประโยชน์ Close' }).locator('#useAddressTypeCode').press('Tab');
+  // await page.getByRole('dialog', { name: 'จัดการผู้รับประโยชน์ Close' }).locator('#useAddressTypeCode').click();
+  // await page.getByRole('dialog', { name: 'จัดการผู้รับประโยชน์ Close' }).locator('#useAddressTypeCode').fill('ที่อยู่ปัจจุบ');
+  // await page.getByRole('dialog', { name: 'จัดการผู้รับประโยชน์ Close' }).locator('#useAddressTypeCode').press('Tab');
+  const useAddressInput = page
+  .getByRole('dialog', { name: 'จัดการผู้รับประโยชน์ Close' })
+  .locator('#useAddressTypeCode input');
+  await useAddressInput.click();
+  await page.waitForTimeout(500);
+  await page.keyboard.press('ArrowDown');
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Enter');
   await page.waitForTimeout(1000);
 
   // เพิ่มแต่ละคน
@@ -3569,26 +3680,69 @@ await page.getByRole('button', { name: 'ยืนยัน' }).click();
     await page.getByRole('textbox').press('Tab');
     await page.getByText('เลือก').first().click();
 
+    // const policyTypeText =
+    // policyType === 'ORD'
+    // ? 'สามัญ'
+    // : policyType === 'PA'
+    // ? 'PA'
+    // : policyType === 'IND'
+    // ? 'อุตสาหกรรม'
+    // : '';
+
+    // if (!policyTypeText) {
+    // throw new Error(`❌ policyType ไม่รองรับ: ${policyType}`);
+    // }
+    
+    // await mandatoryFillTab(page, policyTypeText, '#policyTypeSearch', 'ประเภทกรมธรรม์');
+    // await mandatoryFillTab(page, applicationNo, '#policyTypeSearch', 'ประเภทกรมธรรม์');
+    // // await page.locator('#policyTypeSearch').nth(1).fill(policyTypeText);
+
+    // // await page.locator('#policyTypeSearch').nth(1).fill('สามัญ');
+
+    // // await page.locator('#policyTypeSearch').nth(1).press('Tab');
+    // // await page.getByRole('region').filter({ hasText: 'เหตุผลที่รับฝาก *เคสใหม่ประเภทข้อมูล *ใบคำขอประเภทกรมธรรม์ * option สามัญ,' }).getByRole('textbox').nth(3).click();
+    // await page.getByRole('region').filter({ hasText: 'เหตุผลที่รับฝาก *เคสใหม่ประเภทข้อมูล *ใบคำขอประเภทกรมธรรม์ * ' }).getByRole('textbox').nth(3).fill(applicationNo); //ใส่เลขใบคำขอ
+
     const policyTypeText =
     policyType === 'ORD'
-    ? 'สามัญ'
-    : policyType === 'PA'
-    ? 'อุบัติเหตุ'
-    : policyType === 'IND'
-    ? 'อุตสาหกรรม'
-    : '';
-
-    if (!policyTypeText) {
+      ? 'สามัญ'
+      : policyType === 'PA'
+      ? 'PA'
+      : policyType === 'IND'
+      ? 'อุตสาหกรรม'
+      : '';
+    
+  if (!policyTypeText) {
     throw new Error(`❌ policyType ไม่รองรับ: ${policyType}`);
-    }
+  }
+  
+  // ประเภทกรมธรรม์
+  const policyTypeInput = page.locator('input#policyTypeSearch');
+  
+  await policyTypeInput.waitFor({
+    state: 'visible',
+    timeout: 10000,
+  });
+  
+  await policyTypeInput.click();
+  await policyTypeInput.fill('');
+  await policyTypeInput.type(policyTypeText, { delay: 100 });
+  await policyTypeInput.press('Tab');
+  console.log('✅ เลือกประเภทกรมธรรม์ =', policyTypeText);
+  await page.waitForTimeout(500);
+  
+  // เลขที่ใบคำขอ
+  await page
+  .locator('div:has-text("ค้นหารายการใบคำขอ/กรมธรรม์")')
+  .locator('label:has-text("เลขที่ใบคำขอ")')
+  .locator('..')
+  .locator('input')
+  .first()
+  .fill(applicationNo);
 
-    await page.locator('#policyTypeSearch').nth(1).fill(policyTypeText);
-
-    // await page.locator('#policyTypeSearch').nth(1).fill('สามัญ');
-
-    await page.locator('#policyTypeSearch').nth(1).press('Tab');
-    await page.getByRole('region').filter({ hasText: 'เหตุผลที่รับฝาก *เคสใหม่ประเภทข้อมูล *ใบคำขอประเภทกรมธรรม์ * option สามัญ,' }).getByRole('textbox').nth(3).click();
-    await page.getByRole('region').filter({ hasText: 'เหตุผลที่รับฝาก *เคสใหม่ประเภทข้อมูล *ใบคำขอประเภทกรมธรรม์ *สามัญเลขที่ใบคำขอ * ' }).getByRole('textbox').nth(3).fill(applicationNo); //ใส่เลขใบคำขอ
+  console.log('✅ เลขที่ใบคำขอ =', applicationNo);
+  
+  await page.waitForTimeout(500);
     await page.getByRole('button', { name: 'ค้นหา', exact: true }).click();
     await page.waitForTimeout(600);
     await page.getByRole('button', { name: 'ยืนยัน' }).click();
