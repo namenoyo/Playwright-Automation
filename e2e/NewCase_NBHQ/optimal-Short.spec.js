@@ -1,8 +1,5 @@
 import { test, expect } from '@playwright/test';
 import writeHelpers from './data/write-result.js';
-import { generateTempReceipt } from './helpers/tempReceipt.js';
-
-
 
 // ปรับแก้ล่าสุด เรื่องการกรอกชื่อบัญชีให้ดึงจากข้อมูลลูกค้าแทนการ hardcode
 
@@ -166,7 +163,6 @@ async function fillTabAndVerify(locator, value, options = {}) {
   throw new Error(`fillTabAndVerify failed: ${label} | expected="${expected}" | actual="${lastValue}"`);
 }
 
-
 const { fetchRunnableCases, claimCase, writeResult } = writeHelpers;
 
 test('NBHQ realtime runner', async ({ browser }) => {
@@ -203,13 +199,6 @@ test('NBHQ realtime runner', async ({ browser }) => {
 
     try {
      
-    //   const tempNo = String(finalData.tempReceiptNo || '').trim();
-
-    //   if (!tempNo) {
-    //     console.log('⚠️ tempReceiptNo ว่าง → run generate flow');
-    //     await generateTempReceipt(page, finalData);
-    //   }
-      
     //SIT
     await page.waitForTimeout(1000);
 
