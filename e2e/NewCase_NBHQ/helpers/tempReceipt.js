@@ -21,10 +21,13 @@ export async function generateTempReceipt(page, finalData) {
 
   await page.goto(homeUrl, { waitUntil: 'domcontentloaded' });
 
-  await page.locator('#username').waitFor({ state: 'visible', timeout: 15000 });
-  await page.locator('#username').fill(branch);
-  await page.locator('#password').fill('12');
-  await page.getByRole('button', { name: 'Login' }).click();
+  const check_logout = await page.locator('a', { hasText: 'ออกจากระบบ' }).isVisible()
+  if (!check_logout) {
+    await page.locator('#username').waitFor({ state: 'visible', timeout: 15000 });
+    await page.locator('#username').fill(branch);
+    await page.locator('#password').fill('12');
+    await page.getByRole('button', { name: 'Login' }).click();
+  }
 
  await page.waitForTimeout(800);
 
@@ -293,10 +296,15 @@ await page.goto(borrowUrl, {
   // const okBtn = await page.locator('#btok');
   // await okBtn.waitFor({ state: 'visible', timeout: 15000 });
   // await okBtn.click();
-  await page.on('dialog', async dialog => {
-    console.log('Dialog message:', dialog.message());
+  // จับ event ของ dialog และกด accept อัตโนมัติ ของ Network
+  page.once('dialog', async dialog => {
+    try {
+      console.log('Dialog message:', dialog.message());
 
-    await dialog.accept();
+      await dialog.accept();
+    } catch (err) {
+      console.log('Dialog already handled');
+    }
   });
   await page.locator('#btok').click();
 
