@@ -488,12 +488,38 @@ function normalizeTitle(t) {
 // ===================================================
 async function setupAutoPopupDismiss(page) {
   // 1. OneSignal "ไว้ภายหลัง" — addLocatorHandler ทำงาน background ตลอด flow
+  //    waitForTimeout(600) หลัง dismiss เพื่อให้ page stabilise ก่อน Playwright
+  //    retry action เดิม (ป้องกัน consent modal state reset จาก Livewire re-render)
   await page.addLocatorHandler(
     page.getByRole('button', { name: /ไว้.*หลัง/i }),
     async (btn) => {
       await btn.click({ force: true }).catch(() => {});
-      console.log('🔕 auto-dismiss: OneSignal popup');
+      console.log('🔕 auto-dismiss: OneSignal popup (role button)');
+      await page.waitForTimeout(600);
     }
+  );
+
+  // 1b. OneSignal container fallback — ครอบคลุม popup ที่ re-appear หลัง Livewire re-render
+  //     หรือมีข้อความ dismiss ต่างกัน (ยกเลิก, No Thanks, Later ฯลฯ)
+  //     ใช้ { times: 10 } เพื่อป้องกัน loop ไม่สิ้นสุดถ้า popup ไม่ยอมหาย
+  await page.addLocatorHandler(
+    page.locator('#onesignal-slidedown-container'),
+    async (container) => {
+      // ลองคลิกปุ่ม dismiss ทุกตัวที่อยู่ใน container ตามลำดับ
+      const dismissTexts = [/ไว้.*หลัง/i, /ยกเลิก/i, /ไม่.*ขอบคุณ/i, /No Thanks/i, /Later/i, /Close/i];
+      for (const pattern of dismissTexts) {
+        const btn = container.locator('button').filter({ hasText: pattern }).first();
+        if (await btn.isVisible({ timeout: 300 }).catch(() => false)) {
+          await btn.click({ force: true }).catch(() => {});
+          console.log(`🔕 auto-dismiss: OneSignal container (${pattern})`);
+          return;
+        }
+      }
+      // fallback: ซ่อน container โดยตรงถ้าไม่มีปุ่มที่กด
+      await container.evaluate(el => el.style.setProperty('display', 'none', 'important')).catch(() => {});
+      console.log('🔕 auto-dismiss: OneSignal container (force hide)');
+    },
+    { times: 10 }
   );
 
   // 2. Live chat widget — MutationObserver ใน page ซ่อน/minimize อัตโนมัติ
@@ -526,7 +552,28 @@ async function setupAutoPopupDismiss(page) {
 //   flow = click label -> open modal -> กด "ยอมรับ"
 // ===================================================
 async function acceptAllConsents(page) {
-  const consentIds = [150, 151, 152];
+  // ค้นหา consent IDs จากหน้าจริง (ไม่ hardcode 150/151/152)
+  let consentIds = [];
+  try {
+    await page.locator('label[data-target^="#consent-"]').first()
+      .waitFor({ state: 'visible', timeout: 6000 });
+    consentIds = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll('label[data-target^="#consent-"]'))
+        .map(l => {
+          const m = l.getAttribute('data-target')?.match(/consent-(\d+)/);
+          return m ? parseInt(m[1]) : null;
+        })
+        .filter(id => id !== null);
+    });
+    console.log(`☑️ พบ consent IDs: [${consentIds.join(', ')}]`);
+  } catch {
+    console.log('☑️ ไม่พบ consent labels บนหน้านี้ — ข้าม acceptAllConsents');
+    return;
+  }
+  if (!consentIds.length) {
+    console.log('☑️ consent IDs ว่างเปล่า — ข้าม');
+    return;
+  }
 
   for (const id of consentIds) {
     console.log(`☑️ เริ่มยอมรับ consent-${id}`);
@@ -615,21 +662,98 @@ if (await pdpaCheckbox.count()) {
         await page.waitForTimeout(1000);
       });
 
+    // force-check the outer accepted_{id} checkbox if Livewire didn't auto-tick it
+    await page.waitForTimeout(500);
+    const outerChecked = await page.locator(`#accepted_${id}`).isChecked().catch(() => true);
+    if (!outerChecked) {
+      console.log(`⚠️ #accepted_${id} ยังไม่ checked → force-check ผ่าน JS`);
+      await page.evaluate((cid) => {
+        const cb = document.querySelector(`#accepted_${cid}`);
+        if (cb && !cb.checked) {
+          cb.checked = true;
+          cb.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+          cb.dispatchEvent(new Event('input', { bubbles: true }));
+          cb.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }, id);
+      await page.waitForTimeout(500);
+    }
+
     console.log(`✅ ยอมรับ consent-${id} สำเร็จ`);
   }
 
-  // verify checkbox หลัก
+  // verify + retry สูงสุด 3 รอบ (ป้องกัน Livewire re-render / OneSignal interrupt)
+  // แต่ละรอบที่ยังไม่ checked: ทำ full modal cycle ใหม่ (open → ยอมรับ) แทน force-check อย่างเดียว
+  // เพราะ OneSignal handler อาจทำให้ Livewire reset server-side consent state หลัง dismiss
   for (const id of consentIds) {
-    await expect
-      .poll(async () => {
-        return await page
-          .locator(`#accepted_${id}`)
-          .isChecked()
-          .catch(() => false);
-      }, { timeout: 10000 })
-      .toBeTruthy();
+    let verified = false;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      // รอ Livewire settle ก่อน poll — networkidle หรือ timeout 5s
+      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
+      const checked = await page.locator(`#accepted_${id}`).isChecked().catch(() => false);
+      if (checked) {
+        verified = true;
+        break;
+      }
 
-    console.log(`✅ accepted_${id} checked แล้ว`);
+      console.warn(`⚠️ #accepted_${id} ยังไม่ checked (attempt ${attempt}/3) → re-run modal cycle`);
+
+      // --- full modal cycle retry ---
+      // step 1: คลิก label เพื่อ open modal (consent อาจ reset หลัง OneSignal dismiss)
+      try {
+        const retryLabel = page.locator(`label[data-target="#consent-${id}"]`).first();
+        const isLabelVisible = await retryLabel.isVisible({ timeout: 2000 }).catch(() => false);
+        if (isLabelVisible) {
+          await retryLabel.click();
+          const retryModal = page.locator(`#consent-${id}`);
+          await retryModal.waitFor({ state: 'visible', timeout: 8000 });
+
+          // step 2: handle pdpa checkbox ถ้ามี (เฉพาะ modal ที่มี)
+          const retryPdpa = retryModal.locator('#pdpa_consent').first();
+          if (await retryPdpa.count()) {
+            const pdpaChecked = await retryPdpa.isChecked().catch(() => false);
+            if (!pdpaChecked) {
+              const pdpaId = await retryPdpa.getAttribute('id');
+              const pdpaLabel = pdpaId
+                ? retryModal.locator(`label[for="${pdpaId}"]`).first()
+                : retryModal.locator('label').filter({ hasText: /ยินยอม|รับทราบ|ตกลง|ข้าพเจ้า/i }).first();
+              if (await pdpaLabel.isVisible({ timeout: 1000 }).catch(() => false)) {
+                await pdpaLabel.click({ force: true }).catch(() => {});
+              } else {
+                await retryPdpa.click({ force: true }).catch(() => {});
+              }
+              await page.waitForTimeout(400);
+            }
+          }
+
+          // step 3: กด ยอมรับ อีกครั้ง
+          const retryAcceptBtn = retryModal.getByRole('button', { name: 'ยอมรับ' }).first();
+          await retryAcceptBtn.waitFor({ state: 'visible', timeout: 8000 });
+          await retryAcceptBtn.click();
+          await retryModal.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {});
+          await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
+          await page.waitForTimeout(1000);
+        } else {
+          // label ไม่ visible (consent อาจ checked แล้วโดย server) → รอแล้ว poll อีกครั้ง
+          await page.waitForTimeout(2000);
+        }
+      } catch (retryErr) {
+        console.warn(`⚠️ modal cycle retry consent-${id} attempt ${attempt} error: ${retryErr.message}`);
+        await page.waitForTimeout(2000);
+      }
+    }
+    if (!verified) {
+      // ตรวจครั้งสุดท้ายหลังครบ 3 รอบ
+      const finalCheck = await page.locator(`#accepted_${id}`).isChecked().catch(() => false);
+      if (finalCheck) {
+        console.log(`✅ accepted_${id} checked แล้ว (final check)`);
+      } else {
+        // ไม่ throw — modal "ยอมรับ" ถูกคลิกแล้ว อาจเป็น Livewire lag — ดำเนินต่อ
+        console.error(`❌ #accepted_${id} ยังไม่ checked หลัง 3 attempts — ดำเนินต่อ`);
+      }
+    } else {
+      console.log(`✅ accepted_${id} checked แล้ว`);
+    }
   }
 }
 

@@ -359,6 +359,7 @@ async function writeResult({
     },
   });
 
+  sheetCache = null; // invalidate cache so next fetchRunnableCases reads fresh data
   console.log(`✅ Updated row ${rowNumber} / No ${no} (${applicationNo || '-'}) => ${status}${testStatusQr ? ` | Test Status QR => ${testStatusQr}` : ''}`);
 }
 
@@ -466,7 +467,24 @@ async function writeTempReceiptNo(no, tempReceiptNo) {
   sheetCache = null;
 }
 
+async function writeQrApplicationNo(no, applicationNo) {
+  const sheets = await getSheetsClient();
+  const { headerMap } = await loadSheet();
+  const rowNumber = await getRowNumberByNo(no);
 
+  const value = normalize(applicationNo);
+  if (!value) throw new Error(`❌ writeQrApplicationNo: applicationNo ว่าง no=${no}`);
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: SPREADSHEET_ID,
+    range: getA1Cell(rowNumber, headerMap, 'เลขใบคำขอ'),
+    valueInputOption: 'USER_ENTERED',
+    requestBody: { values: [[value]] },
+  });
+
+  sheetCache = null;
+  console.log(`✅ บันทึกเลขใบคำขอ No ${no} => ${value}`);
+}
 
 async function fetchRunnableCases(createByFilter) {
   if (!createByFilter) {
@@ -774,6 +792,7 @@ module.exports = {
   writeResultsBatch,
   fetchRunnableCases,
   writeTempReceiptNo,
+  writeQrApplicationNo,
   fetchQrRunnableCases,
   claimQrCase,
   writeQrResult,
