@@ -9,9 +9,9 @@ const CREDENTIALS_PATH = path.resolve(
 
 const TOKEN_PATH = path.resolve(__dirname, '../../../credentials/token.json');
 
-const SPREADSHEET_ID = '1lmIoKDqXzw922U3F6FIYWdBxchsPbQNW4hQ_Vh812pM';
-const SHEET_NAME = 'Prepare_Test_Data_NBHQ';
-const DATA_RANGE = `${SHEET_NAME}!A:EF`;
+const SPREADSHEET_ID = '1lmIoKDqXzw922U3F6FIYWdBxchsPbQNW4hQ_Vh812pM'; // สำหรับระบุลิงก์ชีท
+const SHEET_NAME = 'Prepare_Test_Data_NBHQ'; // Tab Google Sheets ที่ใช้เก็บข้อมูลเคสทดสอบ
+const DATA_RANGE = `${SHEET_NAME}!A:EF`; // ช่วงข้อมูลทั้งหมดในชีท (ปรับตามจำนวนคอลัมน์ที่ใช้จริง)
 const HEADER_ROW = 4;
 
 
@@ -132,14 +132,23 @@ function isRunnableRow(row, headerMap, createByFilter = RUN_CREATE_BY) {
   const valid = getValue(row, headerMap, 'Valid').toUpperCase();
   const createBy = getValue(row, headerMap, 'Create By');
   const status = getValue(row, headerMap, 'Test Status').toLowerCase();
+  const result = getValue(row, headerMap, 'Result').toLowerCase();
 
   return (
     no !== '' &&
     valid === 'TRUE' &&
     createBy === createByFilter &&
-     (
+    (
       status === 'ready for test' ||
-      status === 'ready for retest'
+      status === 'ready for retest' ||
+      (
+        status === 'inprogress' &&
+        result === 'deposit success'
+      ) ||
+      (
+        status === 'inprogress' &&
+        result === 'waiting policy no'
+      )
     )
   );
 }
@@ -185,11 +194,11 @@ function buildRiders(row, headerMap) {
       riderCode,
       riderName,
       riderCoverage:
-  riderCoverage === '-'
-    ? ''
-    : normalize(riderCoverage).toLowerCase() === 'any'
-    ? 'Any'
-    : riderCoverage,
+        riderCoverage === '-'
+          ? ''
+          : normalize(riderCoverage).toLowerCase() === 'any'
+            ? 'Any'
+            : riderCoverage,
       riderPremium: riderPremium === '-' ? '' : riderPremium,
     });
   }
@@ -242,7 +251,7 @@ async function claimCase(no, createByFilter) {
 
   const row = dataRows[rowNumber - HEADER_ROW - 1];
 
- if (!isRunnableRow(row, headerMap, createByFilter)) {
+  if (!isRunnableRow(row, headerMap, createByFilter)) {
     console.log(`⏭️ Skip No ${no} เพราะไม่ผ่านเงื่อนไข No/Valid/Create By/Test Status`);
     return false;
   }
@@ -267,6 +276,7 @@ async function writeResult({
   no,
   applicationNo,
   status,
+  result = '',
   remark,
   depositReceiptNo = '',
   policyNo = '',
@@ -278,14 +288,26 @@ async function writeResult({
   const rowNumber = await getRowNumberByNo(no);
 
   const nextTestStatus =
-    status === 'PASS'
-      ? 'Done'
-      : 'Ready for Retest';
+  status === 'PASS'
+    ? 'Done'
+    : status === 'Inprogress'
+      ? 'Inprogress'
+      : status === 'FAIL'
+        ? 'Fail'
+        : status === 'Deposit Success'
+          ? 'Inprogress'
+          : status === 'Waiting Policy No'
+            ? 'Inprogress'
+            : status === 'Done - Please Check'
+              ? 'Done - Please Check'
+              : status === 'Done'
+                ? 'Done'
+                : 'Ready for Retest';
 
   const testDate = `'${new Date().toLocaleString('sv-SE', {
-  timeZone: 'Asia/Bangkok',
-  hour12: false
-}).replace('T', ' ')}`;
+    timeZone: 'Asia/Bangkok',
+    hour12: false
+  }).replace('T', ' ')}`;
 
   const data = [
     {
@@ -294,7 +316,11 @@ async function writeResult({
     },
     {
       range: getA1Cell(rowNumber, headerMap, 'Result'),
-      values: [[status]],
+      values: [[
+        status === 'FAIL' && result
+          ? result
+          : result || status
+      ]],
     },
     {
       range: getA1Cell(rowNumber, headerMap, 'Remark'),
@@ -304,11 +330,17 @@ async function writeResult({
       range: getA1Cell(rowNumber, headerMap, 'Test Date'),
       values: [[testDate]],
     },
-    {
+    // {
+    //   range: getA1Cell(rowNumber, headerMap, 'เลขรับฝาก'),
+    //   values: [[depositReceiptNo]],
+    // },
+  ];
+  if (depositReceiptNo) {
+    data.push({
       range: getA1Cell(rowNumber, headerMap, 'เลขรับฝาก'),
       values: [[depositReceiptNo]],
-    },
-  ];
+    });
+  }
 
   if (policyNo) {
     data.push({
@@ -354,14 +386,26 @@ async function writeResultsBatch(items) {
     const nextTestStatus =
       item.status === 'PASS'
         ? 'Done'
-        : 'Ready for Retest';
+        : item.status === 'Deposit Success'
+          ? 'Inprogress'
+          : item.status === 'Waiting Policy No'
+            ? 'Inprogress'
+            : item.status === 'Inprogress'
+              ? 'Inprogress'
+              : item.status === 'Done - Please Check'
+                ? 'Done - Please Check'
+                : item.status === 'Done'
+                  ? 'Done'
+                  : item.status === 'FAIL'
+                    ? 'Fail'
+                    : 'Ready for Retest';
 
     const now = new Date();
 
-const testDate = `'${new Date().toLocaleString('sv-SE', {
-  timeZone: 'Asia/Bangkok',
-  hour12: false
-}).replace('T', ' ')}`;
+    const testDate = `'${new Date().toLocaleString('sv-SE', {
+      timeZone: 'Asia/Bangkok',
+      hour12: false
+    }).replace('T', ' ')}`;
 
     data.push(
       {
@@ -370,7 +414,11 @@ const testDate = `'${new Date().toLocaleString('sv-SE', {
       },
       {
         range: getA1Cell(rowNumber, headerMap, 'Result'),
-        values: [[item.status]],
+        values: [[
+          item.status === 'FAIL' && item.result
+            ? item.result
+            : item.result || item.status
+        ]],
       },
       {
         range: getA1Cell(rowNumber, headerMap, 'Remark'),
@@ -380,11 +428,18 @@ const testDate = `'${new Date().toLocaleString('sv-SE', {
         range: getA1Cell(rowNumber, headerMap, 'Test Date'),
         values: [[testDate]],
       },
-      {
-        range: getA1Cell(rowNumber, headerMap, 'เลขรับฝาก'),
-        values: [[item.depositReceiptNo || '']],
-      }
+      // {
+      //   range: getA1Cell(rowNumber, headerMap, 'เลขรับฝาก'),
+      //   values: [[item.depositReceiptNo || '']],
+      // }
     );
+
+    if (item.depositReceiptNo) {
+      data.push({
+        range: getA1Cell(rowNumber, headerMap, 'เลขรับฝาก'),
+        values: [[item.depositReceiptNo]],
+      });
+    }
 
     if (item.policyNo) {
       data.push({
@@ -464,11 +519,13 @@ async function fetchRunnableCases(createByFilter) {
 
       return {
         no: getValue(row, headerMap, 'No'),
+        testStatus: getValue(row, headerMap, 'Test Status'),
+        result: getValue(row, headerMap, 'Result'),
         environment: getValue(row, headerMap, 'Env'),
         caseType: getValue(row, headerMap, 'ลักษณะเคส'),
         applicationNo: getValue(row, headerMap, 'เลขใบคำขอ'),
         tempReceiptNo: getValue(row, headerMap, 'เลขใบรับเงินชั่วคราว'),
-        
+
         //-------- Section: สาขาตัวแทน --------
         branch: getValue(row, headerMap, 'สาขา'),
         branchName: getValue(row, headerMap, 'ชื่อสาขา'),
@@ -478,6 +535,7 @@ async function fetchRunnableCases(createByFilter) {
 
         partner: getValue(row, headerMap, 'Partner'),
         partnerNo: getValue(row, headerMap, 'Partner Code'),
+        partnerCode2: getValue(row, headerMap, 'Partner Code 2'),
 
         //-------- Section: ข้อมูลลูกค้าผู้เอาประกัน --------
         cardType: getValue(row, headerMap, 'ประเภทบัตร'),
@@ -485,7 +543,7 @@ async function fetchRunnableCases(createByFilter) {
         expirecardNo: getValue(row, headerMap, 'วันที่บัตรหมดอายุ'),
         nationality: getValue(row, headerMap, 'สัญชาติ'),
         documentidentify: getValue(row, headerMap, 'เอกสารที่ใช้แสดง'),
-        
+
         cusType: getValue(row, headerMap, 'ลูกค้า'), //ประเภทลูกค้า เก่า / ใหม่
         cusTitlePrefix: getValue(row, headerMap, 'คำนำหน้าลูกค้า'),
 
@@ -495,7 +553,7 @@ async function fetchRunnableCases(createByFilter) {
           getValue(row, headerMap, 'ประเภทเพศ'),
           getValue(row, headerMap, 'เพศ')
         ),
-        
+
         cusName: getValue(row, headerMap, 'ชื่อลูกค้า'),
         cusSurname: getValue(row, headerMap, 'นามสกุลลูกค้า'),
         birthDate: getValue(row, headerMap, 'วันเดือนปีเกิด'),
@@ -572,7 +630,7 @@ async function fetchRunnableCases(createByFilter) {
           .replace(/\.00$/, '')
           .trim(),
 
-        premium: String(getRawValue(row, headerMap, 'เบี้ย/ทุนชดเชย'))
+        premium: String(getRawValue(row, headerMap, 'เบี้ย/ทุนชดเชย/จำนวนเงินขอกู้'))
           .replace(/,/g, '')
           .replace(/\.00$/, '')
           .trim(),
@@ -582,7 +640,7 @@ async function fetchRunnableCases(createByFilter) {
         riders: buildRiders(row, headerMap),
 
         // -------- Section: รายละเอียดผู้ชำระเบี้ย --------
-        payerType: getValue(row, headerMap, 'การชำระเบี้ยประกันภัย'),      
+        payerType: getValue(row, headerMap, 'การชำระเบี้ยประกันภัย'),
         payerPrefix: getValue(row, headerMap, 'ผู้ชำระเบี้ยประกันภัย-คำนำหน้า'),
         payerName: getValue(row, headerMap, 'ผู้ชำระเบี้ยประกันภัย-ชื่อ'),
         payerSurname: getValue(row, headerMap, 'ผู้ชำระเบี้ยประกันภัย-นามสกุล'),
@@ -614,8 +672,8 @@ async function fetchRunnableCases(createByFilter) {
 
         // -------- Section: BMI ส่วนสูง น้ำหนัก --------
         Valid: getValue(row, headerMap, 'Valid'),
-        
-       
+
+
         // -------- Section: Info Result --------
         createBy: getValue(row, headerMap, 'Create By'),
         uwApprove: getValue(row, headerMap, 'UW Approve'),

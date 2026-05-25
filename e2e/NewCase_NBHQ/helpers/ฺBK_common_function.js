@@ -211,6 +211,14 @@ async function autoFillRequiredFields(page) {
   console.log('✅ ไล่เช็ค Required Field เสร็จแล้ว');
 }
 async function autoConfirmDialogs(page, timeout = 1200) {
+  const dialog = page.getByRole('dialog').last();
+
+  const hasDialog = await dialog
+    .isVisible({ timeout })
+    .catch(() => false);
+
+  if (!hasDialog) return false;
+
   const confirmTexts = [
     'ตกลง',
     'ยืนยัน',
@@ -221,30 +229,18 @@ async function autoConfirmDialogs(page, timeout = 1200) {
   ];
 
   for (const text of confirmTexts) {
-    const btn = page
-      .getByRole('button', { name: text, exact: true })
-      .last();
+    const btn = dialog.getByRole('button', { name: text }).last();
 
     const visible = await btn
-      .isVisible({ timeout })
+      .isVisible({ timeout: 300 })
       .catch(() => false);
 
-    if (!visible) continue;
-
-    // กันพวกปุ่ม "ไม่ใช่"
-    const actualText = (
-      await btn.innerText().catch(() => '')
-    ).trim();
-
-    if (actualText !== text) continue;
-
-    await btn.click({ force: true });
-
-    console.log(`✅ autoConfirmDialogs: clicked "${actualText}"`);
-
-    await page.waitForTimeout(500);
-
-    return true;
+    if (visible) {
+      await btn.click({ force: true }).catch(() => {});
+      console.log(`✅ autoConfirmDialogs: clicked dialog "${text}"`);
+      await page.waitForTimeout(500);
+      return true;
+    }
   }
 
   return false;

@@ -9,9 +9,9 @@ const CREDENTIALS_PATH = path.resolve(
 
 const TOKEN_PATH = path.resolve(__dirname, '../../../credentials/token.json');
 
-const SPREADSHEET_ID = '1lmIoKDqXzw922U3F6FIYWdBxchsPbQNW4hQ_Vh812pM';
-const SHEET_NAME = 'Prepare_Test_Data_NBHQ';
-const DATA_RANGE = `${SHEET_NAME}!A:EF`;
+const SPREADSHEET_ID = '1lmIoKDqXzw922U3F6FIYWdBxchsPbQNW4hQ_Vh812pM'; // สำหรับระบุลิงก์ชีท
+const SHEET_NAME = 'Prepare_Test_Data_NBHQ'; // Tab Google Sheets ที่ใช้เก็บข้อมูลเคสทดสอบ
+const DATA_RANGE = `${SHEET_NAME}!A:EF`; // ช่วงข้อมูลทั้งหมดในชีท (ปรับตามจำนวนคอลัมน์ที่ใช้จริง)
 const HEADER_ROW = 4;
 
 
@@ -156,6 +156,10 @@ function buildRiders(row, headerMap) {
   const riderCoverages = splitPipeline(getRawValue(row, headerMap, 'ทุน Rider'));
   const riderPremiums = splitPipeline(getRawValue(row, headerMap, 'เบี้ย Rider'));
 
+  const firstRiderCoverage = riderCoverages.find(
+    (v) => normalize(v) && normalize(v) !== '-' && normalize(v).toLowerCase() !== 'any'
+  ) || '';
+
   const maxLen = Math.max(
     riderCodes.length,
     riderNames.length,
@@ -168,15 +172,24 @@ function buildRiders(row, headerMap) {
   for (let i = 0; i < maxLen; i++) {
     const riderCode = riderCodes[i] || '';
     const riderName = riderNames[i] || '';
-    const riderCoverage = riderCoverages[i] || '';
+    let riderCoverage = riderCoverages[i] || '';
     const riderPremium = riderPremiums[i] || '';
+
+    if (normalize(riderCoverage).toLowerCase() === 'any') {
+      riderCoverage = firstRiderCoverage;
+    }
 
     if (!riderCode && !riderName && !riderCoverage && !riderPremium) continue;
 
     riders.push({
       riderCode,
       riderName,
-      riderCoverage: riderCoverage === '-' ? '' : riderCoverage,
+      riderCoverage:
+  riderCoverage === '-'
+    ? ''
+    : normalize(riderCoverage).toLowerCase() === 'any'
+    ? 'Any'
+    : riderCoverage,
       riderPremium: riderPremium === '-' ? '' : riderPremium,
     });
   }
@@ -254,6 +267,7 @@ async function writeResult({
   no,
   applicationNo,
   status,
+  result = '',
   remark,
   depositReceiptNo = '',
   policyNo = '',
@@ -265,9 +279,15 @@ async function writeResult({
   const rowNumber = await getRowNumberByNo(no);
 
   const nextTestStatus =
-    status === 'PASS'
-      ? 'Done'
-      : 'Ready for Retest';
+  status === 'PASS'
+    ? 'Done'
+    : status === 'Deposit Success'
+    ? 'Inprogress'
+    : status === 'Inprogress'
+    ? 'Inprogress'
+    : status === 'Done'
+    ? 'Done'
+    : 'Ready for Retest';
 
   const testDate = `'${new Date().toLocaleString('sv-SE', {
   timeZone: 'Asia/Bangkok',
@@ -281,7 +301,7 @@ async function writeResult({
     },
     {
       range: getA1Cell(rowNumber, headerMap, 'Result'),
-      values: [[status]],
+      values: [[result || status]],
     },
     {
       range: getA1Cell(rowNumber, headerMap, 'Remark'),
@@ -339,9 +359,15 @@ async function writeResultsBatch(items) {
     const rowNumber = await getRowNumberByNo(item.no);
 
     const nextTestStatus =
-      item.status === 'PASS'
-        ? 'Done'
-        : 'Ready for Retest';
+  item.status === 'PASS'
+    ? 'Done'
+    : item.status === 'Deposit Success'
+    ? 'Inprogress'
+    : item.status === 'Inprogress'
+    ? 'Inprogress'
+    : item.status === 'Done'
+    ? 'Done'
+    : 'Ready for Retest';
 
     const now = new Date();
 
@@ -406,6 +432,35 @@ const testDate = `'${new Date().toLocaleString('sv-SE', {
   console.log(`✅ Batch updated ${items.length} rows`);
 }
 
+
+
+async function writeTempReceiptNo(no, tempReceiptNo) {
+  const sheets = await getSheetsClient();
+  const { headerMap } = await loadSheet();
+  const rowNumber = await getRowNumberByNo(no);
+
+  const value = normalize(tempReceiptNo);
+
+  if (!value) {
+    throw new Error(`❌ writeTempReceiptNo: tempReceiptNo ว่าง no=${no}`);
+  }
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: SPREADSHEET_ID,
+    range: getA1Cell(rowNumber, headerMap, 'เลขใบรับเงินชั่วคราว'),
+    valueInputOption: 'USER_ENTERED',
+    requestBody: {
+      values: [[value]],
+    },
+  });
+
+  console.log(`✅ Updated เลขใบรับเงินชั่วคราว row ${rowNumber} / No ${no} => ${value}`);
+
+  sheetCache = null;
+}
+
+
+
 async function fetchRunnableCases(createByFilter) {
   if (!createByFilter) {
     throw new Error('❌ ต้องส่งค่า RUN_CREATE_BY เข้ามาใน fetchRunnableCases(createByFilter)');
@@ -436,6 +491,7 @@ async function fetchRunnableCases(createByFilter) {
 
         partner: getValue(row, headerMap, 'Partner'),
         partnerNo: getValue(row, headerMap, 'Partner Code'),
+        partnerCode2: getValue(row, headerMap, 'Partner Code 2'),
 
         //-------- Section: ข้อมูลลูกค้าผู้เอาประกัน --------
         cardType: getValue(row, headerMap, 'ประเภทบัตร'),
@@ -530,7 +586,7 @@ async function fetchRunnableCases(createByFilter) {
           .replace(/\.00$/, '')
           .trim(),
 
-        premium: String(getRawValue(row, headerMap, 'เบี้ย'))
+        premium: String(getRawValue(row, headerMap, 'เบี้ย/ทุนชดเชย/จำนวนเงินขอกู้'))
           .replace(/,/g, '')
           .replace(/\.00$/, '')
           .trim(),
@@ -622,4 +678,5 @@ module.exports = {
   writeResult,
   writeResultsBatch,
   fetchRunnableCases,
+  writeTempReceiptNo,
 };
