@@ -392,22 +392,144 @@ async function killDigitalSalesPopups(page) {
   }).catch(() => {});
 }
 // ===================================================
-// Helper: คลิกปุ่มจาก text (รอ visible 10s)
+// Helper: คลิกปุ่มจาก text — retry loop รองรับ Livewire re-render หลัง popup dismiss
+//
+// ปัญหาเดิม: waitFor({ state: 'attached' }) resolve ทันที แต่ addLocatorHandler
+// ยิงระหว่าง click → Playwright หยุด action → dismiss + 600ms → retry click →
+// ถ้า Livewire re-render ทำให้ปุ่มหาย timeout 30s หมดก่อนที่จะ retry ได้สำเร็จ
+//
+// Fix: ใช้ retry loop ที่แต่ละรอบ: ตรวจ popup → dismiss → รอ settle → re-locate → click
+// ทำให้ทนต่อหลาย popup occurrence และ Livewire re-render ระหว่าง retry
 // ===================================================
 async function clickButtonByText(page, text, timeout = 10000) {
-  const loc = page.locator(`button:has-text("${text}")`).first();
+  const deadline = Date.now() + timeout;
+  const retryGap = 1500; // ms ระหว่าง attempt — ให้เวลา Livewire settle
+  let attempt = 0;
 
-  await loc.waitFor({ state: 'attached', timeout });
+  while (Date.now() < deadline) {
+    attempt++;
+    const remaining = deadline - Date.now();
 
-  if (await loc.isVisible({ timeout: 1500 }).catch(() => false)) {
-    await loc.click();
-  } else {
-    // display:none → force:true ยังไม่พอ (ไม่มี bounding box) → ใช้ JS click แทน
-    await loc.evaluate(el => el.click());
-    console.log(`⚡ js-click "${text}" (display:none)`);
+    // ถ้าเวลาเหลือน้อยเกินไปก็ออกเลย
+    if (remaining < 200) break;
+
+    // ทุก attempt: ตรวจ popup ก่อน ถ้ามีให้ dismiss + รอ settle
+    const onesignalContainer = page.locator('#onesignal-slidedown-container');
+    const laterBtn = page.getByRole('button', { name: /ไว้.*หลัง/i });
+    if (await laterBtn.isVisible({ timeout: 300 }).catch(() => false)) {
+      await laterBtn.click({ force: true }).catch(() => {});
+      console.log(`🔕 clickButtonByText: dismiss OneSignal ก่อน attempt ${attempt}`);
+      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
+      await page.waitForTimeout(600);
+    } else if (await onesignalContainer.isVisible({ timeout: 300 }).catch(() => false)) {
+      await onesignalContainer.evaluate(el =>
+        el.style.setProperty('display', 'none', 'important')
+      ).catch(() => {});
+      console.log(`🔕 clickButtonByText: force-hide OneSignal container ก่อน attempt ${attempt}`);
+      await page.waitForTimeout(400);
+    }
+
+    const loc = page.locator(`button:has-text("${text}")`).first();
+
+    // รอให้ปุ่ม attach ก่อน — ใช้เวลาที่เหลืออยู่ (สูงสุด 5s ต่อรอบ)
+    const waitMs = Math.min(5000, deadline - Date.now());
+    const attached = await loc.waitFor({ state: 'attached', timeout: waitMs })
+      .then(() => true)
+      .catch(() => false);
+
+    if (!attached) {
+      console.log(`⚠️ clickButtonByText attempt ${attempt}: ปุ่ม "${text}" ยังไม่ attach — retry`);
+      await page.waitForTimeout(retryGap);
+      continue;
+    }
+
+    try {
+      if (await loc.isVisible({ timeout: 1000 }).catch(() => false)) {
+        await loc.click();
+      } else {
+        // display:none (Livewire lazy render) → dispatchEvent ให้ Alpine @click รับได้
+        await loc.evaluate(el => el.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+        console.log(`⚡ js-click "${text}" (display:none)`);
+      }
+      console.log(`✅ กดปุ่ม "${text}" (attempt ${attempt})`);
+      return; // สำเร็จ — ออกจาก loop
+    } catch (err) {
+      // click ล้มเหลว (มักเกิดจาก element detach ระหว่าง Livewire re-render)
+      console.log(`⚠️ clickButtonByText attempt ${attempt} click error: ${err.message} — retry`);
+      await page.waitForTimeout(retryGap);
+    }
   }
 
-  console.log(`✅ กดปุ่ม "${text}"`);
+  throw new Error(`❌ clickButtonByText: กดปุ่ม "${text}" ไม่สำเร็จหลัง ${attempt} attempts (timeout ${timeout}ms)`);
+}
+
+// ===================================================
+// Helper: คลิกปุ่มตัวแรกที่พบจาก list ตามลำดับ priority
+//
+// ใช้เมื่อ UI อาจแสดงปุ่มคนละชื่อ ขึ้นอยู่กับ product/config
+// เช่น บาง product มี "คำนวณเบี้ยประกันภัย" ส่วนบางตัวมีแค่ "ซื้อประกันออนไลน์"
+//
+// Logic:
+//   — วน texts ตาม priority: ถ้าเจอปุ่มใดก่อน → click ทันที + return
+//   — แต่ละรอบ retry มีการ dismiss OneSignal ก่อน (เหมือน clickButtonByText)
+//   — ถ้าครบ timeout โดยไม่เจอปุ่มใดเลย → throw ระบุทุก text ที่ค้นหา
+// ===================================================
+async function clickFirstFound(page, texts, timeout = 10000) {
+  const deadline = Date.now() + timeout;
+  const retryGap = 1500;
+  let attempt = 0;
+
+  while (Date.now() < deadline) {
+    attempt++;
+    const remaining = deadline - Date.now();
+    if (remaining < 200) break;
+
+    // dismiss OneSignal ก่อนทุก attempt (เหมือน clickButtonByText)
+    const onesignalContainer = page.locator('#onesignal-slidedown-container');
+    const laterBtn = page.getByRole('button', { name: /ไว้.*หลัง/i });
+    if (await laterBtn.isVisible({ timeout: 300 }).catch(() => false)) {
+      await laterBtn.click({ force: true }).catch(() => {});
+      console.log(`🔕 clickFirstFound: dismiss OneSignal ก่อน attempt ${attempt}`);
+      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
+      await page.waitForTimeout(600);
+    } else if (await onesignalContainer.isVisible({ timeout: 300 }).catch(() => false)) {
+      await onesignalContainer.evaluate(el =>
+        el.style.setProperty('display', 'none', 'important')
+      ).catch(() => {});
+      console.log(`🔕 clickFirstFound: force-hide OneSignal container ก่อน attempt ${attempt}`);
+      await page.waitForTimeout(400);
+    }
+
+    // ตรวจทุก text ตามลำดับ — เจอตัวแรกที่ attach แล้ว click ทันที
+    for (const text of texts) {
+      const loc = page.locator(`button:has-text("${text}")`).first();
+      const waitMs = Math.min(2000, deadline - Date.now());
+      const attached = await loc.waitFor({ state: 'attached', timeout: waitMs })
+        .then(() => true)
+        .catch(() => false);
+      if (!attached) continue;
+
+      try {
+        if (await loc.isVisible({ timeout: 1000 }).catch(() => false)) {
+          await loc.click();
+        } else {
+          // display:none (Livewire lazy render) → dispatchEvent ให้ Alpine @click รับได้
+          await loc.evaluate(el => el.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+          console.log(`⚡ js-click "${text}" (display:none)`);
+        }
+        console.log(`✅ clickFirstFound: กดปุ่ม "${text}" (attempt ${attempt})`);
+        return text; // คืน text ที่กดสำเร็จ เพื่อให้ caller ใช้ log ได้
+      } catch (err) {
+        console.log(`⚠️ clickFirstFound attempt ${attempt} click "${text}" error: ${err.message} — ลอง text ถัดไป`);
+      }
+    }
+
+    await page.waitForTimeout(retryGap);
+  }
+
+  throw new Error(
+    `❌ clickFirstFound: ไม่พบปุ่มใดใน [${texts.map(t => `"${t}"`).join(', ')}] หลัง ${attempt} attempts (timeout ${timeout}ms)`
+  );
 }
 
 // ===================================================
@@ -487,21 +609,45 @@ function normalizeTitle(t) {
 //   ไม่ต้องเรียก dismissPopups ที่ step ไหนอีก
 // ===================================================
 async function setupAutoPopupDismiss(page) {
+  // helper ใช้ร่วมกันทั้ง 2 handler: click dismiss → remove container → disable SDK re-prompt
+  // remove() แทน style:none เพื่อให้ Playwright เห็น element หายไปจาก DOM ทันที
+  // ถ้าใช้แค่ style:none → SDK re-inject ใหม่ทันที → button กลับมา → handler loop ไม่สิ้นสุด
+  const nukeOneSignal = async (page) => {
+    await page.evaluate(() => {
+      const el = document.getElementById('onesignal-slidedown-container');
+      if (el) el.remove();
+      // ปิด OneSignal SDK ไม่ให้แสดง prompt ซ้ำในหน้านี้
+      try {
+        if (window.OneSignal) {
+          if (typeof window.OneSignal.isPushNotificationsEnabled === 'function') {
+            window.OneSignal.isPushNotificationsEnabled = async () => true;
+          }
+          if (typeof window.OneSignal.getNotificationPermission === 'function') {
+            window.OneSignal.getNotificationPermission = async () => 'granted';
+          }
+        }
+      } catch (_) {}
+    }).catch(() => {});
+  };
+
   // 1. OneSignal "ไว้ภายหลัง" — addLocatorHandler ทำงาน background ตลอด flow
-  //    waitForTimeout(600) หลัง dismiss เพื่อให้ page stabilise ก่อน Playwright
-  //    retry action เดิม (ป้องกัน consent modal state reset จาก Livewire re-render)
+  //    ปัญหาเดิม: ไม่มี { times } limit → handler loop ไม่สิ้นสุดเมื่อ SDK re-inject button ทันที
+  //    Fix: เพิ่ม { times: 5 } + nukeOneSignal (remove DOM + disable SDK) แทน style:none
+  //    waitForTimeout(600) ยังคงไว้ — จำเป็นเพื่อให้ Livewire server-side settle ก่อน retry
   await page.addLocatorHandler(
     page.getByRole('button', { name: /ไว้.*หลัง/i }),
     async (btn) => {
       await btn.click({ force: true }).catch(() => {});
-      console.log('🔕 auto-dismiss: OneSignal popup (role button)');
+      console.log('🔕 auto-dismiss: OneSignal popup (role button) → nuke container');
+      await nukeOneSignal(page);
       await page.waitForTimeout(600);
-    }
+    },
+    { times: 5 }
   );
 
   // 1b. OneSignal container fallback — ครอบคลุม popup ที่ re-appear หลัง Livewire re-render
   //     หรือมีข้อความ dismiss ต่างกัน (ยกเลิก, No Thanks, Later ฯลฯ)
-  //     ใช้ { times: 10 } เพื่อป้องกัน loop ไม่สิ้นสุดถ้า popup ไม่ยอมหาย
+  //     ใช้ { times: 5 } เพื่อป้องกัน loop ไม่สิ้นสุดถ้า popup ไม่ยอมหาย
   await page.addLocatorHandler(
     page.locator('#onesignal-slidedown-container'),
     async (container) => {
@@ -511,15 +657,16 @@ async function setupAutoPopupDismiss(page) {
         const btn = container.locator('button').filter({ hasText: pattern }).first();
         if (await btn.isVisible({ timeout: 300 }).catch(() => false)) {
           await btn.click({ force: true }).catch(() => {});
-          console.log(`🔕 auto-dismiss: OneSignal container (${pattern})`);
+          console.log(`🔕 auto-dismiss: OneSignal container (${pattern}) → nuke`);
+          await nukeOneSignal(page);
           return;
         }
       }
-      // fallback: ซ่อน container โดยตรงถ้าไม่มีปุ่มที่กด
-      await container.evaluate(el => el.style.setProperty('display', 'none', 'important')).catch(() => {});
-      console.log('🔕 auto-dismiss: OneSignal container (force hide)');
+      // fallback: ถ้าไม่มีปุ่มที่กดได้ → remove container โดยตรง
+      console.log('🔕 auto-dismiss: OneSignal container (force remove)');
+      await nukeOneSignal(page);
     },
-    { times: 10 }
+    { times: 5 }
   );
 
   // 2. Live chat widget — MutationObserver ใน page ซ่อน/minimize อัตโนมัติ
@@ -577,6 +724,14 @@ async function acceptAllConsents(page) {
 
   for (const id of consentIds) {
     console.log(`☑️ เริ่มยอมรับ consent-${id}`);
+
+    // pre-clear OneSignal ก่อนทุก consent modal cycle
+    // เพราะ addLocatorHandler อาจยังไม่ทัน fire (handler fires async) ทำให้
+    // modal.waitFor(visible) ถูกขัดด้วย handler loop — budget หมดก่อน modal เปิด
+    await page.evaluate(() => {
+      const el = document.getElementById('onesignal-slidedown-container');
+      if (el) el.remove();
+    }).catch(() => {});
 
     const label = page.locator(
       `label[data-target="#consent-${id}"]`
@@ -861,6 +1016,7 @@ module.exports = {
   setFlatpickrDate,
   retryBirthDate,
   clickButtonByText,
+  clickFirstFound,
   clickRadioLabel,
   acceptAllConsents,
   autoSelectSafeRadios,

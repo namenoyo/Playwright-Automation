@@ -12,7 +12,7 @@
 const { test, expect } = require('@playwright/test');
 const path = require('path');
 const fs = require('fs');
-const { fetchRunnableCases, claimCase, writeResult } = require('./data/write-result');
+const { fetchRunnableCases, claimCase, writeResult, fetchNbhqRunnableCases, claimNbhqCase, writeNbhqResult } = require('./data/write-result');
 const {
   dismissPopups,
   setupAutoPopupDismiss,
@@ -40,7 +40,7 @@ const ENV_MAP = {
 };
 
 // แก้ไข RUN_CREATE_BY ให้ตรงกับ "Create By" ใน Google Sheet
-const RUN_CREATE_BY = 'เนม';
+const RUN_CREATE_BY = 'top';
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -52,7 +52,7 @@ async function dismissOverlays(page) {
     if (onesignal) onesignal.style.setProperty('display', 'none', 'important');
     const chat = document.getElementById('chat-widget-container');
     if (chat) chat.style.setProperty('display', 'none', 'important');
-  }).catch(() => {});
+  }).catch(() => { });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -94,8 +94,8 @@ async function fill2C2PForm(page) {
   console.log('💳 กรอกข้อมูลบัตรเครดิต 2C2P...');
   const [expMonth, expYear] = CC_DATA.expiry.split('/'); // "12", "25"
 
-  await page.waitForLoadState('domcontentloaded').catch(() => {});
-  await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+  await page.waitForLoadState('domcontentloaded').catch(() => { });
+  await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => { });
   await page.waitForTimeout(5000);
 
   // ── Diagnostic: dump page/iframe state so we can identify correct selectors ─
@@ -104,7 +104,7 @@ async function fill2C2PForm(page) {
     const screenshotDir = path.resolve(__dirname, 'screenshots');
     if (!fs.existsSync(screenshotDir)) fs.mkdirSync(screenshotDir, { recursive: true });
     const ssPath = path.join(screenshotDir, `cc-form-${Date.now()}.png`);
-    await page.screenshot({ path: ssPath, fullPage: true }).catch(() => {});
+    await page.screenshot({ path: ssPath, fullPage: true }).catch(() => { });
     console.log(`   📸 screenshot: ${ssPath}`);
 
     // Collect all frame URLs
@@ -192,10 +192,10 @@ async function fill2C2PForm(page) {
   const cvvResult = await locatorInPageOrFrame(page, '#tel-cvv', 5000);
   if (cvvResult) {
     const cvvEl = cvvResult.loc;
-    await cvvEl.waitFor({ state: 'attached', timeout: 5000 }).catch(() => {});
-    await cvvEl.click({ force: true }).catch(() => {});
+    await cvvEl.waitFor({ state: 'attached', timeout: 5000 }).catch(() => { });
+    await cvvEl.click({ force: true }).catch(() => { });
     await cvvEl.fill(CC_DATA.cvv, { force: true }).catch(async () => {
-      await cvvEl.pressSequentially(CC_DATA.cvv, { delay: 50 }).catch(() => {});
+      await cvvEl.pressSequentially(CC_DATA.cvv, { delay: 50 }).catch(() => { });
     });
     const cvvVal = await cvvEl.inputValue().catch(() => '');
     console.log(cvvVal ? `   ✅ CVV: ${cvvVal}` : '   ⚠️ CVV ไม่ถูก set');
@@ -255,6 +255,24 @@ async function fill2C2PForm(page) {
 // ─────────────────────────────────────────────────────────────────────────────
 // PA Product Helpers
 // ─────────────────────────────────────────────────────────────────────────────
+
+// URL segments that appear AFTER /quotation/ in the purchase flow.
+// Used to detect race conditions where Livewire navigates past /quotation/ before waitForURL catches it.
+function isPastQuotation(url) {
+  return (
+    url.includes('/identity') ||
+    url.includes('/health') ||
+    url.includes('/fatca') ||
+    url.includes('/applicant') ||
+    url.includes('/beneficiary') ||
+    url.includes('/tax') ||
+    url.includes('/document') ||
+    url.includes('/policy') ||
+    url.includes('/confirm') ||
+    url.includes('/payment') ||
+    url.includes('/success')
+  );
+}
 
 function isPaProduct(data, productSlug) {
   return (
@@ -382,7 +400,7 @@ async function runPaCalculator(page, data) {
         try {
           const plans = comp.get?.('plans') || comp.getData?.()?.plans || comp.data?.plans;
           if (Array.isArray(plans) && plans.length > 0) return plans[0].id ?? plans[0];
-        } catch {}
+        } catch { }
       }
       return null;
     }).catch(() => null);
@@ -529,7 +547,7 @@ async function runPaCalculator(page, data) {
       .find(b => /คำนวณเบี้ยประกันภัย/.test(b.textContent.trim()));
     if (btn) btn.click();
   });
-  await page.waitForURL(/\/quotation\//, { timeout: 20000 }).catch(() => {});
+  await page.waitForURL(/\/quotation\//, { timeout: 20000 }).catch(() => { });
   await waitOptionalLoading(page);
   await dismissPopups(page);
   console.log('✅ PA calculator เสร็จสิ้น — อยู่ที่ quotation');
@@ -563,7 +581,7 @@ async function runPhase1Flow(page, data, productSlug) {
     console.log('📌 Step A2: เลือกเพศ');
     await waitForReady(page, ['label[for="gender-m"]', 'label[for="gender-f"]'], 15000);
     const genderVal = String(data.gender || '').trim();
-    const isMale   = /^(M|male)$/i.test(genderVal) || genderVal.includes('ชาย');
+    const isMale = /^(M|male)$/i.test(genderVal) || genderVal.includes('ชาย');
     const isFemale = /^(F|female)$/i.test(genderVal) || genderVal.includes('หญิง');
     if (isMale) {
       await clickRadioLabel(page, 'gender-m');
@@ -611,7 +629,7 @@ async function runPhase1Flow(page, data, productSlug) {
       await insuredInput.fill('');
       await insuredInput.pressSequentially(insuredRaw, { delay: 30 });
       await page.keyboard.press('Tab');
-      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
+      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => { });
       console.log(`✅ กรอก insured_amount: ${insuredRaw}`);
 
       await clickButtonByText(page, 'ต่อไป');
@@ -645,7 +663,7 @@ async function runPhase1Flow(page, data, productSlug) {
           await selectedLabel.click({ force: true });
           console.log(`✅ เลือกโหมดชำระ: "${selectedText}" (จาก "${payPeriodVal}")`);
           // รอ Livewire settle หลังเลือก interval — ป้องกัน OneSignal ยิงในช่วง re-render
-          await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
+          await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => { });
         } else {
           const failMsg = `[paymentPeriod]: ไม่พบ "${payPeriodVal}" ในตัวเลือกที่มีบนหน้าจอ (${intervalTexts.map(t => t.trim()).join(', ')})`;
           console.error(failMsg);
@@ -663,7 +681,7 @@ async function runPhase1Flow(page, data, productSlug) {
       //   → ทำให้ปุ่มหายชั่วคราว และ timeout 30s หมดก่อนที่ปุ่มจะกลับมา
       // Fix: drain networkidle (8s) → kill popups → dismissOverlays → clickFirstFound (retry-loop)
       //   Fallback: บาง product ไม่มี "คำนวณเบี้ยประกันภัย" → ใช้ "ซื้อประกันออนไลน์" แทน
-      await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {});
+      await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => { });
       await killDigitalSalesPopups(page);
       await dismissOverlays(page);
       const clickedBtn = await clickFirstFound(
@@ -683,12 +701,18 @@ async function runPhase1Flow(page, data, productSlug) {
         await killDigitalSalesPopups(page);
         await dismissOverlays(page);
         await clickButtonByText(page, 'ซื้อประกันออนไลน์');
-        await page.waitForURL('**/quotation/**', { timeout: 30000 });
+        // Race guard: navigation อาจผ่าน /quotation/ ไปแล้วก่อน wait จะเริ่ม — ยอมรับ URL ใด ๆ ที่อยู่หลัง quotation ด้วย
+        if (!page.url().includes('/quotation/') && !isPastQuotation(page.url())) {
+          await page.waitForURL(url => url.includes('/quotation/') || isPastQuotation(url), { timeout: 30000 }).catch(() => { });
+        }
         await waitOptionalLoading(page);
         await dismissPopups(page);
       } else if (clickedBtn !== 'คำนวณเบี้ยประกันภัย') {
         // Fallback path: ซื้อประกันออนไลน์ ถูกกดไปแล้ว — รอ navigation เสร็จ
-        await page.waitForURL('**/quotation/**', { timeout: 30000 });
+        // Race guard: page อาจวิ่งผ่าน /quotation/ ไปแล้วตอน wait เริ่ม
+        if (!page.url().includes('/quotation/') && !isPastQuotation(page.url())) {
+          await page.waitForURL(url => url.includes('/quotation/') || isPastQuotation(url), { timeout: 30000 }).catch(() => { });
+        }
         await waitOptionalLoading(page);
         await dismissPopups(page);
       }
@@ -702,7 +726,10 @@ async function runPhase1Flow(page, data, productSlug) {
       await premiumInput.fill(premium);
       console.log(`✅ กรอกเบี้ย: ${premium}`);
       await clickButtonByText(page, 'คำนวณจำนวนเงินเอาประกันภัย');
-      await page.waitForURL('**/quotation/**', { timeout: 30000 });
+      // Race guard: page อาจผ่าน /quotation/ ไปแล้วก่อน wait เริ่ม
+      if (!page.url().includes('/quotation/') && !isPastQuotation(page.url())) {
+        await page.waitForURL(url => url.includes('/quotation/') || isPastQuotation(url), { timeout: 30000 }).catch(() => { });
+      }
       await waitOptionalLoading(page);
       await dismissPopups(page);
     }
@@ -711,9 +738,17 @@ async function runPhase1Flow(page, data, productSlug) {
   // ── B. Quotation → Identity ───────────────────────────────────────────────
 
   console.log('📌 Step B: กด ซื้อประกันออนไลน์ (quotation → identity)');
-  await page.waitForURL('**/quotation/**', { timeout: 30000 });
-  await clickButtonByText(page, 'ซื้อประกันออนไลน์');
-  await page.waitForURL('**/identity**', { timeout: 30000 });
+  // Race guard: ถ้า navigation จาก step A วิ่งผ่าน /quotation/ ไปแล้ว ข้าม wait นี้ได้เลย
+  if (!page.url().includes('/quotation/') && !isPastQuotation(page.url())) {
+    await page.waitForURL(url => url.includes('/quotation/') || isPastQuotation(url), { timeout: 30000 }).catch(() => { });
+  }
+  // ถ้าอยู่ที่ /quotation/ แล้ว → กด "ซื้อประกันออนไลน์" ปกติ; ถ้าผ่านไปแล้ว → ข้ามการกด
+  if (page.url().includes('/quotation/')) {
+    await clickButtonByText(page, 'ซื้อประกันออนไลน์');
+    await page.waitForURL('**/identity**', { timeout: 30000, waitUntil: 'domcontentloaded' });
+  } else {
+    console.log('   ⚡ Step B: navigation ผ่าน /quotation/ ไปแล้ว — ข้ามการกดปุ่ม');
+  }
   await waitOptionalLoading(page);
   await dismissPopups(page);
 
@@ -782,7 +817,7 @@ async function runPhase1Flow(page, data, productSlug) {
   // ── D. Health (สุขภาพ) ───────────────────────────────────────────────────
 
   console.log('📌 Step D: /health/');
-  await page.waitForURL('**/health**', { timeout: 30000 }).catch(() => {});
+  await page.waitForURL('**/health**', { timeout: 30000, waitUntil: 'domcontentloaded' }).catch(() => { });
   await waitOptionalLoading(page);
   await dismissPopups(page);
 
@@ -802,7 +837,7 @@ async function runPhase1Flow(page, data, productSlug) {
       target = page.locator('input[type="number"]').nth(fallbackNth);
     }
     for (let i = 1; i <= 3; i++) {
-      await target.scrollIntoViewIfNeeded().catch(() => {});
+      await target.scrollIntoViewIfNeeded().catch(() => { });
       await target.click({ force: true });
       await target.fill('');
       await target.type(value, { delay: 80 });
@@ -818,7 +853,7 @@ async function runPhase1Flow(page, data, productSlug) {
   await fillWithRetry(weightSpecific, 1, weightVal, 'weight');
 
   await clickButtonByText(page, 'ถัดไป');
-  const onFatca = await page.waitForURL('**/fatca**', { timeout: 20000 })
+  const onFatca = await page.waitForURL('**/fatca**', { timeout: 20000, waitUntil: 'domcontentloaded' })
     .then(() => true).catch(() => false);
   await waitOptionalLoading(page);
   await dismissPopups(page);
@@ -828,84 +863,84 @@ async function runPhase1Flow(page, data, productSlug) {
   if (!onFatca) {
     console.log(`📌 Step E: ข้าม FATCA — URL ปัจจุบัน: ${page.url()}`);
     if (!page.url().includes('/applicant')) {
-      await page.waitForURL('**/applicant**', { timeout: 20000 }).catch(() => {});
+      await page.waitForURL('**/applicant**', { timeout: 20000, waitUntil: 'domcontentloaded' }).catch(() => { });
     }
   } else {
 
-  console.log('📌 Step E: /fatca/');
+    console.log('📌 Step E: /fatca/');
 
-  // CRS: อยู่อาศัยในไทยเท่านั้น
-  const crsRadio = page.locator('input[name="crs[thai_residence_only]"][value="Y"]').first();
-  if (await crsRadio.isVisible({ timeout: 2000 }).catch(() => false)) {
-    const lblId = await crsRadio.getAttribute('id');
-    const lbl = page.locator(`label[for="${lblId}"]`).first();
-    if (await lbl.isVisible({ timeout: 1000 }).catch(() => false)) {
-      await lbl.click({ force: true });
-    } else {
-      await crsRadio.check({ force: true });
-    }
-    console.log('✅ CRS: อยู่อาศัยในไทยเท่านั้น');
-  }
-
-  // กรอกสถานที่เกิด
-  const birthPlaceVal = String(data.registerProvince || '').trim();
-  if (birthPlaceVal) {
-    const birthPlaceInput = page.locator('input[name="crs[city_name]"]').first();
-    await birthPlaceInput.waitFor({ state: 'visible', timeout: 10000 });
-    await birthPlaceInput.scrollIntoViewIfNeeded();
-    await birthPlaceInput.click({ force: true });
-    await birthPlaceInput.fill(birthPlaceVal);
-    await birthPlaceInput.press('Tab');
-    const actualBirthPlace = await birthPlaceInput.inputValue();
-    if (actualBirthPlace !== birthPlaceVal) {
-      throw new Error(`❌ กรอกสถานที่เกิดไม่สำเร็จ expected=${birthPlaceVal} actual=${actualBirthPlace}`);
-    }
-    console.log(`✅ สถานที่เกิด = ${birthPlaceVal}`);
-  }
-
-  // FATCA safe defaults
-  for (const radioId of ['ans-145-2', 'ans-146-6', 'ans-147-24']) {
-    const lbl = page.locator(`label[for="${radioId}"]`);
-    if (await lbl.isVisible({ timeout: 1500 }).catch(() => false)) {
-      await lbl.click({ force: true });
-      console.log(`✅ FATCA คลิก ${radioId}`);
-    }
-    await page.waitForTimeout(100);
-  }
-
-  // JS fallback — ตอบ "ไม่" ทุก radio ที่ยังไม่ได้ตอบ
-  await page.evaluate(() => {
-    const safeTexts = ['ไม่ใช่', 'ไม่', 'ไม่มี'];
-    const groups = {};
-    document.querySelectorAll('input[type="radio"]').forEach(el => {
-      if (!el.name) return;
-      if (!groups[el.name]) groups[el.name] = [];
-      groups[el.name].push(el);
-    });
-    for (const [, radios] of Object.entries(groups)) {
-      if (radios.some(r => r.checked)) continue;
-      const safe = radios.find(r => {
-        const lbl = document.querySelector(`label[for="${r.id}"]`);
-        const txt = (lbl?.innerText || r.value || '').trim();
-        return safeTexts.some(s => txt.includes(s));
-      });
-      if (safe) {
-        const lbl = document.querySelector(`label[for="${safe.id}"]`);
-        if (lbl) lbl.click(); else safe.click();
+    // CRS: อยู่อาศัยในไทยเท่านั้น
+    const crsRadio = page.locator('input[name="crs[thai_residence_only]"][value="Y"]').first();
+    if (await crsRadio.isVisible({ timeout: 2000 }).catch(() => false)) {
+      const lblId = await crsRadio.getAttribute('id');
+      const lbl = page.locator(`label[for="${lblId}"]`).first();
+      if (await lbl.isVisible({ timeout: 1000 }).catch(() => false)) {
+        await lbl.click({ force: true });
+      } else {
+        await crsRadio.check({ force: true });
       }
+      console.log('✅ CRS: อยู่อาศัยในไทยเท่านั้น');
     }
-  });
-  await page.waitForTimeout(500);
 
-  await clickButtonByText(page, 'ถัดไป');
-  await page.waitForTimeout(2000);
-  console.log(`🔎 URL หลัง fatca ถัดไป = ${page.url()}`);
+    // กรอกสถานที่เกิด
+    const birthPlaceVal = String(data.registerProvince || '').trim();
+    if (birthPlaceVal) {
+      const birthPlaceInput = page.locator('input[name="crs[city_name]"]').first();
+      await birthPlaceInput.waitFor({ state: 'visible', timeout: 10000 });
+      await birthPlaceInput.scrollIntoViewIfNeeded();
+      await birthPlaceInput.click({ force: true });
+      await birthPlaceInput.fill(birthPlaceVal);
+      await birthPlaceInput.press('Tab');
+      const actualBirthPlace = await birthPlaceInput.inputValue();
+      if (actualBirthPlace !== birthPlaceVal) {
+        throw new Error(`❌ กรอกสถานที่เกิดไม่สำเร็จ expected=${birthPlaceVal} actual=${actualBirthPlace}`);
+      }
+      console.log(`✅ สถานที่เกิด = ${birthPlaceVal}`);
+    }
 
-  if (!page.url().includes('/applicant')) {
-    const firstError = await page.locator('.invalid-feedback, .text-danger, [class*="error"]')
-      .filter({ hasText: /.+/ }).first().innerText().catch(() => '');
-    throw new Error(`❌ ไม่ไป /applicant หลังกด ถัดไป (url=${page.url()}) error="${firstError}"`);
-  }
+    // FATCA safe defaults
+    for (const radioId of ['ans-145-2', 'ans-146-6', 'ans-147-24']) {
+      const lbl = page.locator(`label[for="${radioId}"]`);
+      if (await lbl.isVisible({ timeout: 1500 }).catch(() => false)) {
+        await lbl.click({ force: true });
+        console.log(`✅ FATCA คลิก ${radioId}`);
+      }
+      await page.waitForTimeout(100);
+    }
+
+    // JS fallback — ตอบ "ไม่" ทุก radio ที่ยังไม่ได้ตอบ
+    await page.evaluate(() => {
+      const safeTexts = ['ไม่ใช่', 'ไม่', 'ไม่มี'];
+      const groups = {};
+      document.querySelectorAll('input[type="radio"]').forEach(el => {
+        if (!el.name) return;
+        if (!groups[el.name]) groups[el.name] = [];
+        groups[el.name].push(el);
+      });
+      for (const [, radios] of Object.entries(groups)) {
+        if (radios.some(r => r.checked)) continue;
+        const safe = radios.find(r => {
+          const lbl = document.querySelector(`label[for="${r.id}"]`);
+          const txt = (lbl?.innerText || r.value || '').trim();
+          return safeTexts.some(s => txt.includes(s));
+        });
+        if (safe) {
+          const lbl = document.querySelector(`label[for="${safe.id}"]`);
+          if (lbl) lbl.click(); else safe.click();
+        }
+      }
+    });
+    await page.waitForTimeout(500);
+
+    await clickButtonByText(page, 'ถัดไป');
+    await page.waitForTimeout(2000);
+    console.log(`🔎 URL หลัง fatca ถัดไป = ${page.url()}`);
+
+    if (!page.url().includes('/applicant')) {
+      const firstError = await page.locator('.invalid-feedback, .text-danger, [class*="error"]')
+        .filter({ hasText: /.+/ }).first().innerText().catch(() => '');
+      throw new Error(`❌ ไม่ไป /applicant หลังกด ถัดไป (url=${page.url()}) error="${firstError}"`);
+    }
 
   } // end if (onFatca)
 
@@ -1097,7 +1132,7 @@ async function runPhase1Flow(page, data, productSlug) {
   }
 
   await clickButtonByText(page, 'ถัดไป');
-  await page.waitForURL('**/beneficiary**', { timeout: 30000 });
+  await page.waitForURL('**/beneficiary**', { timeout: 30000, waitUntil: 'domcontentloaded' });
   await waitOptionalLoading(page);
   await dismissPopups(page);
 
@@ -1138,7 +1173,7 @@ async function runPhase1Flow(page, data, productSlug) {
         // รอ Livewire append new beneficiary row (3s minimum + networkidle fallback)
         // หลีกเลี่ยง toHaveCount เพราะ dynamic name scheme แตกต่างกันตาม product
         await page.waitForTimeout(3000);
-        await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {});
+        await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => { });
       } else {
         console.warn(`   ⚠️ ไม่พบปุ่ม "เพิ่มผู้รับผลประโยชน์" สำหรับคนที่ ${i + 1} — ข้ามรายการนี้`);
         continue; // ไม่มี row ใหม่ ไม่พยายามกรอก
@@ -1146,11 +1181,11 @@ async function runPhase1Flow(page, data, productSlug) {
     }
 
     const benData = beneList[i];
-    const benPrefix    = String(benData.benePrefix || '').trim();
+    const benPrefix = String(benData.benePrefix || '').trim();
     const benFirstName = String(benData.beneName || '').trim();
-    const benLastName  = String(benData.beneSurname || '').trim();
-    const benRela      = String(benData.beneRela || '').trim();
-    const benAge       = String(benData.beneAge || '').trim();
+    const benLastName = String(benData.beneSurname || '').trim();
+    const benRela = String(benData.beneRela || '').trim();
+    const benAge = String(benData.beneAge || '').trim();
 
     console.log(`📌 ผู้รับผลประโยชน์ที่ ${i + 1}: ${benPrefix} ${benFirstName} ${benLastName} | ${benRela} | อายุ ${benAge}`);
 
@@ -1238,14 +1273,14 @@ async function runPhase1Flow(page, data, productSlug) {
   }
 
   await clickButtonByText(page, 'ถัดไป');
-  await page.waitForURL('**/tax**', { timeout: 30000 });
+  await page.waitForURL('**/tax**', { waitUntil: 'domcontentloaded', timeout: 30000 });
   await waitOptionalLoading(page);
   await dismissPopups(page);
 
   // ── H. Tax (ภาษี) ────────────────────────────────────────────────────────
 
   console.log('📌 Step H: /tax/');
-  await page.waitForURL('**/tax**', { timeout: 30000 });
+  await page.waitForURL('**/tax**', { waitUntil: 'domcontentloaded', timeout: 30000 });
   await waitOptionalLoading(page);
   await dismissPopups(page);
 
@@ -1259,7 +1294,7 @@ async function runPhase1Flow(page, data, productSlug) {
   console.log('✅ เลือก: ไม่มีความประสงค์ขอยกเว้นภาษี');
 
   await clickButtonByText(page, 'ถัดไป');
-  await page.waitForURL('**/document**', { timeout: 30000 });
+  await page.waitForURL('**/document**', { timeout: 30000, waitUntil: 'domcontentloaded' });
   await waitOptionalLoading(page);
   await dismissPopups(page);
 
@@ -1273,7 +1308,7 @@ async function runPhase1Flow(page, data, productSlug) {
 
   if (fs.existsSync(idCardImagePath)) {
     await page.locator('input[name="idcard_front"]')
-      .setInputFiles(idCardImagePath).catch(() => {});
+      .setInputFiles(idCardImagePath).catch(() => { });
     await page.waitForTimeout(1000);
     console.log('   ✅ อัปโหลดภาพหน้าบัตรแล้ว');
   } else {
@@ -1282,52 +1317,67 @@ async function runPhase1Flow(page, data, productSlug) {
 
   if (fs.existsSync(idCardImagePath)) {
     await page.locator('input[name="idcard_selfie"]')
-      .setInputFiles(idCardImagePath).catch(() => {});
+      .setInputFiles(idCardImagePath).catch(() => { });
     await page.waitForTimeout(1000);
     console.log('   ✅ อัปโหลดภาพถ่ายคู่บัตรแล้ว');
   }
 
   await dismissOverlays(page);
   await page.locator('button:has-text("ถัดไป")').click();
-  await page.waitForURL(/\/policy/, { timeout: 30000 }).catch(() => {});
+  await page.waitForURL(/\/policy/, { timeout: 30000, waitUntil: 'domcontentloaded' }).catch(() => { });
   await page.waitForLoadState('domcontentloaded');
   await page.waitForTimeout(2000);
   console.log('✅ อัปโหลดเอกสารเสร็จสิ้น');
 
   // ── J. Policy delivery (วิธีรับกรมธรรม์) ───────────────────────────────
 
-  await page.waitForURL(/\/(policy|confirm)/, { timeout: 30000 }).catch(() => {});
+  await page.waitForURL(/\/(policy|confirm)/, { timeout: 30000, waitUntil: 'domcontentloaded' }).catch(() => { });
 
   if (page.url().includes('/policy')) {
     console.log('📌 Step J: /policy/ — เลือกวิธีรับกรมธรรม์');
     await page.waitForTimeout(1000);
 
-    const deliveryMap = { 'e-policy': 'EMAIL', 'ไปรษณีย์': 'POSTAL' };
-    const policyChoice = String(data.paperOrElectronic || 'e-policy').trim();
-    const deliveryVal = deliveryMap[policyChoice] || 'EMAIL';
+    // strict: ถ้า sheet ไม่มีค่า หรือค่าไม่รู้จัก → throw ทันที ห้าม fallback
+    const policyChoice = String(data.paperOrElectronic || '').trim();
+    if (!policyChoice) {
+      throw new Error('[paperOrElectronic]: ไม่มีค่าใน sheet — ต้องระบุ "e-policy" หรือ "ไปรษณีย์"');
+    }
+    const deliveryMap = {
+      'e-policy': 'email',
+      'email': 'email',       // alias: sheet value "Email"
+      'ไปรษณีย์': 'postal',
+      'paper': 'postal',      // alias: sheet value "Paper"
+    };
+    const deliveryVal = deliveryMap[policyChoice.toLowerCase()] ?? deliveryMap[policyChoice];
+    if (!deliveryVal) {
+      throw new Error(`[paperOrElectronic]: ไม่รู้จักค่า "${policyChoice}" — ค่าที่ยอมรับ: "e-policy", "Email", "ไปรษณีย์", "Paper"`);
+    }
 
-    const clickDeliveryLabel = async (fieldName, val) => {
-      const lbl = page.locator(`label[for="${fieldName}_${val.toLowerCase()}"]`);
-      if (await lbl.isVisible({ timeout: 3000 }).catch(() => false)) {
-        await lbl.click();
-        await page.waitForTimeout(600);
-        const openModal = page.locator('.modal.show')
-          .filter({ has: page.locator('[data-dismiss="modal"]') });
-        if (await openModal.isVisible({ timeout: 500 }).catch(() => false)) {
-          await openModal.locator('[data-dismiss="modal"]').click();
-          await page.waitForTimeout(500);
-          console.log('   ปิด popup แจ้งเตือน');
-        }
+    // mandatory click: ถ้าไม่พบ label → throw (ไม่ silent skip)
+    const clickDeliveryLabel = async (fieldName) => {
+      const lbl = page.locator(`label[for="${fieldName}_${deliveryVal}"]`);
+      const visible = await lbl.isVisible({ timeout: 3000 }).catch(() => false);
+      if (!visible) {
+        throw new Error(`[${fieldName}]: ไม่พบ label[for="${fieldName}_${deliveryVal}"] บนหน้าจอ`);
+      }
+      await lbl.click();
+      await page.waitForTimeout(300);
+      const openModal = page.locator('.modal.show')
+        .filter({ has: page.locator('[data-dismiss="modal"]') });
+      if (await openModal.isVisible({ timeout: 1000 }).catch(() => false)) {
+        await openModal.locator('[data-dismiss="modal"]').click();
+        await page.waitForTimeout(500);
+        console.log('   ปิด popup แจ้งเตือน');
       }
     };
 
-    await clickDeliveryLabel('policy_format', deliveryVal);
+    await clickDeliveryLabel('policy_format');
     console.log(`✅ รับกรมธรรม์แบบ: ${policyChoice}`);
-    await clickDeliveryLabel('document_delivery_format', deliveryVal);
+    await clickDeliveryLabel('document_delivery_format');
     console.log(`✅ รับใบเสร็จแบบ: ${policyChoice}`);
 
     await clickButtonByText(page, 'ถัดไป');
-    await page.waitForURL(/\/confirm/, { timeout: 30000 }).catch(() => {});
+    await page.waitForURL(/\/confirm/, { timeout: 30000, waitUntil: 'domcontentloaded' }).catch(() => { });
     await waitOptionalLoading(page);
     await dismissPopups(page);
   }
@@ -1362,7 +1412,7 @@ async function runPhase1Flow(page, data, productSlug) {
 
   console.log('📌 Step L: OTP');
   const otpModal = page.locator('#confirmOtpModal');
-  await otpModal.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
+  await otpModal.waitFor({ state: 'visible', timeout: 10000 }).catch(() => { });
 
   if (await otpModal.isVisible({ timeout: 2000 }).catch(() => false)) {
     // กรอกเบอร์โทร (ถ้ายังไม่มีค่า)
@@ -1388,7 +1438,7 @@ async function runPhase1Flow(page, data, productSlug) {
     // ดึง OTP จาก Debug OTP (UAT แสดง "Debug OTP: XXXXXX")
     // รอ Livewire render ก่อน innerText() — 2s อาจไม่พอ, ให้รอสูงสุด 15s
     const otpDebugEl = otpModal.locator('p').filter({ hasText: /Debug OTP/i });
-    await otpDebugEl.waitFor({ state: 'visible', timeout: 15000 }).catch(() => {});
+    await otpDebugEl.waitFor({ state: 'visible', timeout: 15000 }).catch(() => { });
     const otpDebugText = await otpDebugEl.innerText({ timeout: 5000 }).catch(() => '');
     const otpCode = otpDebugText.match(/Debug OTP[:\s]+(\d+)/i)?.[1] || '';
 
@@ -1445,8 +1495,8 @@ async function runPhase1Flow(page, data, productSlug) {
 
   const paymentMethodVal = String(data.paymentMethod || '').trim();
   console.log(`📌 Step M: /payment/ — ${paymentMethodVal}`);
-  await page.waitForURL(/\/payment/, { timeout: 20000 }).catch(() => {});
-  await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
+  await page.waitForURL(/\/payment/, { timeout: 20000, waitUntil: 'domcontentloaded' }).catch(() => { });
+  await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => { });
   await dismissOverlays(page);
   await page.waitForTimeout(1000);
   console.log(`🔎 URL ที่ Step M = ${page.url()}`);
@@ -1484,7 +1534,7 @@ async function runPhase1Flow(page, data, productSlug) {
     } else {
       // รอให้ Livewire re-render payment method options หลัง pre-step click
       await page.waitForTimeout(3000);
-      await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
+      await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => { });
     }
   }
 
@@ -1523,7 +1573,7 @@ async function runPhase1Flow(page, data, productSlug) {
     const matchedLoc = page.locator(`button:has-text("${matchedOptionText}"), label:has-text("${matchedOptionText}")`).first();
     const matchedAttached = await matchedLoc.waitFor({ state: 'attached', timeout: 2000 }).then(() => true).catch(() => false);
     if (matchedAttached) {
-      await matchedLoc.evaluate(el => el.scrollIntoView({ block: 'center' })).catch(() => {});
+      await matchedLoc.evaluate(el => el.scrollIntoView({ block: 'center' })).catch(() => { });
       await page.waitForTimeout(300);
       if (await matchedLoc.isVisible({ timeout: 1500 }).catch(() => false)) {
         await matchedLoc.click();
@@ -1671,7 +1721,7 @@ async function runPhase1Flow(page, data, productSlug) {
             console.log('   ⚠️ waitForFunction 3DS หมดเวลา — ลองต่อด้วยข้อมูลที่มี');
           });
           const ss3ds = path.join(__dirname, 'screenshots', `3ds-${Date.now()}.png`);
-          await page.screenshot({ path: ss3ds, fullPage: true }).catch(() => {});
+          await page.screenshot({ path: ss3ds, fullPage: true }).catch(() => { });
           console.log(`📸 screenshot 3DS: ${ss3ds}`);
 
           // ดึง Default OTP จาก 3DS page — ลองทั้ง page และ iframe
@@ -1747,7 +1797,7 @@ async function runPhase1Flow(page, data, productSlug) {
           }
 
           console.log('   ⏳ รอ redirect ไป /success หลัง 3DS...');
-          await page.waitForURL(/\/success/, { timeout: 60000 }).catch(() => {});
+          await page.waitForURL(/\/success/, { timeout: 60000, waitUntil: 'domcontentloaded' }).catch(() => { });
         }
       } else {
         console.log('✅ ผ่าน payment (UAT bypass ไม่ต้องกรอก 2C2P)');
@@ -1755,11 +1805,11 @@ async function runPhase1Flow(page, data, productSlug) {
 
     } else {
       // ── Cash / other (everything else) — รอ redirect ไป /success ────────────────────
-      await page.waitForURL(/\/success/, { timeout: 30000 }).catch(() => {});
+      await page.waitForURL(/\/success/, { timeout: 30000, waitUntil: 'domcontentloaded' }).catch(() => { });
     }
 
     // ── ตรวจ /success URL หลัง payment (throw ถ้าไม่ใช่ — ทุก product type) ──
-    await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
+    await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => { });
     await page.waitForTimeout(1500);
     const paymentFinalUrl = page.url();
     console.log(`🔎 URL หลัง payment = ${paymentFinalUrl}`);
@@ -1774,8 +1824,8 @@ async function runPhase1Flow(page, data, productSlug) {
   // ── N. Success — ดึงเลขที่อ้างอิง ────────────────────────────────────────
 
   console.log('📌 Step N: /success/ — ดึงเลขอ้างอิง');
-  await page.waitForURL(/\/success/, { timeout: 30000 }).catch(() => {});
-  await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
+  await page.waitForURL(/\/success/, { timeout: 30000, waitUntil: 'domcontentloaded' }).catch(() => { });
+  await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => { });
   await page.waitForTimeout(1000);
 
   const stepNUrl = page.url();
@@ -1821,7 +1871,7 @@ async function runPhase1Flow(page, data, productSlug) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Main Test — Loop ดึงเคสจาก Google Sheet แล้วรัน Phase 1 Flow
 // ─────────────────────────────────────────────────────────────────────────────
-test('Digital Sale Phase 1 — Google Sheet Runner', async ({ browser }) => {
+test('Digital Sales — Google Sheet Runner', async ({ browser }) => {
   test.setTimeout(0);
   let idx = 0;
 
@@ -1904,22 +1954,30 @@ test('Digital Sale Phase 1 — Google Sheet Runner', async ({ browser }) => {
         const screenshotPath = `reports/qa/screenshots/phase1_gsheet_fail_${no}_${Date.now()}.png`;
         await page.screenshot({ path: screenshotPath, fullPage: true });
         console.log(`📸 Screenshot: ${screenshotPath}`);
-      } catch {}
+      } catch { }
     } finally {
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
       try {
+        // QR PASS → Result = 'Waiting Policy No' (ลูกค้าชำระแล้ว แต่ยังไม่มีเลขกรมธรรม์)
+        //           + skipTestStatus=true → ไม่เขียน Test Status และ Test Status QR (คงค่าเดิม)
+        // QR FAIL / non-QR → ใช้ status ตามปกติ ('PASS' หรือ 'FAIL')
+        const isQrPass = qrReady && status === 'PASS';
+        const resultOverride = isQrPass ? 'Waiting Policy No' : '';
+
         await writeResult({
           no,
           status,
           remark: `[${elapsed}s] ${remark}`.slice(0, 500),
           applicationNo: referenceNumber,
-          testStatusQr: qrReady ? 'Ready for Test' : '',
+          result: resultOverride,
+          // QR+PASS: ไม่เขียน Test Status — ปล่อยให้คงค่าเดิมใน sheet
+          skipTestStatus: isQrPass,
         });
-        console.log(`📝 Write result: No ${no} => ${status} [${elapsed}s]`);
+        console.log(`📝 Write result: No ${no} => ${status}${resultOverride ? ` | Result: ${resultOverride}` : ''} [${elapsed}s]`);
       } catch (writeErr) {
         console.error(`❌ Write Sheet failed: No ${no}`, writeErr);
       }
-      await context.close().catch(() => {});
+      await context.close().catch(() => { });
     }
   }
 
@@ -1956,3 +2014,1610 @@ test('Digital Sale Phase 1 — Google Sheet Runner', async ({ browser }) => {
  *   ที่อยู่ตามทะเบียนบ้าน-จังหวัด (ใช้เป็น birthPlace ใน FATCA ด้วย)
  * ──────────────────────────────────────────────────────
  */
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Phase 5 — NBHQ QR Code Runner
+// Automates NBS Steps 23–27 after QR payment has been confirmed externally.
+//
+// Prerequisite:
+//   - Phase 1 (QR+PASS) wrote: Test Status = Inprogress, Result = 'Waiting Policy No',
+//     เลขใบคำขอ = reference number
+//   - Someone manually completed Steps 12–22 (receipt upload to NBS)
+//   - Case status in NBHQ is now "ชำระครบ"
+//
+// Steps automated per case:
+//   23 — search by เลขใบคำขอ → verify status = "ชำระครบ" (FAIL if not)
+//   24 — click "ตรวจสอบข้อมูลเคสใหม่"
+//   25 — scroll to bottom → click "ยืนยันตรวจสอบข้อมูล"
+//   26 — verify success message
+//   27 — navigate back → search again → extract เลขที่ กธ (policy number)
+// ═════════════════════════════════════════════════════════════════════════════
+
+// ─── Phase 5 Constants ────────────────────────────────────────────────────────
+
+const NBS_URL = 'https://uatnbs.thaisamut.co.th/nbsweb/secure/home.html';
+const NBS_USER = 'MG0001';
+const NBS_PASS = '1234';
+
+// NBHQ navigation path:
+// ระบบงานให้บริการ > ระบบจัดการข้อมูลเคสใหม่ สำนักงานใหญ่ (NBHQ) > จัดการข้อมูลเคสใหม่ > ตรวจสอบข้อมูลเคสใหม่
+const MENU_PATH = [
+  'ระบบงานให้บริการ',
+  'ระบบจัดการข้อมูลเคสใหม่ สำนักงานใหญ่',  // partial — ตรงกับ substring
+  'จัดการข้อมูลเคสใหม่',
+  'ตรวจสอบข้อมูลเคสใหม่',
+];
+
+// Policy number regex: เลขที่ กธ เช่น PA20000157, LS20000001
+const POLICY_NO_REGEX = /[A-Z]{2,3}\d{7,10}/;
+
+// ─── NBS Helpers ─────────────────────────────────────────────────────────────
+
+/**
+ * Login to NBS system
+ * ใช้ Basic Auth ผ่าน httpCredentials (กัน browser auth dialog)
+ * + กรอก form ถ้า NBS มี login form แยก
+ *
+ * Popup layers handled:
+ *   1. page.on('dialog') — browser-native auth/confirm/alert dialogs (must register BEFORE goto)
+ *   2. Captive portal / in-page proxy portal — detected by URL host mismatch after navigation
+ *   3. httpCredentials (context-level) — handles WWW-Authenticate Basic/Digest (401)
+ *   Note: httpCredentials does NOT cover NTLM/Kerberos/Proxy-Auth (407);
+ *         those require the dialog handler + credentials-in-URL fallback below.
+ */
+async function loginNbs(page) {
+  console.log(`🔐 NBS: กำลัง login ${NBS_URL}`);
+
+  // ── Layer 1: register dialog handler BEFORE goto ──────────────────────────
+  // Browser-native auth dialogs (Basic Auth challenge, proxy auth, confirm, alert)
+  // fire synchronously during navigation — must be registered before page.goto()
+  // so Playwright can intercept them instead of blocking the navigation indefinitely.
+  page.on('dialog', async (dialog) => {
+    const dialogType = dialog.type(); // 'alert' | 'confirm' | 'prompt' | 'beforeunload'
+    const dialogMsg = dialog.message();
+    console.log(`   🔔 Dialog intercepted — type: ${dialogType}, message: "${dialogMsg.substring(0, 120)}"`);
+    try {
+      if (dialogType === 'prompt') {
+        // Network auth prompts sometimes appear as 'prompt' — try accepting with empty string
+        // (credentials are already sent via httpCredentials context option)
+        await dialog.accept('');
+      } else {
+        await dialog.accept();
+      }
+      console.log('   ✅ Dialog accepted');
+    } catch (e) {
+      console.warn(`   ⚠️ Dialog accept failed: ${e.message}`);
+    }
+  });
+
+  await page.goto(NBS_URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
+  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => { });
+  await page.waitForTimeout(1500);
+
+  // ── Layer 2: captive portal / proxy portal detection ─────────────────────
+  // Corporate proxies / firewalls redirect to an in-page portal (different host)
+  // before allowing access. Detect by checking if the current URL host differs
+  // from the target NBS host — if so, look for and click an "allow" button.
+  const currentUrl = page.url();
+  const nbsHostname = 'uatnbs.thaisamut.co.th';
+  try {
+    const currentHostname = new URL(currentUrl).hostname;
+    if (currentHostname !== nbsHostname && currentUrl !== 'about:blank') {
+      console.warn(`   ⚠️ Redirected to proxy/captive portal: ${currentUrl}`);
+      console.log('   🔍 กำลังมองหาปุ่ม "Allow" / "อนุญาต" / "ยืนยัน"...');
+
+      // Try common Thai/English "allow network" button text patterns
+      const allowPatterns = [
+        /อนุญาต/i, /ยืนยัน/i, /allow/i, /proceed/i, /continue/i,
+        /ตกลง/i, /ok$/i, /accept/i, /เข้าสู่ระบบ/i,
+      ];
+      let portalHandled = false;
+      for (const pattern of allowPatterns) {
+        const btn = page.getByRole('button', { name: pattern }).first();
+        if (await btn.isVisible({ timeout: 2000 }).catch(() => false)) {
+          await btn.click();
+          console.log(`   ✅ คลิกปุ่ม portal: "${pattern}"`);
+          await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => { });
+          await page.waitForTimeout(1500);
+          portalHandled = true;
+          break;
+        }
+        // Also check <a> and <input type="submit"> links
+        const linkOrInput = page.locator(`a, input[type="submit"]`).filter({ hasText: pattern }).first();
+        if (await linkOrInput.isVisible({ timeout: 1000 }).catch(() => false)) {
+          await linkOrInput.click();
+          console.log(`   ✅ คลิก link/input portal: "${pattern}"`);
+          await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => { });
+          await page.waitForTimeout(1500);
+          portalHandled = true;
+          break;
+        }
+      }
+
+      if (!portalHandled) {
+        // Last resort: navigate directly to NBS with credentials embedded in URL
+        // This bypasses some proxy auth challenges that httpCredentials misses (NTLM-lite)
+        console.warn('   ⚠️ ไม่พบปุ่ม portal — ลอง navigate ตรงไป NBS อีกครั้ง');
+        const nbsUrlWithCreds = NBS_URL.replace('https://', `https://${NBS_USER}:${NBS_PASS}@`);
+        await page.goto(nbsUrlWithCreds, { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => { });
+        await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => { });
+        await page.waitForTimeout(1500);
+      }
+    }
+  } catch (urlParseErr) {
+    console.warn(`   ⚠️ URL parse error: ${urlParseErr.message}`);
+  }
+
+  console.log(`   🌐 URL หลัง navigate: ${page.url()}`);
+
+  // ตรวจว่ามี login form หรือไม่ (บางระบบ redirect ไป login page แยก)
+  const usernameInput = page.locator('input[name="username"], input[name="name"], input[id="name"], input[type="text"][name*="user"], input[id*="user"], input[placeholder*="user" i]').first();
+  const hasLoginForm = await usernameInput.isVisible({ timeout: 10000 }).catch(() => false);
+
+  if (hasLoginForm) {
+    await usernameInput.fill(NBS_USER);
+    console.log(`   ✅ กรอก username: ${NBS_USER}`);
+
+    const passwordInput = page.locator('input[name="password"], input[type="password"]').first();
+    await passwordInput.fill(NBS_PASS);
+    console.log('   ✅ กรอก password');
+
+    // กด submit/login
+    const loginBtn = page.locator('button[type="submit"], input[type="submit"], button:has-text("login"), button:has-text("เข้าสู่ระบบ"), button:has-text("Login")').first();
+    if (await loginBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await loginBtn.click();
+      console.log('   ✅ กด Login button');
+    } else {
+      await page.keyboard.press('Enter');
+      console.log('   ✅ กด Enter (fallback)');
+    }
+
+    await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => { });
+    await page.waitForTimeout(2000);
+
+    // รอ spinner หายหลัง login — ใช้ shared helper (เดียวกับที่ใช้หลัง menu click)
+    await waitForNbsSpinner(page);
+
+    console.log(`   ✅ Login สำเร็จ — URL: ${page.url()}`);
+  } else {
+    console.log('   ℹ️ ไม่พบ login form — อาจใช้ Basic Auth หรือ session ที่มีอยู่แล้ว');
+  }
+}
+
+/**
+ * รอให้ NBS spinner "กรุณารอสักครู่" หายไปจากหน้าจอ
+ * ใช้หลัง login และหลังคลิกทุก menu item — spinner ปรากฏทุกครั้งที่มี page transition
+ * timeout: 30s (เผื่อ NBS UAT ช้า)
+ */
+async function waitForNbsSpinner(page) {
+  await page.waitForFunction(() => {
+    const overlays = document.querySelectorAll('*');
+    for (const el of overlays) {
+      if (el.offsetParent !== null && (el.innerText || '').includes('กรุณารอสักครู่')) return false;
+    }
+    return true;
+  }, { timeout: 30000 }).catch(() => {
+    console.warn('   ⚠️ waitForNbsSpinner timeout 30s — เดินต่อ');
+  });
+}
+
+/**
+ * Navigate ผ่าน NBS sidebar/menu ตาม MENU_PATH
+ * ใช้ text-matching แบบ partial (substring) เพื่อรองรับ whitespace และ line breaks
+ * หลังคลิกทุก step: รอ spinner "กรุณารอสักครู่" หายก่อน — NBS fires spinner บน page transition
+ */
+async function navigateNbhqMenu(page) {
+  console.log('📌 NBHQ: นำทางผ่านเมนู...');
+
+  for (let i = 0; i < MENU_PATH.length; i++) {
+    const menuText = MENU_PATH[i];
+    console.log(`   Step ${i + 1}/${MENU_PATH.length}: คลิก "${menuText}"`);
+
+    // ลองหาด้วยหลาย selector pattern — NBS อาจใช้ <a>, <li>, <span>, หรือ <div> เป็น menu item
+    const candidates = [
+      page.locator(`a:has-text("${menuText}")`).first(),
+      page.locator(`li:has-text("${menuText}")`).first(),
+      page.locator(`span:has-text("${menuText}")`).first(),
+      page.locator(`div[role="menuitem"]:has-text("${menuText}")`).first(),
+    ];
+
+    // Steps 1–2 (i=0, i=1): menu items live inside a dropdown that must open first.
+    // waitForSelector(state:'visible') can resolve on a hidden/pre-rendered <a> before the
+    // dropdown actually opens → false-positive → click fires on invisible element → nothing happens.
+    // Fix: waitForFunction polling <a> bounding box (width > 0 && height > 0) — guarantees the
+    // element is truly painted and interactive before we attempt to click it.
+    //
+    // Steps 3–4 (i=2, i=3): already on a stable loaded page; combinedSelector race is fine.
+    const visibilityTimeout = i === 0 ? 15000 : i === 2 ? 15000 : i === 3 ? 20000 : 8000;
+
+    if (i < 2) {
+      // Bounding-box wait — ensures <a> is visible AND has real layout dimensions
+      await page.waitForFunction((text) => {
+        return [...document.querySelectorAll('a')].some(el => {
+          const r = el.getBoundingClientRect();
+          return r.width > 0 && r.height > 0 &&
+            (el.textContent || '').replace(/\s+/g, ' ').trim().includes(text);
+        });
+      }, menuText, { timeout: visibilityTimeout }).catch(() => { });
+    } else {
+      // Race ALL selector candidates in parallel — waitForSelector resolves as soon as ANY matches.
+      const combinedSelector = [
+        `a:has-text("${menuText}")`,
+        `li:has-text("${menuText}")`,
+        `span:has-text("${menuText}")`,
+        `div[role="menuitem"]:has-text("${menuText}")`,
+      ].join(', ');
+      await page.waitForSelector(combinedSelector, { state: 'visible', timeout: visibilityTimeout })
+        .catch(() => { }); // graceful — candidates loop below handles the "not found" case
+    }
+
+    let clicked = false;
+    for (const loc of candidates) {
+      if (i < 2) {
+        // Steps 1–2: isVisible() can return true on pre-rendered hidden elements (CSS visible but
+        // zero dimensions). Verify THIS specific loc instance has real pixel dimensions so we don't
+        // fire a click on an off-screen/collapsed element.
+        const hasRealSize = await loc.evaluate(el => {
+          const r = el.getBoundingClientRect();
+          return r.width > 0 && r.height > 0;
+        }).catch(() => false);
+        if (!hasRealSize) continue; // skip — not truly painted/interactive
+      } else {
+        // Steps 3–4: standard visibility check is sufficient (page is fully loaded)
+        if (!await loc.isVisible({ timeout: 1000 }).catch(() => false)) continue;
+      }
+      await loc.scrollIntoViewIfNeeded().catch(() => { });
+      await loc.click();
+      clicked = true;
+      console.log(`   ✅ คลิก "${menuText}" สำเร็จ`);
+      break;
+    }
+
+    if (!clicked) {
+      // Fallback: ใช้ evaluate เพื่อหา element ที่มี text ตรงกัน
+      const evalClicked = await page.evaluate((text) => {
+        const els = Array.from(document.querySelectorAll('a, li, span, button, div[role="menuitem"]'));
+        const el = els.find(e =>
+          e.offsetParent !== null &&
+          (e.textContent || '').replace(/\s+/g, ' ').trim().includes(text)
+        );
+        if (el) {
+          el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+          return true;
+        }
+        return false;
+      }, menuText);
+
+      if (evalClicked) {
+        console.log(`   ✅ คลิก "${menuText}" ด้วย evaluate fallback`);
+        clicked = true;
+      } else {
+        throw new Error(`❌ NBHQ menu: ไม่พบ menu item "${menuText}" บนหน้าจอ`);
+      }
+    }
+
+    // รอ spinner หายหลังทุก menu click — NBS แสดง "กรุณารอสักครู่" บน page transition
+    // Skip for i=2/i=3: NBS ไม่แสดง spinner หลัง sub-menu click; spinner ถูก drain แล้วหลัง i=1
+    if (i !== 2 && i !== 3) {
+      await waitForNbsSpinner(page);
+    }
+
+    // i=1 (Step 2): "ระบบจัดการข้อมูลเคสใหม่ สำนักงานใหญ่" — triggers full page navigation
+    // Use waitForLoadState (not waitForNavigation) — navigation may already be complete by the
+    // time waitForNavigation is registered, causing a race condition that hangs indefinitely.
+    // waitForLoadState is idempotent: if page is already in the target state, it resolves immediately.
+    if (i === 1) {
+      console.log(`   ⏳ รอ page navigation หลัง Step 2 click (domcontentloaded, max 30s)...`);
+      await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => {
+        console.warn('   ⚠️ waitForLoadState timeout — เดินต่อ');
+      });
+      await waitForNbsSpinner(page);
+    }
+
+    // i=2 (Step 3): "จัดการข้อมูลเคสใหม่" — already on new page from Step 2; no navigation needed
+    // Use state:'visible' (not 'attached') so next iteration's race-wait resolves immediately
+    // when element is already on screen, avoiding a full visibilityTimeout burn.
+    if (i === 2) {
+      const nextMenuText = MENU_PATH[i + 1]; // "ตรวจสอบข้อมูลเคสใหม่"
+      if (nextMenuText) {
+        console.log(`   ⏳ รอ "${nextMenuText}" ปรากฏใน DOM (content-driven, max 60s)...`);
+        // NBS ไม่มี iframe ใน Phase 5 navigation — ตรวจ page หลักเพียงอย่างเดียว
+        await page.waitForSelector(
+          `a:has-text("${nextMenuText}"), li:has-text("${nextMenuText}"), span:has-text("${nextMenuText}")`,
+          { state: 'visible', timeout: 60000 }
+        ).catch(() => {
+          console.warn(`   ⚠️ content-driven wait timeout — "${nextMenuText}" ยังไม่ปรากฏ; เดินต่อแล้วให้ candidates loop จัดการ`);
+        });
+      }
+    }
+  }
+
+  console.log('✅ นำทางเมนู NBHQ ครบแล้ว');
+}
+
+/**
+ * Step 23: กรอกเลขใบคำขอในช่องค้นหา และกดค้นหา
+ * คืน true ถ้าพบผลลัพธ์
+ */
+async function searchByApplicationNo(page, applicationNo) {
+  console.log(`📌 Step 23: ค้นหา เลขใบคำขอ "${applicationNo}"`);
+
+  // ── Step 23a: Clear "วันที่บันทึกใบคำขอ" from/to date fields ──────────────
+  // ตรวจสอบจาก DOM จริง (uat-intranet-api.ochi.link/thaisamut/web/nbentry):
+  //   date-from field: id="applicationStartDate", name="applicationStartDate", placeholder="จากวันที่"
+  //   date-to   field: id="applicationEndDate",   name="applicationEndDate",   placeholder="ถึงวันที่"
+  // ทั้งสอง field เป็น type="text" (ไม่ใช่ type="date") และมีค่า pre-filled (เช่น "08/04/2569")
+  // ต้อง clear ก่อนกรอก applicationNo เพราะ date range จำกัดผลลัพธ์
+
+  const clearDateField = async (loc, label) => {
+    const visible = await loc.isVisible({ timeout: 2000 }).catch(() => false);
+    if (!visible) { console.log(`   ⚠️ ${label}: ไม่พบหรือ hidden — ข้าม`); return; }
+    try {
+      // React MUI date picker: ต้อง click → Ctrl+A → Delete (repeat สำหรับ multi-segment)
+      // ห้ามใช้ fill('') — React controlled input ไม่รับรู้ DOM change จาก fill
+      await loc.click();
+      await page.keyboard.press('Control+A');
+      await page.keyboard.press('Delete');
+      await page.waitForTimeout(200);
+      // repeat สำหรับ multi-segment field (day/month/year แยก segment)
+      await page.keyboard.press('Control+A');
+      await page.keyboard.press('Delete');
+      await page.waitForTimeout(200);
+      console.log(`   ✅ Clear ${label}`);
+    } catch (err) {
+      console.warn(`   ⚠️ clearDateField ${label} error: ${err.message}`);
+    }
+  };
+
+  // date-from: id="applicationStartDate" (ยืนยันจาก DOM inspection)
+  await clearDateField(
+    page.locator('#applicationStartDate'),
+    'วันที่บันทึกใบคำขอ (จากวันที่)'
+  );
+
+  // date-to: id="applicationEndDate" (ยืนยันจาก DOM inspection)
+  await clearDateField(
+    page.locator('#applicationEndDate'),
+    'วันที่บันทึกใบคำขอ (ถึงวันที่)'
+  );
+
+  await page.waitForTimeout(500);
+
+  // ── Step 23b: กรอก "เลขที่ใบคำขอ" ────────────────────────────────────────
+  // ตรวจสอบจาก DOM จริง:
+  //   id="applicationNo", name="" (empty — ทำให้ name*= selector ไม่ทำงาน!), type="text"
+  //   placeholder="" (ว่าง), aria-label=null
+  //   CSS class: MuiInputBase-input (React MUI component)
+  // ต้องใช้ id="applicationNo" เท่านั้น — name selector และ placeholder selector ใช้ไม่ได้
+
+  const searchInput = page.locator('#applicationNo');
+  const searchVisible = await searchInput.isVisible({ timeout: 5000 }).catch(() => false);
+  if (!searchVisible) {
+    throw new Error(`❌ Step 23: ไม่พบ input#applicationNo บนหน้า ตรวจสอบข้อมูลเคสใหม่`);
+  }
+
+  await searchInput.clear().catch(() => { });
+  await searchInput.fill(applicationNo);
+  await page.waitForTimeout(500); // รอให้ React/MUI state sync หลัง fill ก่อนกดค้นหา
+  console.log(`   ✅ กรอก เลขใบคำขอ: ${applicationNo} (selector: #applicationNo)`);
+
+  // ── Step 23c: กดปุ่ม "ค้นหา" ─────────────────────────────────────────────
+  // DOM inspection: button "ค้นหา" มี text content "ค้นหา" พร้อม inner generic element
+  const searchBtn = page.locator('button:has-text("ค้นหา")').first();
+  const btnVisible = await searchBtn.isVisible({ timeout: 3000 }).catch(() => false);
+  if (btnVisible) {
+    await searchBtn.click();
+    console.log('   ✅ กดปุ่มค้นหา');
+  } else {
+    // fallback: Enter key ถ้าปุ่มหาไม่เจอ
+    await page.keyboard.press('Enter');
+    console.log('   ✅ กด Enter (fallback)');
+  }
+
+  // Phase 1: รอให้ spinner ปรากฏก่อน (popup อาจใช้เวลาสักครู่หลัง click)
+  // ถ้า server ตอบเร็วและ spinner ไม่ปรากฏเลยก็ ok — catch ทิ้ง
+  await page.waitForFunction(() => {
+    return [...document.querySelectorAll('*')].some(
+      el => el.offsetParent !== null && (el.innerText || '').includes('กรุณารอสักครู่')
+    );
+  }, { timeout: 3000 }).catch(() => { });
+
+  // Phase 2: รอให้ spinner หายไปจากหน้าจอ (max 30s)
+  await waitForNbsSpinner(page);
+
+  // Phase 3: รอให้ตารางผลลัพธ์ render ก่อนอ่านค่า
+  await page.waitForSelector('table tbody tr, .result-row, tr[data-id]', {
+    state: 'attached',
+    timeout: 15000,
+  }).catch(() => { });
+  await page.waitForTimeout(500); // buffer สำหรับ React render cycle
+
+  return true;
+}
+
+/**
+ * Step 23 (ต่อ): ตรวจสอบ status = "ชำระครบ" ในผลลัพธ์
+ * throw Error ถ้าไม่พบหรือ status ไม่ใช่ "ชำระครบ"
+ */
+async function verifyStatusChampraKhrop(page, applicationNo) {
+  const bodyText = await page.locator('body').innerText({ timeout: 5000 }).catch(() => '');
+  console.log(`   🔎 body (500 chars): ${bodyText.substring(0, 500)}`);
+
+  // ตรวจว่าพบเลขใบคำขอในผลลัพธ์หรือไม่
+  if (!bodyText.includes(applicationNo)) {
+    throw new Error(`❌ Step 23: ไม่พบเลขใบคำขอ "${applicationNo}" ในผลลัพธ์ค้นหา`);
+  }
+
+  // ตรวจ status ต้องเป็น "ชำระครบ"
+  if (!bodyText.includes('ชำระครบ')) {
+    // ดึง status จริงที่แสดงในหน้า
+    const statusMatch = bodyText.match(/(?:สถานะ|Status)[^\n:]*[:：]?\s*([^\n]{1,50})/i);
+    const actualStatus = statusMatch ? statusMatch[1].trim() : '(ไม่พบ status ในผลลัพธ์)';
+    throw new Error(
+      `❌ Step 23: สถานะไม่ใช่ "ชำระครบ" — สถานะจริง: "${actualStatus}"\n` +
+      `   เลขใบคำขอ: ${applicationNo}\n` +
+      `   กรุณารอให้ผู้รับผิดชอบทำ Steps 12–22 ให้ครบก่อน`
+    );
+  }
+
+  console.log(`   ✅ Step 23: สถานะ = "ชำระครบ" ✓`);
+}
+
+/**
+ * Step 24: คลิกปุ่ม "ตรวจสอบข้อมูลเคสใหม่"
+ */
+async function clickCheckNewCase(page) {
+  console.log('📌 Step 24: คลิก "ตรวจสอบข้อมูลเคสใหม่"');
+
+  const btnCandidates = [
+    // title attribute — icon-only buttons carry no text; title is the stable identifier
+    page.locator('[title="ตรวจสอบข้อมูลเคสใหม่"]').first(),
+    // text-based fallbacks for buttons that DO render visible text
+    page.locator('a:has-text("ตรวจสอบข้อมูลเคสใหม่"), button:has-text("ตรวจสอบข้อมูลเคสใหม่")').first(),
+    page.locator('input[value*="ตรวจสอบข้อมูลเคสใหม่"]').first(),
+  ];
+
+  for (const loc of btnCandidates) {
+    if (await loc.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await loc.click();
+      console.log('   ✅ คลิก "ตรวจสอบข้อมูลเคสใหม่" สำเร็จ');
+      // Phase 1: wait for "กรุณารอสักครู่" spinner to appear (up to 3s)
+      await page.waitForFunction(() =>
+        [...document.querySelectorAll('*')].some(
+          el => el.offsetParent !== null && (el.innerText || '').includes('กรุณารอสักครู่')
+        ), { timeout: 3000 }
+      ).catch(() => { });
+      // Phase 2: wait for spinner to disappear
+      await waitForNbsSpinner(page);
+      return;
+    }
+  }
+
+  // Fallback: evaluate text match
+  const evalClicked = await page.evaluate(() => {
+    const els = Array.from(document.querySelectorAll('a, button, input[type="submit"], input[type="button"]'));
+    const el = els.find(e =>
+      e.offsetParent !== null &&
+      (
+        (e.textContent || e.value || '').replace(/\s+/g, ' ').trim().includes('ตรวจสอบข้อมูลเคสใหม่') ||
+        (e.getAttribute('title') || '').includes('ตรวจสอบข้อมูลเคสใหม่')
+      )
+    );
+    if (el) {
+      el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      return true;
+    }
+    return false;
+  });
+
+  if (!evalClicked) {
+    throw new Error(`❌ Step 24: ไม่พบปุ่ม "ตรวจสอบข้อมูลเคสใหม่" บนหน้าจอ`);
+  }
+
+  console.log('   ✅ คลิก "ตรวจสอบข้อมูลเคสใหม่" ด้วย evaluate fallback');
+  // Phase 1: wait for "กรุณารอสักครู่" spinner to appear (up to 3s)
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll('*')].some(
+      el => el.offsetParent !== null && (el.innerText || '').includes('กรุณารอสักครู่')
+    ), { timeout: 3000 }
+  ).catch(() => { });
+  // Phase 2: wait for spinner to disappear
+  await waitForNbsSpinner(page);
+}
+
+/**
+ * Step 25: Scroll to bottom → คลิก "ยืนยันตรวจสอบข้อมูล"
+ */
+async function scrollAndConfirmCheck(page) {
+  console.log('📌 Step 25: Scroll to bottom → คลิก "ยืนยันตรวจสอบข้อมูล"');
+
+  // Scroll ไปที่ล่างสุดของหน้า
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page.waitForTimeout(1000);
+  console.log('   ✅ Scroll to bottom');
+
+  const btnCandidates = [
+    page.locator('a:has-text("ยืนยันตรวจสอบข้อมูล"), button:has-text("ยืนยันตรวจสอบข้อมูล")').first(),
+    page.locator('input[value*="ยืนยันตรวจสอบข้อมูล"]').first(),
+  ];
+
+  for (const loc of btnCandidates) {
+    if (await loc.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await loc.scrollIntoViewIfNeeded().catch(() => { });
+      await loc.click();
+      console.log('   ✅ คลิก "ยืนยันตรวจสอบข้อมูล" สำเร็จ');
+      await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => { });
+      await page.waitForTimeout(2000);
+      return;
+    }
+  }
+
+  // Fallback: evaluate text match
+  const evalClicked = await page.evaluate(() => {
+    const els = Array.from(document.querySelectorAll('a, button, input[type="submit"], input[type="button"]'));
+    const el = els.find(e =>
+      e.offsetParent !== null &&
+      (e.textContent || e.value || '').replace(/\s+/g, ' ').trim().includes('ยืนยันตรวจสอบข้อมูล')
+    );
+    if (el) {
+      el.scrollIntoView({ block: 'center' });
+      el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      return true;
+    }
+    return false;
+  });
+
+  if (!evalClicked) {
+    throw new Error(`❌ Step 25: ไม่พบปุ่ม "ยืนยันตรวจสอบข้อมูล" บนหน้าจอ`);
+  }
+
+  console.log('   ✅ คลิก "ยืนยันตรวจสอบข้อมูล" ด้วย evaluate fallback');
+  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => { });
+  await page.waitForTimeout(2000);
+}
+
+/**
+ * logoutNbs: Logout จาก NBS ไม่ว่าจะ login เป็น user ใด
+ * รองรับทั้ง link text "ออกจากระบบ" และ href*="logout"
+ */
+async function logoutNbs(page) {
+  console.log('🔓 NBS: Logout...');
+
+  // DOM inspection (2026-05-22): logout element is
+  //   <a class="user-action" href="javascript:APP.commands.logout('/nbsweb/secure/logout.html')">ออกจากระบบ</a>
+  // APP.commands.logout calls confirm('ต้องการออกจากระบบ?') synchronously before navigating.
+  //
+  // Use page.on() (persistent) not page.once() — the confirm fires synchronously inside the
+  // javascript: href execution, which can race with once() de-registration during locator checks.
+  const confirmHandler = async (dialog) => {
+    try {
+      if (dialog.type() === 'confirm' || dialog.type() === 'alert') {
+        await dialog.accept();
+      }
+    } catch (_) { }
+  };
+  page.on('dialog', confirmHandler);
+
+  // Primary: a.user-action (confirmed class from DOM inspection) — most specific
+  // Fallback chain: href*=logout (javascript: href contains "logout"), then text-based
+  const logoutCandidates = [
+    page.locator('a.user-action:has-text("ออกจากระบบ")').first(),
+    page.locator('a[href*="logout"]').first(),
+    page.locator('a:has-text("ออกจากระบบ")').first(),
+    page.locator('button:has-text("ออกจากระบบ")').first(),
+    page.locator('i[title="ออกจากระบบ"]').first(),
+  ];
+
+  for (const loc of logoutCandidates) {
+    const isVis = await loc.isVisible({ timeout: 3000 }).catch(() => false);
+    if (isVis) {
+      await loc.click();
+      await page.locator('div[aria-labelledby="confirmation-dialog-title"]').locator('button:has-text("ตกลง")').click().catch(() => { });
+      console.log('   ✅ คลิก logout link/button');
+      await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => { });
+      await page.waitForTimeout(1500);
+      page.off('dialog', confirmHandler);
+      return;
+    }
+  }
+
+  // Fallback: evaluate — dispatchEvent to bypass offsetParent visibility requirement
+  const evalLoggedOut = await page.evaluate(() => {
+    const el = Array.from(document.querySelectorAll('a, button')).find(e =>
+      (e.textContent || '').replace(/\s+/g, ' ').trim().includes('ออกจากระบบ') ||
+      (e.getAttribute('href') || '').toLowerCase().includes('logout')
+    );
+    if (el) {
+      el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      return true;
+    }
+    return false;
+  });
+
+  if (evalLoggedOut) {
+    console.log('   ✅ Logout ด้วย evaluate fallback');
+    await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => { });
+    await page.waitForTimeout(1500);
+  } else {
+    console.warn('   ⚠️ ไม่พบปุ่ม logout — navigate ไป home แล้วล็อก session ใหม่');
+    // Navigate back to NBS home — session จะถูก re-set เมื่อ loginNbs ถูกเรียก
+    await page.goto(NBS_URL, { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => { });
+    await page.waitForTimeout(1500);
+  }
+
+  page.off('dialog', confirmHandler);
+}
+
+/**
+ * loginNbsAs: Login NBS ด้วย credentials ที่กำหนด (generic — ใช้ร่วมกันได้กับทุก account)
+ * ต่างจาก loginNbs ตรงที่รับ user/pass เป็น parameter แทนการใช้ NBS_USER/NBS_PASS โดยตรง
+ */
+async function loginNbsAs(page, username, password) {
+  console.log(`🔐 NBS: Login เป็น "${username}"...`);
+
+  // register dialog handler BEFORE goto (เหมือน loginNbs)
+  // ถ้า handler ลงทะเบียนแล้ว (เช่น เรียก loginNbs ก่อน) จะซ้อนทับกันโดยไม่มีปัญหา
+  page.on('dialog', async (dialog) => {
+    try {
+      await dialog.type() === 'prompt' ? dialog.accept('') : dialog.accept();
+    } catch (_) { }
+  });
+
+  await page.goto(NBS_URL, { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => { });
+  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => { });
+  await page.waitForTimeout(1500);
+
+  const usernameInput = page.locator(
+    'input[name="username"], input[name="name"], input[id="name"], input[type="text"][name*="user"], input[id*="user"], input[placeholder*="user" i]'
+  ).first();
+  const hasLoginForm = await usernameInput.isVisible({ timeout: 10000 }).catch(() => false);
+
+  if (hasLoginForm) {
+    await usernameInput.fill(username);
+    const passwordInput = page.locator('input[name="password"], input[type="password"]').first();
+    await passwordInput.fill(password);
+
+    const loginBtn = page.locator(
+      'button[type="submit"], input[type="submit"], button:has-text("login"), button:has-text("เข้าสู่ระบบ"), button:has-text("Login")'
+    ).first();
+    if (await loginBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await loginBtn.click();
+    } else {
+      await page.keyboard.press('Enter');
+    }
+
+    await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => { });
+    await page.waitForTimeout(2000);
+    await waitForNbsSpinner(page);
+    console.log(`   ✅ Login เป็น "${username}" สำเร็จ`);
+  } else {
+    console.log(`   ℹ️ ไม่พบ login form — อาจใช้ session/Basic Auth อยู่แล้ว`);
+  }
+}
+
+/**
+ * unlockApplicationCase: ปลดล็อค เลขใบคำขอ ที่ถูก lock โดยผู้ใช้อื่น
+ *
+ * สาเหตุที่ต้องใช้: หลัง click "ยืนยันตรวจสอบข้อมูล" ระบบแสดง popup
+ * "รายการเลขใบคำขอนี้กำลังถูกใช้งานโดยผู้ใช้งานท่านอื่น กรุณาทำรายการใหม่ภายหลัง"
+ *
+ * ขั้นตอน:
+ *   1. ปิด popup
+ *   2. Logout
+ *   3. Login ด้วย boss account (boss/0)
+ *   4. ไปเมนู ระบบงานให้บริการ → ระบบจัดการข้อมูลเคสใหม่ สำนักงานใหญ่
+ *   5. คลิก "ดูแลระบบ"
+ *   6. คลิก "Manual Batch Process"
+ *   7. กรอก applicationNo ในช่อง "Manual : ปลดล็อคใบคำขอ (Concurrent)"
+ *   8. คลิกปุ่มปลดล็อค
+ *   9. Logout boss → Login กลับเป็น MG0001
+ */
+async function unlockApplicationCase(page, applicationNo) {
+  console.log(`🔓 unlockApplicationCase: ปลดล็อค เลขใบคำขอ "${applicationNo}"...`);
+
+  // ── Step 1: ปิด locked popup ──────────────────────────────────────────────
+  // popup แสดงข้อความ "กำลังถูกใช้งานโดยผู้ใช้งานท่านอื่น" — ปิดด้วยปุ่ม OK/ปิด/ยืนยัน
+  await page.waitForTimeout(500);
+  const closeCandidates = [
+    page.locator('button:has-text("ตกลง"), button:has-text("OK"), button:has-text("ปิด"), button:has-text("ยืนยัน")').first(),
+    page.locator('.modal button, .dialog button, [role="dialog"] button').first(),
+    page.locator('[data-dismiss="modal"], [aria-label="Close"], button.close').first(),
+  ];
+  let popupClosed = false;
+  for (const loc of closeCandidates) {
+    if (await loc.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await loc.click();
+      console.log('   ✅ ปิด locked popup แล้ว');
+      await page.waitForTimeout(800);
+      popupClosed = true;
+      break;
+    }
+  }
+  if (!popupClosed) {
+    // Fallback: evaluate — หาปุ่มที่ visible ในทุก modal/dialog
+    await page.evaluate(() => {
+      const btns = Array.from(document.querySelectorAll('button, [data-dismiss]'));
+      const dismissBtn = btns.find(b =>
+        b.offsetParent !== null &&
+        /ตกลง|OK|ปิด|ยืนยัน|Close|close/i.test((b.textContent || b.getAttribute('aria-label') || '').trim())
+      );
+      if (dismissBtn) dismissBtn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    }).catch(() => { });
+    await page.waitForTimeout(800);
+    console.log('   ℹ️ ใช้ evaluate fallback ปิด popup');
+  }
+  await waitForNbsSpinner(page);
+
+  // ── Step 2: Logout ────────────────────────────────────────────────────────
+  await logoutNbs(page);
+
+  // ── Step 3: Login ด้วย boss account ──────────────────────────────────────
+  const BOSS_USER = 'boss';
+  const BOSS_PASS = '0';
+  await loginNbsAs(page, BOSS_USER, BOSS_PASS);
+
+  // ── Steps 4a–4b: ระบบงานให้บริการ → ระบบจัดการข้อมูลเคสใหม่ สำนักงานใหญ่ ─
+  // ใช้ bounding-box wait pattern เดียวกับ navigateNbhqMenu (i < 2)
+  const BOSS_MENU_STEPS = [
+    'ระบบงานให้บริการ',
+    'ระบบจัดการข้อมูลเคสใหม่ สำนักงานใหญ่',
+    'ดูแลระบบ',
+    'Manual Batch Process',
+  ];
+
+  for (let i = 0; i < BOSS_MENU_STEPS.length; i++) {
+    const menuText = BOSS_MENU_STEPS[i];
+    console.log(`   Step ${i + 1}/${BOSS_MENU_STEPS.length}: คลิก "${menuText}"`);
+
+    // ลองหาด้วยหลาย selector pattern — NBS อาจใช้ <a>, <li>, <span>, หรือ <div> เป็น menu item
+    const candidates = [
+      page.locator(`a:has-text("${menuText}")`).first(),
+      page.locator(`li:has-text("${menuText}")`).first(),
+      page.locator(`span:has-text("${menuText}")`).first(),
+      page.locator(`div[role="menuitem"]:has-text("${menuText}")`).first(),
+    ];
+
+    // Steps 1–2 (i=0, i=1): menu items live inside a dropdown that must open first.
+    // waitForSelector(state:'visible') can resolve on a hidden/pre-rendered <a> before the
+    // dropdown actually opens → false-positive → click fires on invisible element → nothing happens.
+    // Fix: waitForFunction polling <a> bounding box (width > 0 && height > 0) — guarantees the
+    // element is truly painted and interactive before we attempt to click it.
+    //
+    // Steps 3–4 (i=2, i=3): already on a stable loaded page; combinedSelector race is fine.
+    const visibilityTimeout = i === 0 ? 15000 : i === 2 ? 15000 : i === 3 ? 20000 : 8000;
+
+    if (i < 2) {
+      // Bounding-box wait — ensures <a> is visible AND has real layout dimensions
+      await page.waitForFunction((text) => {
+        return [...document.querySelectorAll('a')].some(el => {
+          const r = el.getBoundingClientRect();
+          return r.width > 0 && r.height > 0 &&
+            (el.textContent || '').replace(/\s+/g, ' ').trim().includes(text);
+        });
+      }, menuText, { timeout: visibilityTimeout }).catch(() => { });
+    } else {
+      // Race ALL selector candidates in parallel — waitForSelector resolves as soon as ANY matches.
+      const combinedSelector = [
+        `a:has-text("${menuText}")`,
+        `li:has-text("${menuText}")`,
+        `span:has-text("${menuText}")`,
+        `div[role="menuitem"]:has-text("${menuText}")`,
+      ].join(', ');
+      await page.waitForSelector(combinedSelector, { state: 'visible', timeout: visibilityTimeout })
+        .catch(() => { }); // graceful — candidates loop below handles the "not found" case
+    }
+
+    let clicked = false;
+    for (const loc of candidates) {
+      if (i < 2) {
+        // Steps 1–2: isVisible() can return true on pre-rendered hidden elements (CSS visible but
+        // zero dimensions). Verify THIS specific loc instance has real pixel dimensions so we don't
+        // fire a click on an off-screen/collapsed element.
+        const hasRealSize = await loc.evaluate(el => {
+          const r = el.getBoundingClientRect();
+          return r.width > 0 && r.height > 0;
+        }).catch(() => false);
+        if (!hasRealSize) continue; // skip — not truly painted/interactive
+      } else {
+        // Steps 3–4: standard visibility check is sufficient (page is fully loaded)
+        if (!await loc.isVisible({ timeout: 1000 }).catch(() => false)) continue;
+      }
+      await loc.scrollIntoViewIfNeeded().catch(() => { });
+      await loc.click();
+      clicked = true;
+      console.log(`   ✅ คลิก "${menuText}" สำเร็จ`);
+      break;
+    }
+
+    if (!clicked) {
+      // Fallback: ใช้ evaluate เพื่อหา element ที่มี text ตรงกัน
+      const evalClicked = await page.evaluate((text) => {
+        const els = Array.from(document.querySelectorAll('a, li, span, button, div[role="menuitem"]'));
+        const el = els.find(e =>
+          e.offsetParent !== null &&
+          (e.textContent || '').replace(/\s+/g, ' ').trim().includes(text)
+        );
+        if (el) {
+          el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+          return true;
+        }
+        return false;
+      }, menuText);
+
+      if (evalClicked) {
+        console.log(`   ✅ คลิก "${menuText}" ด้วย evaluate fallback`);
+        clicked = true;
+      } else {
+        throw new Error(`❌ NBHQ menu: ไม่พบ menu item "${menuText}" บนหน้าจอ`);
+      }
+    }
+
+    // รอ spinner หายหลังทุก menu click — NBS แสดง "กรุณารอสักครู่" บน page transition
+    // Skip for i=2/i=3: NBS ไม่แสดง spinner หลัง sub-menu click; spinner ถูก drain แล้วหลัง i=1
+    if (i !== 2 && i !== 3) {
+      await waitForNbsSpinner(page);
+    }
+
+    // i=1 (Step 2): "ระบบจัดการข้อมูลเคสใหม่ สำนักงานใหญ่" — triggers full page navigation
+    // Use waitForLoadState (not waitForNavigation) — navigation may already be complete by the
+    // time waitForNavigation is registered, causing a race condition that hangs indefinitely.
+    // waitForLoadState is idempotent: if page is already in the target state, it resolves immediately.
+    if (i === 1) {
+      console.log(`   ⏳ รอ page navigation หลัง Step 2 click (domcontentloaded, max 30s)...`);
+      await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => {
+        console.warn('   ⚠️ waitForLoadState timeout — เดินต่อ');
+      });
+      await waitForNbsSpinner(page);
+    }
+
+    // i=2 (Step 3): "จัดการข้อมูลเคสใหม่" — already on new page from Step 2; no navigation needed
+    // Use state:'visible' (not 'attached') so next iteration's race-wait resolves immediately
+    // when element is already on screen, avoiding a full visibilityTimeout burn.
+    if (i === 2) {
+      const nextMenuText = BOSS_MENU_STEPS[i + 1]; // "ตรวจสอบข้อมูลเคสใหม่"
+      if (nextMenuText) {
+        console.log(`   ⏳ รอ "${nextMenuText}" ปรากฏใน DOM (content-driven, max 60s)...`);
+        // NBS ไม่มี iframe ใน Phase 5 navigation — ตรวจ page หลักเพียงอย่างเดียว
+        await page.waitForSelector(
+          `a:has-text("${nextMenuText}"), li:has-text("${nextMenuText}"), span:has-text("${nextMenuText}")`,
+          { state: 'visible', timeout: 60000 }
+        ).catch(() => {
+          console.warn(`   ⚠️ content-driven wait timeout — "${nextMenuText}" ยังไม่ปรากฏ; เดินต่อแล้วให้ candidates loop จัดการ`);
+        });
+      }
+    }
+  }
+
+  // ── Step 7: กรอก applicationNo ในช่อง "ปลดล็อคใบคำขอ (Concurrent)" ───────
+  // หน้า Manual Batch Process มีหลาย section — ต้องหา section ที่มีข้อความ
+  // "Manual : ปลดล็อคใบคำขอ (Concurrent)" แล้วหา input ภายใน section นั้น
+  console.log(`   📌 Boss Step 7: กรอก เลขใบคำขอ "${applicationNo}" ในช่อง ปลดล็อค`);
+
+  // รอ section "ปลดล็อคใบคำขอ" ปรากฏก่อน
+  await page.waitForFunction(() => {
+    return document.body.innerText.includes('ปลดล็อคใบคำขอ');
+  }, { timeout: 15000 }).catch(() => {
+    console.warn('   ⚠️ ไม่พบ section "ปลดล็อคใบคำขอ" ใน Manual Batch Process');
+  });
+
+  // หา input ใน section ปลดล็อค — ลอง selector หลายแบบตามลำดับ
+  // Best-effort: หา input ที่อยู่ใน section มีข้อความ "ปลดล็อค"
+  let unlockInputFilled = false;
+
+  // Pattern 1: หา section element ก่อน แล้ว scope input ภายใน
+  const unlockSectionLoc = page.locator(
+    'div:has-text("ปลดล็อคใบคำขอ"), fieldset:has-text("ปลดล็อคใบคำขอ"), section:has-text("ปลดล็อคใบคำขอ"), tr:has-text("ปลดล็อคใบคำขอ"), td:has-text("ปลดล็อคใบคำขอ")'
+  ).last(); // ใช้ last() เพื่อจับ section ที่ลึกที่สุด (ใกล้ input มากสุด)
+
+  const sectionVisible = await unlockSectionLoc.isVisible({ timeout: 5000 }).catch(() => false);
+  if (sectionVisible) {
+    const inputInSection = unlockSectionLoc.locator('input[type="text"], input:not([type]), input[type="number"]').first();
+    if (await inputInSection.isVisible({ timeout: 3000 }).catch(() => false)) {
+      // React MUI pattern: click → fill → dispatchEvent
+      await inputInSection.click();
+      await inputInSection.fill('');
+      await inputInSection.pressSequentially(applicationNo, { delay: 30 });
+      await inputInSection.dispatchEvent('change');
+      unlockInputFilled = true;
+      console.log(`   ✅ กรอก "${applicationNo}" ใน input ของ section ปลดล็อค`);
+    }
+  }
+
+  if (!unlockInputFilled) {
+    // Pattern 2: evaluate — หา input ที่อยู่ใกล้ label "ปลดล็อค" ใน DOM
+    unlockInputFilled = await page.evaluate((appNo) => {
+      // หา label/cell ที่มีข้อความ "ปลดล็อค" หรือ "Concurrent"
+      const allEls = Array.from(document.querySelectorAll('*'));
+      const labelEl = allEls.find(el =>
+        el.children.length === 0 &&  // leaf node
+        (el.textContent || '').includes('ปลดล็อค') &&
+        el.offsetParent !== null
+      );
+      if (!labelEl) return false;
+      // หา input ใน parent chain (สูงสุด 5 ระดับ)
+      let container = labelEl.parentElement;
+      for (let depth = 0; depth < 5; depth++) {
+        if (!container) break;
+        const inp = container.querySelector('input[type="text"], input:not([type]), input[type="number"]');
+        if (inp && inp.offsetParent !== null) {
+          inp.focus();
+          inp.value = appNo;
+          inp.dispatchEvent(new Event('input', { bubbles: true }));
+          inp.dispatchEvent(new Event('change', { bubbles: true }));
+          inp.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
+          return true;
+        }
+        container = container.parentElement;
+      }
+      return false;
+    }, applicationNo);
+    if (unlockInputFilled) {
+      console.log(`   ✅ กรอก "${applicationNo}" ด้วย evaluate (label-proximity pattern)`);
+    } else {
+      console.warn(`   ⚠️ ไม่พบ input field สำหรับปลดล็อค — อาจต้องตรวจสอบ selector`);
+    }
+  }
+
+  // ── Step 8: คลิกปุ่มปลดล็อค ──────────────────────────────────────────────
+  console.log('   📌 Boss Step 8: คลิกปุ่มปลดล็อค');
+  await page.waitForTimeout(500);
+
+  // ลอง selector ตามลำดับ: "ปลดล็อค", "Submit", "Execute", "ดำเนินการ"
+  const unlockBtnCandidates = [
+    page.locator('button:has-text("ปลดล็อค"), input[value*="ปลดล็อค"]').first(),
+    page.locator('button:has-text("Submit"), input[value="Submit"]').first(),
+    page.locator('button:has-text("Execute"), input[value="Execute"]').first(),
+    page.locator('button:has-text("ดำเนินการ")').first(),
+    page.locator('button[type="submit"]').first(),
+  ];
+
+  let unlockBtnClicked = false;
+  for (const btnLoc of unlockBtnCandidates) {
+    if (await btnLoc.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await btnLoc.scrollIntoViewIfNeeded().catch(() => { });
+      await btnLoc.click();
+      unlockBtnClicked = true;
+      console.log('   ✅ คลิกปุ่มปลดล็อค สำเร็จ');
+      break;
+    }
+  }
+
+  if (!unlockBtnClicked) {
+    // Evaluate fallback: หาปุ่มใน section ปลดล็อคที่ใกล้กับ input ที่เพิ่งกรอก
+    await page.evaluate((appNo) => {
+      const allBtns = Array.from(document.querySelectorAll('button, input[type="submit"], input[type="button"]'));
+      // ลอง match text ก่อน
+      const byText = allBtns.find(b =>
+        b.offsetParent !== null &&
+        /ปลดล็อค|Submit|Execute|ดำเนินการ/i.test((b.textContent || b.value || '').trim())
+      );
+      if (byText) { byText.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true })); return true; }
+      // fallback: หา submit button ใน section "ปลดล็อค"
+      const labelEl = Array.from(document.querySelectorAll('*')).find(el =>
+        el.children.length === 0 && (el.textContent || '').includes('ปลดล็อค') && el.offsetParent !== null
+      );
+      if (labelEl) {
+        let container = labelEl.parentElement;
+        for (let d = 0; d < 6; d++) {
+          if (!container) break;
+          const btn = container.querySelector('button, input[type="submit"]');
+          if (btn && btn.offsetParent !== null) {
+            btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+            return true;
+          }
+          container = container.parentElement;
+        }
+      }
+      return false;
+    }, applicationNo);
+    console.log('   ℹ️ คลิกปุ่มปลดล็อคด้วย evaluate fallback');
+  }
+
+  await waitForNbsSpinner(page);
+  await page.waitForTimeout(1000);
+
+  // ตรวจว่าปลดล็อคสำเร็จ (optional — แค่ log ไม่ throw เพราะ success message ต่างกันตาม NBS version)
+  const unlockBodyText = await page.locator('body').innerText({ timeout: 5000 }).catch(() => '');
+  console.log(`   🔎 Unlock result (200 chars): ${unlockBodyText.substring(0, 200)}`);
+
+  // ── Step 9a: Logout boss ──────────────────────────────────────────────────
+  await logoutNbs(page);
+
+  // ── Step 9b: Login กลับเป็น MG0001 ───────────────────────────────────────
+  await loginNbsAs(page, NBS_USER, NBS_PASS);
+  console.log(`✅ unlockApplicationCase เสร็จสิ้น — กลับมาเป็น ${NBS_USER} แล้ว`);
+}
+
+/**
+ * Step 26: ตรวจสอบ success message หลัง "ยืนยันตรวจสอบข้อมูล"
+ * ถ้าพบ locked popup ("กำลังถูกใช้งานโดยผู้ใช้งานท่านอื่น") → ปลดล็อคแล้ว retry Steps 4–26
+ * throw Error ถ้าไม่พบ success message ใด ๆ
+ *
+ * @param {import('@playwright/test').Page} page
+ * @param {string} applicationNo - เลขใบคำขอ (ใช้สำหรับ unlock flow)
+ */
+async function verifySuccessMessage(page, applicationNo = '') {
+  console.log('📌 Step 26: ตรวจสอบ success message');
+
+  await page.waitForTimeout(500);
+
+  // Step 1: Read body text FIRST before touching any buttons
+  const bodyText = await page.evaluate(() => document.body.innerText).catch(() => '');
+  console.log(`   🔎 body (300 chars): ${bodyText.substring(0, 300)}`);
+
+  // Step 2: Check for locked case IMMEDIATELY
+  if (bodyText.includes('กำลังถูกใช้งานโดยผู้ใช้งานท่านอื่น')) {
+    console.warn(`   ⚠️ Step 26: Case locked — กด ตกลง เพื่อปิด popup`);
+    if (!applicationNo) {
+      throw new Error(
+        `❌ Step 26: Case ถูก lock — ไม่มี applicationNo สำหรับ unlock flow\n` +
+        `   Body: ${bodyText.substring(0, 300)}`
+      );
+    }
+    // Click ตกลง to dismiss the locked popup
+    // DOM inspection confirmed: MUI v4 Dialog renders in a React Portal at document.body root.
+    // The ตกลง button is inside .MuiDialogActions-root > div > button (MuiButton-contained, no id).
+    // Selector strategy: target the button inside MuiDialogActions specifically to avoid
+    // matching other ตกลง buttons elsewhere; use { force: true } to bypass MuiBackdrop overlay.
+    const okBtn = page.locator('.MuiDialogActions-root button').first();
+    await okBtn.waitFor({ state: 'visible', timeout: 5000 }).catch(() => { });
+    await okBtn.click({ force: true }).catch(async () => {
+      // Fallback: JS click via evaluate in case Playwright cannot pierce the backdrop
+      await page.evaluate(() => {
+        const actions = document.querySelector('.MuiDialogActions-root');
+        const btn = actions && actions.querySelector('button');
+        if (btn) btn.click();
+      }).catch(() => { });
+    });
+    // 2-phase spinner wait: รอ "กรุณารอสักครู่" ปรากฏ (max 3s) แล้วรอ spinner หาย
+    await page.waitForFunction(() =>
+      [...document.querySelectorAll('*')].some(
+        el => el.offsetParent !== null && (el.innerText || '').includes('กรุณารอสักครู่')
+      ), { timeout: 3000 }
+    ).catch(() => { });
+    await waitForNbsSpinner(page);
+    // Proceed to unlock flow
+    await unlockApplicationCase(page, applicationNo);
+
+    // Retry Steps 4–26: navigate ไปหน้า NBHQ ใหม่แล้ว ค้นหา → click → confirm → verify
+    console.log('   🔁 Retry: กลับ Steps 4–26 หลัง unlock...');
+    await navigateNbhqMenu(page);
+    await searchByApplicationNo(page, applicationNo);
+    await verifyStatusChampraKhrop(page, applicationNo);
+    await clickCheckNewCase(page);
+    await scrollAndConfirmCheck(page);
+
+    // Verify รอบที่ 2 — ถ้า lock ซ้ำอีกรอบ = throw ทันที (ป้องกัน infinite loop)
+    const retryBodyText = await page.locator('body').innerText({ timeout: 5000 }).catch(() => '');
+    console.log(`   🔎 Retry body (300 chars): ${retryBodyText.substring(0, 300)}`);
+
+    if (retryBodyText.includes('กำลังถูกใช้งานโดยผู้ใช้งานท่านอื่น')) {
+      throw new Error(
+        `❌ Step 26: Case "${applicationNo}" ยังถูก lock หลัง unlock flow — หยุดรัน\n` +
+        `   Body: ${retryBodyText.substring(0, 300)}`
+      );
+    }
+
+    // ตรวจ success บน retry body
+    const successPatterns = [
+      /บันทึก.*สำเร็จ/i,
+      /ดำเนินการ.*สำเร็จ/i,
+      /ยืนยัน.*สำเร็จ/i,
+      /success/i,
+      /เรียบร้อย/i,
+      /ตรวจสอบ.*เรียบร้อย/i,
+    ];
+    if (successPatterns.some(p => p.test(retryBodyText))) {
+      const matchedPattern = successPatterns.find(p => p.test(retryBodyText));
+      console.log(`   ✅ Step 26 (retry): พบ success message (pattern: ${matchedPattern})`);
+      return;
+    }
+    throw new Error(
+      `❌ Step 26 (retry): ไม่พบ success message หลัง unlock + retry\n` +
+      `   Body: ${retryBodyText.substring(0, 300)}`
+    );
+  }
+
+  // Step 3: Normal confirmation popup (not locked) — click ยืนยัน if visible
+  const confirmBtn = page.locator('button:has-text("ยืนยัน"), [title="ยืนยัน"], button:has-text("ตกลง"), button:has-text("OK")').first();
+  const hasConfirm = await confirmBtn.isVisible({ timeout: 3000 }).catch(() => false);
+  if (hasConfirm) {
+    console.log('   ℹ️ Step 26: พบ confirmation popup → คลิกยืนยัน');
+    await confirmBtn.click();
+    // Wait for spinner if it appears after confirm
+    await page.waitForFunction(() =>
+      [...document.querySelectorAll('*')].some(
+        el => el.offsetParent !== null && (el.innerText || '').includes('กรุณารอสักครู่')
+      ), { timeout: 3000 }
+    ).catch(() => { });
+    await waitForNbsSpinner(page);
+  }
+
+  // Step 4: NBS success indicators — ขึ้นอยู่กับ system ที่ใช้
+  const successPatterns = [
+    /บันทึก.*สำเร็จ/i,
+    /ดำเนินการ.*สำเร็จ/i,
+    /ยืนยัน.*สำเร็จ/i,
+    /success/i,
+    /เรียบร้อย/i,
+    /ตรวจสอบ.*เรียบร้อย/i,
+  ];
+
+  const hasSuccess = successPatterns.some(p => p.test(bodyText));
+
+  // ตรวจ alert/dialog ด้วย (บางระบบแสดงผลผ่าน alert box)
+  if (!hasSuccess) {
+    // ลองดูจาก visible alert/notification elements
+    const alertText = await page.locator('.alert, .success, [class*="success"], [class*="alert"], .modal').first()
+      .innerText({ timeout: 2000 }).catch(() => '');
+    if (alertText) {
+      const alertHasSuccess = successPatterns.some(p => p.test(alertText));
+      if (alertHasSuccess) {
+        console.log(`   ✅ Step 26: พบ success message ใน alert element: "${alertText.substring(0, 100)}"`);
+        return;
+      }
+    }
+
+    throw new Error(
+      `❌ Step 26: ไม่พบ success message หลัง "ยืนยันตรวจสอบข้อมูล"\n` +
+      `   Body (300 chars): ${bodyText.substring(0, 300)}`
+    );
+  }
+
+  const matchedPattern = successPatterns.find(p => p.test(bodyText));
+  console.log(`   ✅ Step 26: พบ success message (pattern: ${matchedPattern})`);
+}
+
+/**
+ * Step 27: navigate กลับไปหน้า NBHQ search → ค้นหา เลขใบคำขอ อีกครั้ง
+ * → extract เลขที่ กธ (policy number)
+ */
+async function extractPolicyNo(page, applicationNo) {
+  console.log(`📌 Step 27: กลับหน้า NBHQ search → ดึง เลขที่ กธ`);
+
+  // navigate back ไปหน้าค้นหา NBHQ
+  // ลอง browser back ก่อน — ถ้าไม่ได้ ให้ navigate ผ่านเมนูใหม่
+  await page.goBack({ waitUntil: 'domcontentloaded', timeout: 15000 }).catch(async () => {
+    console.log('   ⚠️ goBack ไม่ได้ — navigate ผ่านเมนูใหม่');
+    await navigateNbhqMenu(page);
+  });
+
+  await page.waitForTimeout(1500);
+
+  // ค้นหาด้วย applicationNo อีกครั้ง
+  await searchByApplicationNo(page, applicationNo);
+
+  // ดึง policy number จากผลลัพธ์
+  const bodyText = await page.locator('body').innerText({ timeout: 5000 }).catch(() => '');
+  console.log(`   🔎 body (500 chars): ${bodyText.substring(0, 500)}`);
+
+  // ลอง POLICY_NO_REGEX ก่อน (เช่น PA20000157, LS20000001)
+  const policyMatch = bodyText.match(POLICY_NO_REGEX);
+  if (policyMatch) {
+    const policyNo = policyMatch[0];
+    console.log(`   ✅ Step 27: เลขที่ กธ = "${policyNo}"`);
+    return policyNo;
+  }
+
+  // Fallback: หา label "กธ" หรือ "กรมธรรม์" แล้วอ่านค่าถัดไป
+  const policyLabelMatch = bodyText.match(/(?:เลขที่\s*กธ|กรมธรรม์)[^\d]*(\S{5,20})/i);
+  if (policyLabelMatch) {
+    const policyNo = policyLabelMatch[1].trim();
+    console.log(`   ✅ Step 27: เลขที่ กธ (label match) = "${policyNo}"`);
+    return policyNo;
+  }
+
+  // ถ้าหาไม่เจอ — log warning แต่ไม่ throw (อาจระบบยังไม่ออกเลขกรมธรรม์)
+  console.warn(`   ⚠️ Step 27: ไม่พบ เลขที่ กธ ในผลลัพธ์ — จะเขียน sheet โดยไม่มี เลขกรมธรรม์`);
+  return '';
+}
+
+// ─── Phase 5 Flow (per case) ──────────────────────────────────────────────────
+
+/**
+ * runNbhqFlow: รัน Steps 23–27 สำหรับ 1 case
+ * คืน { policyNo } ถ้าสำเร็จ, throw Error ถ้า FAIL
+ */
+async function runNbhqFlow(page, applicationNo) {
+  // Login
+  await loginNbs(page);
+
+  // Navigate ไปหน้า NBHQ
+  await navigateNbhqMenu(page);
+
+  // Step 23: ค้นหา + ตรวจสถานะ
+  await searchByApplicationNo(page, applicationNo);
+  await verifyStatusChampraKhrop(page, applicationNo);
+
+  // Step 24: คลิก "ตรวจสอบข้อมูลเคสใหม่"
+  await clickCheckNewCase(page);
+
+  // Step 25: Scroll → คลิก "ยืนยันตรวจสอบข้อมูล"
+  await scrollAndConfirmCheck(page);
+
+  // Step 26: ตรวจ success message (ส่ง applicationNo เพื่อรองรับ unlock flow ถ้า case ถูก lock)
+  await verifySuccessMessage(page, applicationNo);
+
+  // Step 27: กลับ → ค้นหา → ดึง เลขที่ กธ
+  const policyNo = await extractPolicyNo(page, applicationNo);
+
+  return { policyNo };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 5 Test — NBHQ QR Code Runner (runs independently from Phase 1)
+// ─────────────────────────────────────────────────────────────────────────────
+
+test('NBHQ — QR Code Runner', async ({ browser }) => {
+  test.setTimeout(0);
+
+  // ── Fetch cases (Condition B: crash recovery / standalone run) ────────────
+  const allCases = await fetchNbhqRunnableCases(RUN_CREATE_BY);
+
+  if (!allCases.length) {
+    console.log('🎉 ไม่มีเคสให้รัน Phase 5 NBHQ');
+    console.log(`   (ตรวจสอบ: Valid=TRUE, Create By="${RUN_CREATE_BY}", Test Status=Inprogress, Result=Waiting Policy No, เลขใบคำขอ ไม่ว่าง)`);
+    return;
+  }
+
+  console.log(`📋 พบ ${allCases.length} เคสสำหรับ Phase 5 NBHQ: ${allCases.map(c => `No ${c.no} (${c.applicationNo})`).join(', ')}`);
+
+  // ── Process each case ──────────────────────────────────────────────────────
+  let idx = 0;
+  for (const caseData of allCases) {
+    idx++;
+    const { no, applicationNo, cusName } = caseData;
+
+    console.log(`\n${'━'.repeat(55)}`);
+    console.log(`🚀 [${idx}/${allCases.length}] No ${no} | เลขใบคำขอ ${applicationNo} | ${cusName}`);
+    console.log('━'.repeat(55));
+
+    // Confirm case ยังตรงเงื่อนไข (ป้องกัน runner อื่นประมวลผลไปแล้ว)
+    const claimed = await claimNbhqCase(no, RUN_CREATE_BY);
+    if (!claimed) {
+      console.log(`⏭️ ข้าม No ${no} — ไม่สามารถ claim ได้ (case อาจถูกประมวลผลไปแล้ว)`);
+      continue;
+    }
+
+    // เปิด browser context ใหม่ต่อ case — แยก session / cookies
+    // ใช้ httpCredentials เพื่อ handle browser Basic Auth dialog ของ NBS อัตโนมัติ
+    // ignoreHTTPSErrors: true — ข้าม SSL certificate interstitial ของ UAT intranet site
+    //   (หน้า "allow network" / "Your connection is not private" ที่ block อัตโนมัติ)
+    const context = await browser.newContext({
+      httpCredentials: { username: NBS_USER, password: NBS_PASS },
+      ignoreHTTPSErrors: true,
+    });
+    const page = await context.newPage();
+
+    let status = 'FAIL';
+    let remark = '';
+    let policyNo = '';
+    const startTime = Date.now();
+
+    try {
+      const result = await runNbhqFlow(page, applicationNo);
+      policyNo = result.policyNo;
+
+      status = 'PASS';
+      remark = policyNo
+        ? `เลขที่ กธ: ${policyNo}`
+        : 'ดำเนินการครบ Steps 23–27 (ยังไม่มีเลขกรมธรรม์)';
+
+      console.log(`\n✅ PASS: No ${no} | เลขใบคำขอ ${applicationNo}` + (policyNo ? ` | เลขกรมธรรม์ ${policyNo}` : ''));
+
+    } catch (err) {
+      const errorMessage = String(err?.message || err);
+
+      // ตรวจว่า runner ถูก stop (browser/context ถูกปิด)
+      const isRunnerStopped =
+        page.isClosed?.() ||
+        /Target page, context or browser has been closed/i.test(errorMessage) ||
+        /Test ended/i.test(errorMessage);
+
+      if (isRunnerStopped) {
+        console.log(`🛑 Runner stopped: No ${no}`);
+        await context.close().catch(() => { });
+        throw err;
+      }
+
+      status = 'FAIL';
+      remark = errorMessage;
+      console.error(`\n❌ FAIL: No ${no} | เลขใบคำขอ ${applicationNo}:`, err);
+
+      // Screenshot เมื่อ FAIL
+      try {
+        const screenshotDir = path.resolve(__dirname, '../../reports/qa/screenshots');
+        if (!fs.existsSync(screenshotDir)) fs.mkdirSync(screenshotDir, { recursive: true });
+        const screenshotPath = path.join(screenshotDir, `phase5_nbhq_fail_${no}_${Date.now()}.png`);
+        await page.screenshot({ path: screenshotPath, fullPage: true });
+        console.log(`📸 Screenshot: ${screenshotPath}`);
+        remark = `${errorMessage} | screenshot: ${path.basename(screenshotPath)}`;
+      } catch { }
+
+    } finally {
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+      try {
+        await writeNbhqResult({
+          no,
+          status,
+          remark: `[${elapsed}s] ${remark}`.slice(0, 500),
+          policyNo,
+        });
+        console.log(`📝 Write result: No ${no} => ${status}${policyNo ? ` | กธ: ${policyNo}` : ''} [${elapsed}s]`);
+      } catch (writeErr) {
+        console.error(`❌ Write Sheet failed: No ${no}`, writeErr);
+      }
+      await context.close().catch(() => { });
+    }
+  }
+
+  console.log('\n🎉 Phase 5 NBHQ รันครบทุกเคสแล้ว');
+});
+
+/*
+ * SETUP (Phase 5):
+ * ──────────────────────────────────────────────────────
+ * 1. แก้ RUN_CREATE_BY ให้ตรงกับ "Create By" ใน Google Sheet
+ *
+ * 2. ตรวจสอบว่า credentials/token.json พร้อมใช้งาน
+ *
+ * 3. เงื่อนไข sheet ที่ Phase 5 ดึงมารัน:
+ *    - Valid = TRUE
+ *    - Create By = RUN_CREATE_BY
+ *    - Test Status = Inprogress
+ *    - Result = 'Waiting Policy No'
+ *    - เลขใบคำขอ ไม่ว่าง
+ *
+ * 4. รันคำสั่ง:
+ *    cd playwright
+ *    npx playwright test digital-sale/digital-sale-phase1-gsheet.spec.js --headed --workers=1
+ *
+ * Column ใน Google Sheet ที่จำเป็น:
+ *   No, Valid, Create By, Test Status, Result, เลขใบคำขอ
+ *   Env, ชื่อลูกค้า, นามสกุลลูกค้า
+ *   (เขียนกลับ: Test Status, Result, Test Date, Remark, เลขกรมธรรม์)
+ * ──────────────────────────────────────────────────────
+ */
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Auto Runner — รัน Phase 1 ก่อน แล้วดึง Phase 5 ใหม่หลัง Phase 1 เสร็จ
+// (Phase 5 fetch ต้องทำหลัง Phase 1 เพื่อให้รับ QR+PASS cases ที่เพิ่งสร้าง)
+// ─────────────────────────────────────────────────────────────────────────────
+
+test('Digital Sale — Auto Runner', async ({ browser }) => {
+  test.setTimeout(0);
+
+  // ── Step 1: ดึง Phase 1 cases ─────────────────────────────────────────────
+  // หมายเหตุ: Phase 5 cases จะถูก fetch ใหม่หลัง Phase 1 เสร็จ
+  // เพื่อให้ครอบคลุม QR+PASS cases ที่ Phase 1 เพิ่งเขียนลง sheet ในรอบนี้
+  const phase1Cases = await fetchRunnableCases(RUN_CREATE_BY);
+
+  console.log(`\n${'═'.repeat(55)}`);
+  console.log('🤖 Digital Sale — Auto Runner');
+  console.log('═'.repeat(55));
+  console.log(`📊 Phase 1 (New):  ${phase1Cases.length} เคส`);
+  console.log('   Phase 5 (NBHQ): จะดึงใหม่หลัง Phase 1 เสร็จ');
+  console.log('═'.repeat(55));
+
+  // ── Step 2: ถ้า Phase 1 ว่าง ────────────────────────────────────────────
+  if (!phase1Cases.length) {
+    console.log('ℹ️  Phase 1 ไม่มีเคสใหม่ — ข้ามไป Phase 5 โดยตรง');
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // Phase 1 loop — New case (Ready for Test / Ready for Retest)
+  // ══════════════════════════════════════════════════════════════════════════
+  if (phase1Cases.length) {
+    console.log(`\n${'─'.repeat(55)}`);
+    console.log(`▶ เริ่ม Phase 1 New Cases (${phase1Cases.length} เคส)`);
+    console.log(`   ${phase1Cases.map(c => `No ${c.no}`).join(', ')}`);
+    console.log('─'.repeat(55));
+
+    let p1idx = 0;
+    for (const finalData of phase1Cases) {
+      p1idx++;
+      const { no, environment, linkProduct } = finalData;
+      const productSlug = String(linkProduct).split('/').pop();
+
+      const claimed = await claimCase(no, RUN_CREATE_BY);
+      if (!claimed) {
+        console.log(`⏭️ ข้าม No ${no} — ไม่สามารถ claim ได้`);
+        continue;
+      }
+
+      const context = await browser.newContext({ timezoneId: 'Asia/Bangkok' });
+      const page = await context.newPage();
+      await setupAutoPopupDismiss(page);
+
+      let status = 'FAIL';
+      let remark = '';
+      let referenceNumber = '';
+      let qrReady = false;
+      const startTime = Date.now();
+
+      try {
+        const baseUrl = ENV_MAP[environment];
+        if (!baseUrl) throw new Error(`❌ ไม่รู้จัก Env: "${environment}"`);
+        if (!linkProduct || String(linkProduct).trim() === '') {
+          throw new Error(`❌ Link_Product ว่างเปล่า — ตรวจสอบ Var_DigitalSales lookup หรือรหัสแบบประกัน "${finalData.policyCode}" ในชีต`);
+        }
+        const fullUrl = String(linkProduct).startsWith('http')
+          ? String(linkProduct)
+          : `${baseUrl}${linkProduct}`;
+
+        console.log(`\n${'━'.repeat(50)}`);
+        console.log(`🚀 [P1 ${p1idx}/${phase1Cases.length}] No ${no} | ${productSlug} | ${environment}`);
+        console.log(`🌐 เปิด: ${fullUrl}`);
+        console.log('━'.repeat(50));
+
+        await page.goto(fullUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+        await dismissPopups(page);
+
+        referenceNumber = await runPhase1Flow(page, finalData, productSlug);
+
+        if (!referenceNumber) throw new Error('❌ ไม่พบเลขอ้างอิงบนหน้า success');
+        status = 'PASS';
+        remark = `เลขอ้างอิง: ${referenceNumber}`;
+        console.log(`\n✅ PASS: No ${no} | ${productSlug} | เลขอ้างอิง: ${referenceNumber}`);
+
+        const pmVal = String(finalData.paymentMethod || '').trim();
+        if (/qr/i.test(pmVal) || pmVal.includes('คิวอาร์')) {
+          qrReady = true;
+          console.log('📌 QR Code payment — จะ set Test Status QR = Ready for Test');
+        }
+      } catch (err) {
+        const errorMessage = String(err?.message || err);
+        const isRunnerStopped =
+          page.isClosed?.() ||
+          /Target page, context or browser has been closed/i.test(errorMessage) ||
+          /Test ended/i.test(errorMessage);
+        if (isRunnerStopped) {
+          console.log(`🛑 Runner stopped: No ${no}`);
+          throw err;
+        }
+        status = 'FAIL';
+        remark = errorMessage;
+        console.error(`\n❌ FAIL: No ${no} | ${productSlug}:`, err);
+        try {
+          const screenshotPath = `reports/qa/screenshots/auto_phase1_fail_${no}_${Date.now()}.png`;
+          await page.screenshot({ path: screenshotPath, fullPage: true });
+          console.log(`📸 Screenshot: ${screenshotPath}`);
+        } catch { }
+      } finally {
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+        try {
+          const isQrPass = qrReady && status === 'PASS';
+          const resultOverride = isQrPass ? 'Waiting Policy No' : '';
+          await writeResult({
+            no,
+            status,
+            remark: `[${elapsed}s] ${remark}`.slice(0, 500),
+            applicationNo: referenceNumber,
+            result: resultOverride,
+            skipTestStatus: isQrPass,
+          });
+          console.log(`📝 Write result: No ${no} => ${status}${resultOverride ? ` | Result: ${resultOverride}` : ''} [${elapsed}s]`);
+        } catch (writeErr) {
+          console.error(`❌ Write Sheet failed: No ${no}`, writeErr);
+        }
+        await context.close().catch(() => { });
+      }
+    }
+
+    console.log(`\n🎉 Phase 1 รันครบ ${phase1Cases.length} เคสแล้ว`);
+  }
+
+  // ── Fetch Phase 5 cases หลัง Phase 1 เสร็จ ────────────────────────────────
+  // ดึงใหม่ ณ จุดนี้เพื่อให้ได้ทั้ง:
+  //   (1) cases เก่าที่ค้างอยู่จากรอบก่อน (Inprogress + Waiting Policy No)
+  //   (2) QR+PASS cases ที่ Phase 1 เพิ่งเขียน "Waiting Policy No" ลง sheet รอบนี้
+  const phase5Cases = await fetchNbhqRunnableCases(RUN_CREATE_BY);
+  console.log(`\n📊 Phase 5 (NBHQ): ${phase5Cases.length} เคส (fetch ล่าสุดหลัง Phase 1)`);
+
+  if (!phase5Cases.length && !phase1Cases.length) {
+    console.log('🎉 ไม่มีเคสให้รัน (Phase 5 และ Phase 1 ว่างทั้งคู่)');
+    console.log('   Phase 5 conditions: Valid=TRUE, Create By=RUN_CREATE_BY, Test Status=Inprogress, Result=Waiting Policy No');
+    console.log('   Phase 1 conditions: Valid=TRUE, Create By=RUN_CREATE_BY, Test Status=Ready for Test/Retest');
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // Phase 5 loop — NBHQ QR Code (Inprogress + Waiting Policy No)
+  // ══════════════════════════════════════════════════════════════════════════
+  if (phase5Cases.length) {
+    console.log(`\n${'─'.repeat(55)}`);
+    console.log(`▶ เริ่ม Phase 5 NBHQ (${phase5Cases.length} เคส)`);
+    console.log(`   ${phase5Cases.map(c => `No ${c.no} (${c.applicationNo})`).join(', ')}`);
+    console.log('─'.repeat(55));
+
+    let p5idx = 0;
+    for (const caseData of phase5Cases) {
+      p5idx++;
+      const { no, applicationNo, cusName } = caseData;
+
+      console.log(`\n${'━'.repeat(55)}`);
+      console.log(`🚀 [P5 ${p5idx}/${phase5Cases.length}] No ${no} | เลขใบคำขอ ${applicationNo} | ${cusName}`);
+      console.log('━'.repeat(55));
+
+      // Claim ป้องกัน runner อื่น overlap
+      const claimed = await claimNbhqCase(no, RUN_CREATE_BY);
+      if (!claimed) {
+        console.log(`⏭️ ข้าม No ${no} — ไม่สามารถ claim ได้ (ถูกประมวลผลไปแล้ว)`);
+        continue;
+      }
+
+      // เปิด context ใหม่ต่อ case (Basic Auth สำหรับ NBS)
+      // ignoreHTTPSErrors: true — ข้าม SSL certificate interstitial ของ UAT intranet site
+      //   (หน้า "allow network" / "Your connection is not private" ที่ block อัตโนมัติ)
+      const context = await browser.newContext({
+        httpCredentials: { username: NBS_USER, password: NBS_PASS },
+        ignoreHTTPSErrors: true,
+      });
+      const page = await context.newPage();
+
+      let status = 'FAIL';
+      let remark = '';
+      let policyNo = '';
+      const startTime = Date.now();
+
+      try {
+        const result = await runNbhqFlow(page, applicationNo);
+        policyNo = result.policyNo;
+
+        status = 'PASS';
+        remark = policyNo
+          ? `เลขที่ กธ: ${policyNo}`
+          : 'ดำเนินการครบ Steps 23–27 (ยังไม่มีเลขกรมธรรม์)';
+
+        console.log(`\n✅ PASS: No ${no} | เลขใบคำขอ ${applicationNo}` + (policyNo ? ` | เลขกรมธรรม์ ${policyNo}` : ''));
+
+      } catch (err) {
+        const errorMessage = String(err?.message || err);
+
+        const isRunnerStopped =
+          page.isClosed?.() ||
+          /Target page, context or browser has been closed/i.test(errorMessage) ||
+          /Test ended/i.test(errorMessage);
+
+        if (isRunnerStopped) {
+          console.log(`🛑 Runner stopped: No ${no}`);
+          await context.close().catch(() => { });
+          throw err;
+        }
+
+        status = 'FAIL';
+        remark = errorMessage;
+        console.error(`\n❌ FAIL: No ${no} | เลขใบคำขอ ${applicationNo}:`, err);
+
+        try {
+          const screenshotDir = path.resolve(__dirname, '../../reports/qa/screenshots');
+          if (!fs.existsSync(screenshotDir)) fs.mkdirSync(screenshotDir, { recursive: true });
+          const screenshotPath = path.join(screenshotDir, `auto_phase5_fail_${no}_${Date.now()}.png`);
+          await page.screenshot({ path: screenshotPath, fullPage: true });
+          console.log(`📸 Screenshot: ${screenshotPath}`);
+          remark = `${errorMessage} | screenshot: ${path.basename(screenshotPath)}`;
+        } catch { }
+
+      } finally {
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+        try {
+          await writeNbhqResult({
+            no,
+            status,
+            remark: `[${elapsed}s] ${remark}`.slice(0, 500),
+            policyNo,
+          });
+          console.log(`📝 Write result: No ${no} => ${status}${policyNo ? ` | กธ: ${policyNo}` : ''} [${elapsed}s]`);
+        } catch (writeErr) {
+          console.error(`❌ Write Sheet failed: No ${no}`, writeErr);
+        }
+        await context.close().catch(() => { });
+      }
+    }
+
+    console.log(`\n🎉 Phase 5 NBHQ รันครบ ${phase5Cases.length} เคสแล้ว`);
+  }
+
+  console.log(`\n${'═'.repeat(55)}`);
+  console.log('🤖 Auto Runner เสร็จสิ้น');
+  console.log('═'.repeat(55));
+});
