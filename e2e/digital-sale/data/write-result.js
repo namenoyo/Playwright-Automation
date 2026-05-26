@@ -268,11 +268,12 @@ async function writeResult({
   applicationNo,
   status,
   remark,
+  result = '',           // ถ้าไม่ส่งมา ใช้ status เป็นค่า Result (พฤติกรรมเดิม)
   depositReceiptNo = '',
   policyNo = '',
   receiptNo = '',
   submitNo = '',
-  testStatusQr = '',
+  skipTestStatus = false, // true = ไม่เขียน Test Status (ใช้สำหรับ QR+PASS — ปล่อยให้คงค่าเดิม)
 }) {
   const sheets = await getSheetsClient();
   const { headerMap } = await loadSheet();
@@ -283,28 +284,34 @@ async function writeResult({
       ? 'Done'
       : 'Ready for Retest';
 
+  // result column value: ใช้ result ถ้าส่งมา ไม่งั้น fallback เป็น status ('PASS'/'FAIL')
+  const resultValue = result || status;
+
   const testDate = `'${new Date().toLocaleString('sv-SE', {
   timeZone: 'Asia/Bangkok',
   hour12: false
 }).replace('T', ' ')}`;
 
   const data = [
-    {
+    // skipTestStatus=true (QR+PASS) → ข้ามคอลัมน์นี้ ปล่อยให้ค่าเดิมใน sheet คงอยู่
+    ...(!skipTestStatus ? [{
       range: getA1Cell(rowNumber, headerMap, 'Test Status'),
       values: [[nextTestStatus]],
-    },
+    }] : []),
     {
       range: getA1Cell(rowNumber, headerMap, 'Result'),
-      values: [[status]],
+      values: [[resultValue]],
     },
-    {
+    // skipTestStatus=true (QR+PASS) → ข้ามคอลัมน์นี้ ปล่อยให้ค่าเดิมใน sheet คงอยู่
+    ...(!skipTestStatus ? [{
       range: getA1Cell(rowNumber, headerMap, 'Remark'),
       values: [[remark]],
-    },
-    {
+    }] : []),
+    // skipTestStatus=true (QR+PASS) → ข้ามคอลัมน์นี้ ปล่อยให้ค่าเดิมใน sheet คงอยู่
+    ...(!skipTestStatus ? [{
       range: getA1Cell(rowNumber, headerMap, 'Test Date'),
       values: [[testDate]],
-    },
+    }] : []),
     {
       range: getA1Cell(rowNumber, headerMap, 'เลขรับฝาก'),
       values: [[depositReceiptNo]],
@@ -339,18 +346,6 @@ async function writeResult({
     });
   }
 
-  if (testStatusQr) {
-    const qrColIdx = headerMap.get('Test Status QR');
-    if (qrColIdx !== undefined) {
-      data.push({
-        range: `${SHEET_NAME}!${columnToLetter(qrColIdx + 1)}${rowNumber}`,
-        values: [[testStatusQr]],
-      });
-    } else {
-      console.warn('⚠️ ไม่พบ column "Test Status QR" ใน sheet — ข้าม');
-    }
-  }
-
   await sheets.spreadsheets.values.batchUpdate({
     spreadsheetId: SPREADSHEET_ID,
     requestBody: {
@@ -360,7 +355,7 @@ async function writeResult({
   });
 
   sheetCache = null; // invalidate cache so next fetchRunnableCases reads fresh data
-  console.log(`✅ Updated row ${rowNumber} / No ${no} (${applicationNo || '-'}) => ${status}${testStatusQr ? ` | Test Status QR => ${testStatusQr}` : ''}`);
+  console.log(`✅ Updated row ${rowNumber} / No ${no} (${applicationNo || '-'}) => ${nextTestStatus} | Result: ${resultValue}`);
 }
 
 async function writeResultsBatch(items) {
@@ -786,6 +781,131 @@ async function writeQrResult({ no, status, remark, receiptNo = '', policyNo = ''
   console.log(`✅ QR Result No ${no} => ${status}${receiptNo ? ` | receipt: ${receiptNo}` : ''}${policyNo ? ` | policy: ${policyNo}` : ''}`);
 }
 
+// ─── Phase 5: NBHQ Functions ──────────────────────────────────────────────────
+
+/**
+ * ตรวจว่า row นี้รัน NBHQ Phase 5 ได้ไหม
+ * เงื่อนไข: Valid=TRUE, Create By ตรงกัน, Test Status=Inprogress,
+ *           Result='Waiting Policy No', เลขใบคำขอ ไม่ว่าง
+ */
+function isNbhqRunnableRow(row, headerMap, createByFilter = '') {
+  const no           = getValue(row, headerMap, 'No');
+  const valid        = getValue(row, headerMap, 'Valid').toUpperCase();
+  const createBy     = getValue(row, headerMap, 'Create By');
+  const testStatus   = getValue(row, headerMap, 'Test Status').toLowerCase();
+  const result       = getValue(row, headerMap, 'Result');
+  const applicationNo = getValue(row, headerMap, 'เลขใบคำขอ');
+
+  return (
+    no !== '' &&
+    valid === 'TRUE' &&
+    createBy === createByFilter &&
+    testStatus === 'inprogress' &&
+    result === 'Waiting Policy No' &&
+    applicationNo !== ''
+  );
+}
+
+/**
+ * ดึง cases ที่พร้อมรัน Phase 5 (Condition B — crash recovery / re-run)
+ * อ่านจาก sheet ตาม isNbhqRunnableRow
+ */
+async function fetchNbhqRunnableCases(createByFilter) {
+  if (!createByFilter) {
+    throw new Error('❌ ต้องส่งค่า createByFilter เข้ามาใน fetchNbhqRunnableCases(createByFilter)');
+  }
+  const { dataRows, headerMap } = await loadSheet(true);
+
+  return dataRows
+    .filter(row => isNbhqRunnableRow(row, headerMap, createByFilter))
+    .map(row => ({
+      no:            getValue(row, headerMap, 'No'),
+      applicationNo: getValue(row, headerMap, 'เลขใบคำขอ'),
+      environment:   getValue(row, headerMap, 'Env'),
+      cusName:       `${getValue(row, headerMap, 'ชื่อลูกค้า')} ${getValue(row, headerMap, 'นามสกุลลูกค้า')}`.trim(),
+    }));
+}
+
+/**
+ * ตรวจสอบ case ก่อนรัน Phase 5
+ * Test Status ควรเป็น Inprogress อยู่แล้ว — ฟังก์ชันนี้แค่ confirm ว่า row ยังตรงเงื่อนไข
+ * ไม่เขียนอะไรลง sheet (เพราะ Test Status ถูก set เป็น Inprogress ใน Phase 1 แล้ว)
+ * คืน true ถ้า row ยังตรงเงื่อนไข, false ถ้า row เปลี่ยนไปแล้ว (เช่น runner อื่น claim ไปแล้ว)
+ */
+async function claimNbhqCase(no, createByFilter) {
+  const { dataRows, headerMap } = await loadSheet(true);
+  const rowNumber = await getRowNumberByNo(no);
+  const row = dataRows[rowNumber - HEADER_ROW - 1];
+
+  if (!isNbhqRunnableRow(row, headerMap, createByFilter)) {
+    console.log(`⏭️ Skip NBHQ No ${no} — ไม่ผ่านเงื่อนไข (Test Status/Result/เลขใบคำขอ เปลี่ยนไปแล้ว)`);
+    return false;
+  }
+
+  const applicationNo = getValue(row, headerMap, 'เลขใบคำขอ');
+  console.log(`🏃 NBHQ Claim No ${no} | เลขใบคำขอ ${applicationNo}`);
+  return true;
+}
+
+/**
+ * เขียนผล Phase 5 กลับ sheet
+ * PASS → Test Status = 'Done', Result = 'PASS', เขียน Test Date + Remark + เลขกรมธรรม์
+ * FAIL → Test Status = 'Ready for Retest', Result = 'FAIL', เขียน Test Date + Remark
+ */
+async function writeNbhqResult({ no, status, remark, policyNo = '' }) {
+  const sheets = await getSheetsClient();
+  const { headerMap } = await loadSheet();
+  const rowNumber = await getRowNumberByNo(no);
+
+  const nextTestStatus = status === 'PASS' ? 'Done' : 'Ready for Retest';
+  const resultValue    = status === 'PASS' ? 'PASS' : 'FAIL';
+
+  const testDate = `'${new Date().toLocaleString('sv-SE', {
+    timeZone: 'Asia/Bangkok',
+    hour12: false,
+  }).replace('T', ' ')}`;
+
+  const data = [
+    {
+      range: getA1Cell(rowNumber, headerMap, 'Test Status'),
+      values: [[nextTestStatus]],
+    },
+    {
+      range: getA1Cell(rowNumber, headerMap, 'Result'),
+      values: [[resultValue]],
+    },
+    {
+      range: getA1Cell(rowNumber, headerMap, 'Test Date'),
+      values: [[testDate]],
+    },
+    {
+      range: getA1Cell(rowNumber, headerMap, 'Remark'),
+      values: [[remark]],
+    },
+  ];
+
+  if (policyNo) {
+    data.push({
+      range: getA1Cell(rowNumber, headerMap, 'เลขกรมธรรม์'),
+      values: [[policyNo]],
+    });
+  }
+
+  await sheets.spreadsheets.values.batchUpdate({
+    spreadsheetId: SPREADSHEET_ID,
+    requestBody: {
+      valueInputOption: 'USER_ENTERED',
+      data,
+    },
+  });
+
+  sheetCache = null;
+  console.log(
+    `✅ NBHQ Updated row ${rowNumber} / No ${no} => ${nextTestStatus} | Result: ${resultValue}` +
+    (policyNo ? ` | เลขกรมธรรม์: ${policyNo}` : '')
+  );
+}
+
 module.exports = {
   claimCase,
   writeResult,
@@ -796,4 +916,9 @@ module.exports = {
   fetchQrRunnableCases,
   claimQrCase,
   writeQrResult,
+  // Phase 5: NBHQ
+  isNbhqRunnableRow,
+  fetchNbhqRunnableCases,
+  claimNbhqCase,
+  writeNbhqResult,
 };
