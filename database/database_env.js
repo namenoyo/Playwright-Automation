@@ -15,6 +15,22 @@ const configdb = {
             DB_NAME: 'letterreturn',
         }
     },
+    nbs: {
+        SIT: {
+            DB_USER: 'nbs',
+            DB_PASSWORD: 'nopass',
+            DB_HOST: '11.100.6.42',
+            DB_PORT: 5432,
+            DB_NAME: 'nbs',
+        },
+        UAT: {
+            DB_USER: 'nbsread',
+            DB_PASSWORD: 'nopass',
+            DB_HOST: '11.100.6.30',
+            DB_PORT: 5432,
+            DB_NAME: 'nbs',
+        }
+    },
     splife: {
         SIT: {
             DB_USER: 'splife',

@@ -1,0 +1,1231 @@
+/**
+ * Digital Sale — Phase 1 with Google Sheet Integration
+ *
+ * ดึง test data จาก Google Sheet → รัน flow เหมือน digital-sale-phase1.spec.js
+ * (ค้นหาแบบประกัน → กรอกข้อมูล → OTP → เงินสด → เลขใบคำขอ) → เขียนผลกลับ Sheet
+ *
+ * วิธีรัน:
+ *   cd playwright
+ *   npx playwright test digital-sale/digital-sale-phase1-gsheet.spec.js --headed --workers=1
+ */
+
+const { test, expect } = require('@playwright/test');
+const path = require('path');
+const fs = require('fs');
+const { fetchRunnableCases, claimCase, writeResult } = require('./data/write-result');
+const {
+  dismissPopups,
+  setupAutoPopupDismiss,
+  waitOptionalLoading,
+  waitForReady,
+  parseBirthDate,
+  setFlatpickrDate,
+  retryBirthDate,
+  killDigitalSalesPopups,
+  clickButtonByText,
+  clickRadioLabel,
+  normalizeTitle,
+  acceptAllConsents,
+  autoSelectSafeRadios,
+  mandatoryFill,
+  optionalFill,
+} = require('./helpers/common_function');
+
+// ─── Config ───────────────────────────────────────────────────────────────────
+
+const ENV_MAP = {
+  SIT: 'https://sit-oceanlife.ochi.link',
+  UAT: 'https://uat2-oceanlife.ochi.link',
+};
+
+// แก้ไข RUN_CREATE_BY ให้ตรงกับ "Create By" ใน Google Sheet
+const RUN_CREATE_BY = 'เนม';
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function dismissOverlays(page) {
+  await page.evaluate(() => {
+    const onesignal = document.getElementById('onesignal-slidedown-container');
+    if (onesignal) onesignal.style.setProperty('display', 'none', 'important');
+    const chat = document.getElementById('chat-widget-container');
+    if (chat) chat.style.setProperty('display', 'none', 'important');
+  }).catch(() => {});
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 2C2P Credit Card Form (UAT test data จาก Projects/Digital Sale/README.md)
+// ─────────────────────────────────────────────────────────────────────────────
+const CC_DATA = {
+  number: '5555555555554444',
+  name: 'test',
+  expiry: '12/30',  // MM/YY
+  cvv: '123',
+  bank: 'Aeon',
+};
+
+async function fill2C2PForm(page) {
+  console.log('💳 กรอกข้อมูลบัตรเครดิต 2C2P...');
+  const [expMonth, expYear] = CC_DATA.expiry.split('/'); // "12", "25"
+
+  await page.waitForLoadState('domcontentloaded').catch(() => {});
+  await page.waitForTimeout(3000);
+
+  // ── Step 1: Card Number ───────────────────────────────────────────────────
+  const cardNumInput = page.locator('#tel-cardNumber, input[placeholder="0000-0000-0000-0000"]').first();
+  if (await cardNumInput.isVisible({ timeout: 5000 }).catch(() => false)) {
+    await cardNumInput.click();
+    await cardNumInput.fill(CC_DATA.number);
+    console.log(`   ✅ card number: ${CC_DATA.number}`);
+  } else {
+    console.log('   ⚠️ ไม่พบ card number input');
+  }
+
+  // รอ form expand หลังกรอก card number (card type detected → expiry/CVV ปรากฏ)
+  await page.waitForTimeout(2000);
+
+  // ── Step 2: Expiry Date ──────────────────────────────────────────────────
+  // ลอง combined "MM / YY" ก่อน
+  const expiryInput = page.locator('input[placeholder="MM / YY"]').first();
+  if (await expiryInput.isVisible({ timeout: 5000 }).catch(() => false)) {
+    await expiryInput.click();
+    // ใช้ type แทน fill เพราะ masked input
+    await expiryInput.pressSequentially(`${expMonth}${expYear}`, { delay: 50 });
+    console.log(`   ✅ expiry: ${expMonth}/${expYear}`);
+  } else {
+    // fallback: separate MM + YY/YYYY
+    const mmInput = page.locator('input[placeholder="MM"]').first();
+    const yyInput = page.locator('input[placeholder="YY"], input[placeholder="YYYY"]').first();
+    if (await mmInput.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await mmInput.click(); await mmInput.pressSequentially(expMonth, { delay: 50 });
+      console.log(`   ✅ expiry MM: ${expMonth}`);
+    } else {
+      console.log('   ⚠️ ไม่พบ expiry input');
+    }
+    if (await yyInput.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await yyInput.click(); await yyInput.pressSequentially(expYear, { delay: 50 });
+      console.log(`   ✅ expiry YY: ${expYear}`);
+    }
+  }
+
+  // รอ CVV field ปรากฏหลัง expiry ถูกกรอก
+  await page.waitForTimeout(1000);
+
+  // ── Step 3: CVV — id="tel-cvv" (same pattern as tel-cardNumber) ──────────
+  const cvvEl = page.locator('#tel-cvv').first();
+  await cvvEl.waitFor({ state: 'attached', timeout: 5000 }).catch(() => {});
+  await cvvEl.click({ force: true }).catch(() => {});
+  await cvvEl.fill(CC_DATA.cvv, { force: true }).catch(async () => {
+    await cvvEl.pressSequentially(CC_DATA.cvv, { delay: 50 }).catch(() => {});
+  });
+  const cvvVal = await cvvEl.inputValue().catch(() => '');
+  console.log(cvvVal ? `   ✅ CVV: ${cvvVal}` : '   ⚠️ CVV ไม่ถูก set');
+
+  // ── Step 4: Cardholder Name — หาจาก label "CARDHOLDER NAME" ─────────────
+  const cardholderFilled = await page.evaluate((name) => {
+    // หา label ที่มี text CARDHOLDER NAME
+    const allEls = Array.from(document.querySelectorAll('label, span, div, p'));
+    const label = allEls.find(el => /cardholder\s*name/i.test(el.textContent.trim()) && el.textContent.trim().length < 30);
+    if (label) {
+      // หา input ใน container เดียวกัน
+      let container = label.parentElement;
+      for (let i = 0; i < 4; i++) {
+        const inp = container?.querySelector('input[type="text"], input:not([type])');
+        if (inp && inp.offsetParent !== null) {
+          inp.focus();
+          inp.value = name;
+          inp.dispatchEvent(new Event('input', { bubbles: true }));
+          inp.dispatchEvent(new Event('change', { bubbles: true }));
+          return true;
+        }
+        container = container?.parentElement;
+      }
+    }
+    return false;
+  }, CC_DATA.name).catch(() => false);
+  console.log(cardholderFilled ? `   ✅ cardholder name: ${CC_DATA.name}` : '   ⚠️ ไม่พบ cardholder name input');
+
+  // ── Step 5: Continue Payment ──────────────────────────────────────────────
+  const continueBtn = page.locator('button.btn-primary[type="submit"], button[type="submit"]').first();
+  if (await continueBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+    await continueBtn.click();
+    console.log('   ✅ กด Continue payment');
+  } else {
+    console.log('   ⚠️ ไม่พบ Continue payment button');
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Flow หลัก — Phase 1 (ใช้ logic จาก digital-sale-phase1.spec.js)
+// รับ data จาก Google Sheet แทน TEST_DATA
+// คืนค่า referenceNumber ที่ได้จากหน้า success
+// ─────────────────────────────────────────────────────────────────────────────
+async function runPhase1Flow(page, data, productSlug) {
+  const phone = String(data.mobilePhone || '').replace(/\D/g, '');
+
+  // ── A. Calculator (หน้า product) ─────────────────────────────────────────
+
+  console.log('📌 Step A1: กดปุ่ม คำนวณเบี้ย/ซื้อออนไลน์');
+  const calcBtn = page
+    .getByRole('link', { name: /คำนวณเบี้ย.*ซื้อออนไลน์/ })
+    .or(page.getByRole('button', { name: /คำนวณเบี้ย.*ซื้อออนไลน์/ }))
+    .first();
+  await calcBtn.waitFor({ state: 'visible', timeout: 10000 });
+  await calcBtn.click();
+  await dismissPopups(page);
+
+  // Step A2: เลือกเพศ
+  console.log('📌 Step A2: เลือกเพศ');
+  await waitForReady(page, ['label[for="gender-m"]', 'label[for="gender-f"]'], 15000);
+  const genderVal = String(data.gender || '').trim();
+  const isMale   = /^(M|male)$/i.test(genderVal) || genderVal.includes('ชาย');
+  const isFemale = /^(F|female)$/i.test(genderVal) || genderVal.includes('หญิง');
+  if (isMale) {
+    await clickRadioLabel(page, 'gender-m');
+    console.log('✅ เลือก: ผู้ชาย');
+  } else if (isFemale) {
+    await clickRadioLabel(page, 'gender-f');
+    console.log('✅ เลือก: ผู้หญิง');
+  } else {
+    throw new Error(`❌ ไม่รู้จักค่าเพศ: "${genderVal}"`);
+  }
+
+  // first-love1810 ต้องกด ต่อไป หลังเลือกเพศ
+  if (productSlug === 'first-love1810') {
+    await clickButtonByText(page, 'ต่อไป');
+    await dismissPopups(page);
+  }
+
+  // Step A3: กรอกวันเกิด
+  console.log(`📌 Step A3: กรอกวันเกิด = ${data.birthDate}`);
+  await waitForReady(page, ['input[name="birthdate"]'], 12000);
+  await dismissPopups(page);
+  await page.waitForTimeout(800);
+
+  const bd = parseBirthDate(data.birthDate);
+  const bdDate = new Date(bd.yearAD, bd.monthInt - 1, bd.day);
+
+  if (productSlug === 'first-love1810') {
+    await retryBirthDate(page, 'input[name="birthdate"]', bdDate);
+    await clickButtonByText(page, 'ต่อไป');
+    await dismissPopups(page);
+  } else {
+    const bdValue = await setFlatpickrDate(page, 'input[name="birthdate"]', bdDate);
+    console.log(`✅ ตั้งวันเกิด: ${bdValue}`);
+    await dismissPopups(page);
+  }
+
+  // Step A4: กรอกเบี้ย/ทุน → คำนวณ → quotation
+  if (productSlug === 'save-and-protect888') {
+    console.log(`📌 Step A4: กรอกจำนวนเงินเอาประกัน = ${data.insuredAmount}`);
+    await waitForReady(page, ['input[name="insured_amount"]'], 12000);
+    const insuredRaw = String(data.insuredAmount || '').replace(/,/g, '').trim();
+    if (!insuredRaw || insuredRaw === '-') throw new Error('❌ ไม่มีค่า insuredAmount');
+    const insuredInput = page.locator('input[name="insured_amount"]');
+    await insuredInput.click();
+    await insuredInput.fill('');
+    await insuredInput.pressSequentially(insuredRaw, { delay: 30 });
+    await page.keyboard.press('Tab');
+    await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
+    console.log(`✅ กรอก insured_amount: ${insuredRaw}`);
+
+    await clickButtonByText(page, 'ต่อไป');
+    await waitOptionalLoading(page);
+    await dismissPopups(page);
+
+    const payPeriodVal = String(data.paymentPeriod || 'รายปี').trim();
+    console.log(`🔎 โหมดชำระจาก sheet = "${payPeriodVal}"`);
+
+    // หา label ที่ text ตรงกับค่าจาก sheet (label[for^="interval-"])
+    const allIntervalLabels = page.locator('label[for^="interval-"]');
+    const intervalCount = await allIntervalLabels.count().catch(() => 0);
+    console.log(`🔎 พบ interval labels: ${intervalCount}`);
+
+    if (intervalCount > 0) {
+      // log ทุก option ที่มี
+      const intervalTexts = await allIntervalLabels.allTextContents().catch(() => []);
+      console.log(`🔎 interval options: ${intervalTexts.map(t => t.trim()).join(' | ')}`);
+
+      // หา label ที่ text ตรงกับ payPeriodVal (exact → includes → fallback แรก)
+      let selectedLabel = null;
+      let selectedText = '';
+      for (let i = 0; i < intervalCount; i++) {
+        const lbl = allIntervalLabels.nth(i);
+        const txt = (await lbl.textContent().catch(() => '')).trim();
+        if (txt === payPeriodVal || txt.includes(payPeriodVal) || payPeriodVal.includes(txt)) {
+          selectedLabel = lbl;
+          selectedText = txt;
+          break;
+        }
+      }
+
+      if (selectedLabel) {
+        await selectedLabel.click({ force: true });
+        console.log(`✅ เลือกโหมดชำระ: "${selectedText}" (จาก "${payPeriodVal}")`);
+      } else {
+        console.log(`⚠️ ไม่พบโหมดชำระ "${payPeriodVal}" ใน options — ไม่เลือก (อาจต้องแก้ข้อมูลใน sheet)`);
+      }
+    } else {
+      console.log(`⚠️ ไม่พบ interval labels บนหน้านี้ — ข้ามขั้นตอนเลือกโหมดชำระ`);
+    }
+
+    await dismissOverlays(page);
+    await clickButtonByText(page, 'คำนวณเบี้ยประกันภัย');
+    await waitOptionalLoading(page);
+    await dismissPopups(page);
+
+    if (!page.url().includes('/quotation/')) {
+      await dismissOverlays(page);
+      await clickButtonByText(page, 'ซื้อประกันออนไลน์');
+      await page.waitForURL('**/quotation/**', { timeout: 15000 });
+      await waitOptionalLoading(page);
+      await dismissPopups(page);
+    }
+  } else {
+    console.log(`📌 Step A4: กรอกเบี้ย = ${data.premium}`);
+    await waitForReady(page, ['input[name="premium_amount"]'], 8000);
+    const premium = String(data.premium || '').replace(/,/g, '').trim();
+    if (!premium || premium === '-') throw new Error('❌ ไม่มีค่า premium');
+    const premiumInput = page.locator('input[name="premium_amount"]');
+    await premiumInput.click();
+    await premiumInput.fill(premium);
+    console.log(`✅ กรอกเบี้ย: ${premium}`);
+    await clickButtonByText(page, 'คำนวณจำนวนเงินเอาประกันภัย');
+    await page.waitForURL('**/quotation/**', { timeout: 15000 });
+    await waitOptionalLoading(page);
+    await dismissPopups(page);
+  }
+
+  // ── B. Quotation → Identity ───────────────────────────────────────────────
+
+  console.log('📌 Step B: กด ซื้อประกันออนไลน์ (quotation → identity)');
+  await page.waitForURL('**/quotation/**', { timeout: 15000 });
+  await clickButtonByText(page, 'ซื้อประกันออนไลน์');
+  await page.waitForURL('**/identity**', { timeout: 15000 });
+  await waitOptionalLoading(page);
+  await dismissPopups(page);
+
+  // ── C. Identity (ยืนยันตัวตน) ────────────────────────────────────────────
+
+  console.log('📌 Step C: กรอกข้อมูลยืนยันตัวตน');
+
+  // C1: เลือกสัญชาติ
+  const nationalityRaw = String(data.nationality || '').trim();
+  const isThai = nationalityRaw === 'ไทย' || nationalityRaw === '';
+  console.log(`   สัญชาติ: ${isThai ? 'ชาวไทย' : 'ชาวต่างชาติ'}`);
+  await waitForReady(page, ['label[for="id_type_idcard"]', 'label[for="id_type_passport"]'], 10000);
+  await clickRadioLabel(page, isThai ? 'id_type_idcard' : 'id_type_passport');
+
+  // C2: เลขบัตรประชาชน
+  console.log(`   เลขบัตร: ${data.cardNo}`);
+  await waitForReady(page, ['input[name="applicant[id_card_no]"]'], 8000);
+  const idCard = String(data.cardNo || '').replace(/\D/g, '').trim();
+  if (!idCard) throw new Error('❌ ไม่มีค่า cardNo');
+  const idCardInput = page.locator('input[name="applicant[id_card_no]"]');
+  await idCardInput.click();
+  await idCardInput.fill(idCard);
+
+  // C3: วันบัตรหมดอายุ
+  console.log(`   วันบัตรหมดอายุ: ${data.expirecardNo}`);
+  if (!data.expirecardNo) throw new Error('❌ ไม่มีค่า expirecardNo');
+  const ed = parseBirthDate(data.expirecardNo);
+  await setFlatpickrDate(
+    page,
+    'input[name="applicant[id_expired_date]"]',
+    new Date(ed.yearAD, ed.monthInt - 1, ed.day)
+  );
+
+  // C4: คำนำหน้าชื่อ
+  console.log(`   คำนำหน้า: ${data.cusTitlePrefix}`);
+  const title = normalizeTitle(data.cusTitlePrefix);
+  if (!title) throw new Error('❌ ไม่มีค่า cusTitlePrefix');
+  await page.locator('select[name="applicant[title_id]"]').first().selectOption({ label: title });
+  await page.waitForTimeout(800);
+
+  // C5: ชื่อ
+  console.log(`   ชื่อ: ${data.cusName}`);
+  if (!data.cusName) throw new Error('❌ ไม่มีค่า cusName');
+  await page.locator('input[name="applicant[first_name]"]').fill(data.cusName);
+
+  // C6: นามสกุล
+  console.log(`   นามสกุล: ${data.cusSurname}`);
+  if (!data.cusSurname) throw new Error('❌ ไม่มีค่า cusSurname');
+  await page.locator('input[name="applicant[last_name]"]').fill(data.cusSurname);
+
+  // C7: อีเมล
+  console.log(`   อีเมล: ${data.email}`);
+  if (!data.email) throw new Error('❌ ไม่มีค่า email');
+  await page.locator('input[type="email"]').fill(data.email);
+
+  // C8: โทรศัพท์
+  console.log(`   โทร: ${phone}`);
+  if (!phone) throw new Error('❌ ไม่มีค่า mobilePhone');
+  await page.locator('input[type="text"][maxlength="10"]').first().fill(phone);
+
+  // C9: ยืนยันข้อมูล → consent → ถัดไป → health
+  await clickButtonByText(page, 'ยืนยันข้อมูล');
+  await acceptAllConsents(page);
+  await page.getByRole('button', { name: 'ถัดไป' }).click();
+
+  // ── D. Health (สุขภาพ) ───────────────────────────────────────────────────
+
+  console.log('📌 Step D: /health/');
+  await page.waitForURL('**/health**', { timeout: 30000 }).catch(() => {});
+  await waitOptionalLoading(page);
+  await dismissPopups(page);
+
+  await autoSelectSafeRadios(page);
+
+  // กรอกส่วนสูง/น้ำหนัก
+  const heightVal = String(data.height || '170').trim();
+  const weightVal = String(data.weight || '65').trim();
+  console.log(`📌 Step D2: ส่วนสูง=${heightVal} น้ำหนัก=${weightVal}`);
+
+  const heightSpecific = page.locator('input[name="question[233][7]"]').first();
+  const weightSpecific = page.locator('input[name="question[234][8]"]').first();
+
+  const fillWithRetry = async (locator, fallbackNth, value, label) => {
+    let target = locator;
+    if (!(await locator.isVisible({ timeout: 3000 }).catch(() => false))) {
+      target = page.locator('input[type="number"]').nth(fallbackNth);
+    }
+    for (let i = 1; i <= 3; i++) {
+      await target.scrollIntoViewIfNeeded().catch(() => {});
+      await target.click({ force: true });
+      await target.fill('');
+      await target.type(value, { delay: 80 });
+      await page.waitForTimeout(400);
+      const actual = await target.inputValue().catch(() => '');
+      if (actual === value) { console.log(`✅ ${label} = ${actual}`); return; }
+      if (i === 3) console.warn(`⚠️ ${label} ไม่สำเร็จ actual=${actual}`);
+      await page.waitForTimeout(300);
+    }
+  };
+
+  await fillWithRetry(heightSpecific, 0, heightVal, 'height');
+  await fillWithRetry(weightSpecific, 1, weightVal, 'weight');
+
+  await clickButtonByText(page, 'ถัดไป');
+  await page.waitForURL('**/fatca**', { timeout: 15000 });
+  await waitOptionalLoading(page);
+  await dismissPopups(page);
+
+  // ── E. FATCA (CRS + FATCA) ───────────────────────────────────────────────
+
+  console.log('📌 Step E: /fatca/');
+
+  // CRS: อยู่อาศัยในไทยเท่านั้น
+  const crsRadio = page.locator('input[name="crs[thai_residence_only]"][value="Y"]').first();
+  if (await crsRadio.isVisible({ timeout: 2000 }).catch(() => false)) {
+    const lblId = await crsRadio.getAttribute('id');
+    const lbl = page.locator(`label[for="${lblId}"]`).first();
+    if (await lbl.isVisible({ timeout: 1000 }).catch(() => false)) {
+      await lbl.click({ force: true });
+    } else {
+      await crsRadio.check({ force: true });
+    }
+    console.log('✅ CRS: อยู่อาศัยในไทยเท่านั้น');
+  }
+
+  // กรอกสถานที่เกิด
+  const birthPlaceVal = String(data.registerProvince || '').trim();
+  if (birthPlaceVal) {
+    const birthPlaceInput = page.locator('input[name="crs[city_name]"]').first();
+    await birthPlaceInput.waitFor({ state: 'visible', timeout: 10000 });
+    await birthPlaceInput.scrollIntoViewIfNeeded();
+    await birthPlaceInput.click({ force: true });
+    await birthPlaceInput.fill(birthPlaceVal);
+    await birthPlaceInput.press('Tab');
+    const actualBirthPlace = await birthPlaceInput.inputValue();
+    if (actualBirthPlace !== birthPlaceVal) {
+      throw new Error(`❌ กรอกสถานที่เกิดไม่สำเร็จ expected=${birthPlaceVal} actual=${actualBirthPlace}`);
+    }
+    console.log(`✅ สถานที่เกิด = ${birthPlaceVal}`);
+  }
+
+  // FATCA safe defaults
+  for (const radioId of ['ans-145-2', 'ans-146-6', 'ans-147-24']) {
+    const lbl = page.locator(`label[for="${radioId}"]`);
+    if (await lbl.isVisible({ timeout: 1500 }).catch(() => false)) {
+      await lbl.click({ force: true });
+      console.log(`✅ FATCA คลิก ${radioId}`);
+    }
+    await page.waitForTimeout(100);
+  }
+
+  // JS fallback — ตอบ "ไม่" ทุก radio ที่ยังไม่ได้ตอบ
+  await page.evaluate(() => {
+    const safeTexts = ['ไม่ใช่', 'ไม่', 'ไม่มี'];
+    const groups = {};
+    document.querySelectorAll('input[type="radio"]').forEach(el => {
+      if (!el.name) return;
+      if (!groups[el.name]) groups[el.name] = [];
+      groups[el.name].push(el);
+    });
+    for (const [, radios] of Object.entries(groups)) {
+      if (radios.some(r => r.checked)) continue;
+      const safe = radios.find(r => {
+        const lbl = document.querySelector(`label[for="${r.id}"]`);
+        const txt = (lbl?.innerText || r.value || '').trim();
+        return safeTexts.some(s => txt.includes(s));
+      });
+      if (safe) {
+        const lbl = document.querySelector(`label[for="${safe.id}"]`);
+        if (lbl) lbl.click(); else safe.click();
+      }
+    }
+  });
+  await page.waitForTimeout(500);
+
+  await clickButtonByText(page, 'ถัดไป');
+  await page.waitForTimeout(2000);
+  console.log(`🔎 URL หลัง fatca ถัดไป = ${page.url()}`);
+
+  if (!page.url().includes('/applicant')) {
+    const firstError = await page.locator('.invalid-feedback, .text-danger, [class*="error"]')
+      .filter({ hasText: /.+/ }).first().innerText().catch(() => '');
+    throw new Error(`❌ ไม่ไป /applicant หลังกด ถัดไป (url=${page.url()}) error="${firstError}"`);
+  }
+
+  // ── F. Applicant (ข้อมูลส่วนบุคคล) ─────────────────────────────────────
+
+  console.log('📌 Step F: /applicant/');
+
+  // ชื่อไม่เคยเปลี่ยน
+  const changeNameNo = page.locator('label[for="change_name-n"]');
+  if (await changeNameNo.isVisible({ timeout: 3000 }).catch(() => false)) {
+    await changeNameNo.click({ force: true });
+    console.log('✅ คลิก change_name-n');
+  }
+
+  // สถานภาพสมรส
+  const maritalVal = String(data.maritalStatus || '').trim();
+  if (maritalVal) {
+    await page.locator('select[name="applicant[marital_status_id]"]').first()
+      .selectOption({ label: maritalVal }).catch(() => {});
+    console.log(`✅ maritalStatus = ${maritalVal}`);
+  }
+
+  // สัญชาติ (เลือก option แรกที่ไม่ใช่ placeholder)
+  const natSel = page.locator('select[name="applicant[nationality_id]"]').first();
+  await natSel.waitFor({ state: 'visible', timeout: 10000 });
+  const natOptions = await natSel.locator('option').all();
+  if (natOptions.length >= 2) {
+    const firstVal = await natOptions[1].getAttribute('value');
+    await natSel.selectOption(firstVal);
+    console.log(`✅ nationality first option = ${firstVal}`);
+  }
+  await page.waitForTimeout(1500); // รอ Livewire re-render หลังเลือก nationality
+
+  // กลุ่มอาชีพ
+  const occGroupVal = String(data.occupation || '').trim();
+  console.log(`🔎 occupation (group) value from sheet = "${occGroupVal}"`);
+  const occGroupSel = page.locator('select[name="applicant[main_occupation_group_id]"]');
+  const occGroupVisible = await occGroupSel.isVisible({ timeout: 3000 }).catch(() => false);
+  console.log(`🔎 occupation group element visible = ${occGroupVisible}`);
+  if (occGroupVisible) {
+    // log ทุก option ที่มีใน dropdown
+    const occGroupOptions = await occGroupSel.locator('option').allTextContents().catch(() => []);
+    console.log(`🔎 occupation group options (${occGroupOptions.length}): ${occGroupOptions.join(' | ')}`);
+  }
+  if (occGroupVal && occGroupVisible) {
+    await occGroupSel.selectOption({ label: occGroupVal }).catch(() =>
+      occGroupSel.selectOption(occGroupVal).catch(() => {})
+    );
+    console.log(`✅ occupation group = "${occGroupVal}"`);
+    await page.waitForTimeout(2500); // รอ Livewire โหลด occupation options
+  } else {
+    console.log(`⚠️ ข้าม occupation group (visible=${occGroupVisible}, val="${occGroupVal}")`);
+  }
+
+  // อาชีพ
+  const occVal = String(data.jobDescription || '').trim();
+  console.log(`🔎 jobDescription (occupation) value from sheet = "${occVal}"`);
+  const occSel = page.locator('select[name="applicant[main_occupation_id]"]');
+  const occVisible = await occSel.isVisible({ timeout: 3000 }).catch(() => false);
+  console.log(`🔎 occupation element visible = ${occVisible}`);
+  if (occVisible) {
+    const occOptions = await occSel.locator('option').allTextContents().catch(() => []);
+    console.log(`🔎 occupation options (${occOptions.length}): ${occOptions.join(' | ')}`);
+  }
+  if (occVal && occVisible) {
+    const occMatched = await occSel.evaluate((sel, val) => {
+      const opt = Array.from(sel.options).find(o =>
+        o.text.trim() === val || o.value === val || o.text.trim().includes(val) || val.includes(o.text.trim())
+      ) || Array.from(sel.options).find(o => o.value !== '');
+      if (opt) { sel.value = opt.value; sel.dispatchEvent(new Event('change', { bubbles: true })); return opt.text.trim(); }
+      return null;
+    }, occVal);
+    console.log(`✅ occupation = "${occMatched}" (จาก "${occVal}")`);
+    await page.waitForTimeout(500);
+  } else {
+    console.log(`⚠️ ข้าม occupation (visible=${occVisible}, val="${occVal}")`);
+  }
+
+  // ตำแหน่ง / ลักษณะธุรกิจ (optional)
+  await optionalFill(page, data.occupationPosition, 'input[name="applicant[main_occupation_position]"]', 'occupationPosition');
+  await optionalFill(page, data.businessType, 'input[name="applicant[main_occupation_business_desc]"]', 'businessType');
+
+  // รายได้ต่อปี
+  await mandatoryFill(
+    page,
+    String(data.annualIncome || '').replace(/,/g, ''),
+    'input[name="applicant[main_occupation_salary]"]',
+    'annualIncome'
+  );
+
+  // ── ที่อยู่ตามทะเบียนบ้าน ──
+  await mandatoryFill(page, data.registerHouseNo, 'input[name="applicant[address_registered][address_no]"]', 'registerHouseNo');
+  await optionalFill(page, data.registerVillage, 'input[name="applicant[address_registered][village_name]"]', 'registerVillage');
+  await optionalFill(page, data.registerMoo, 'input[name="applicant[address_registered][moo]"]', 'registerMoo');
+  await optionalFill(page, data.registerSoi, 'input[name="applicant[address_registered][soi]"]', 'registerSoi');
+  await optionalFill(page, data.registerRoad, 'input[name="applicant[address_registered][street]"]', 'registerRoad');
+
+  await page.locator('select[name="applicant[address_registered][province_id]"]').first()
+    .selectOption({ label: String(data.registerProvince || '').trim() });
+  console.log(`✅ registerProvince = ${data.registerProvince}`);
+  await page.waitForTimeout(1500);
+
+  await page.locator('select[name="applicant[address_registered][district_id]"]').first()
+    .selectOption({ label: String(data.registerDistrict || '').trim() });
+  console.log(`✅ registerDistrict = ${data.registerDistrict}`);
+  await page.waitForTimeout(1500);
+
+  await page.locator('select[name="applicant[address_registered][subdistrict_id]"]').first()
+    .selectOption({ label: String(data.registerSubDistrict || '').trim() });
+  console.log(`✅ registerSubDistrict = ${data.registerSubDistrict}`);
+
+  // รอ postal code auto-fill
+  await expect.poll(async () => {
+    return await page.locator('input[name="applicant[address_registered][postal_code]"]')
+      .inputValue().catch(() => '');
+  }, { timeout: 15000 }).not.toBe('');
+  console.log('✅ postal code loaded');
+
+  // ── ที่อยู่ปัจจุบัน ──
+  const currentUseType = String(data.currentUseAddressType || '').trim();
+  if (currentUseType.includes('ทะเบียนบ้าน')) {
+    await clickRadioLabel(page, 'current_address_type_registered');
+    console.log('✅ ใช้ที่อยู่ทะเบียนบ้าน');
+  } else {
+    await clickRadioLabel(page, 'current_address_type_other');
+    console.log('✅ ใช้ที่อยู่ส่งเอกสาร');
+    await mandatoryFill(page, data.currentHouseNo, 'input[name="applicant[address_current][address_no]"]', 'currentHouseNo');
+    await optionalFill(page, data.currentVillage, 'input[name="applicant[address_current][village_name]"]', 'currentVillage');
+    await optionalFill(page, data.currentMoo, 'input[name="applicant[address_current][moo]"]', 'currentMoo');
+    await optionalFill(page, data.currentSoi, 'input[name="applicant[address_current][soi]"]', 'currentSoi');
+    await optionalFill(page, data.currentRoad, 'input[name="applicant[address_current][street]"]', 'currentRoad');
+    await page.locator('select[name="applicant[address_current][province_id]"]').first()
+      .selectOption({ label: String(data.currentProvince || '').trim() });
+    await page.waitForTimeout(1500);
+    await page.locator('select[name="applicant[address_current][district_id]"]').first()
+      .selectOption({ label: String(data.currentDistrict || '').trim() });
+    await page.waitForTimeout(1500);
+    await page.locator('select[name="applicant[address_current][subdistrict_id]"]').first()
+      .selectOption({ label: String(data.currentSubDistrict || '').trim() });
+    await expect.poll(async () => {
+      return await page.locator('input[name="applicant[address_current][postal_code]"]')
+        .inputValue().catch(() => '');
+    }, { timeout: 15000 }).not.toBe('');
+    console.log('✅ current postal code loaded');
+  }
+
+  await clickButtonByText(page, 'ถัดไป');
+  await page.waitForURL('**/beneficiary**', { timeout: 15000 });
+  await waitOptionalLoading(page);
+  await dismissPopups(page);
+
+  // ── G. Beneficiary (ผู้รับผลประโยชน์) ──────────────────────────────────
+
+  console.log('📌 Step G: /beneficiary/');
+
+  const benefitAutoLbl = page.locator('label[for="benefit_method_auto"]');
+  if (await benefitAutoLbl.isVisible({ timeout: 3000 }).catch(() => false)) {
+    await benefitAutoLbl.click({ force: true });
+    console.log('✅ เลือก benefit_method_auto');
+  }
+
+  const beneList = data.bene?.length ? data.bene : [{
+    benePrefix: '', beneName: data.cusName || '', beneSurname: data.cusSurname || '',
+    beneRela: '', beneAge: '',
+  }];
+  console.log(`📋 จำนวนผู้รับผลประโยชน์: ${beneList.length} คน`);
+
+  for (let i = 0; i < beneList.length; i++) {
+    // กด "เพิ่มผู้รับผลประโยชน์" สำหรับคนที่ 2 เป็นต้นไป
+    if (i > 0) {
+      const addBenBtn = page.getByRole('button', { name: /เพิ่มผู้รับผลประโยชน์/i })
+        .or(page.locator('button').filter({ hasText: /เพิ่ม.*ผู้รับ/i })).first();
+      if (await addBenBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await addBenBtn.click();
+        await page.waitForTimeout(1000);
+        console.log(`   ➕ กด "เพิ่มผู้รับผลประโยชน์" (คนที่ ${i + 1})`);
+      }
+    }
+
+    const benData = beneList[i];
+    const benPrefix    = String(benData.benePrefix || '').trim();
+    const benFirstName = String(benData.beneName || '').trim();
+    const benLastName  = String(benData.beneSurname || '').trim();
+    const benRela      = String(benData.beneRela || '').trim();
+    const benAge       = String(benData.beneAge || '').trim();
+
+    console.log(`📌 ผู้รับผลประโยชน์ที่ ${i + 1}: ${benPrefix} ${benFirstName} ${benLastName} | ${benRela} | อายุ ${benAge}`);
+
+    // คำนำหน้า
+    if (benPrefix) {
+      const prefixSel = page.locator('select[name*="beneficiary"][name*="title_id"]').nth(i);
+      if (await prefixSel.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await prefixSel.selectOption({ label: normalizeTitle(benPrefix) })
+          .catch(() => prefixSel.selectOption(benPrefix).catch(() => {}));
+        console.log(`   ✅ คำนำหน้า: ${benPrefix}`);
+      }
+    }
+
+    // ชื่อ
+    if (benFirstName) {
+      const fnInput = page.locator('input[name*="beneficiary"][name*="first_name"]').nth(i);
+      if (await fnInput.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await fnInput.fill(benFirstName);
+        console.log(`   ✅ ชื่อ: ${benFirstName}`);
+      }
+    }
+
+    // นามสกุล
+    if (benLastName) {
+      const lnInput = page.locator('input[name*="beneficiary"][name*="last_name"]').nth(i);
+      if (await lnInput.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await lnInput.fill(benLastName);
+        console.log(`   ✅ นามสกุล: ${benLastName}`);
+      }
+    }
+
+    // ความสัมพันธ์
+    if (benRela) {
+      const relaSel = page.locator('select[name*="beneficiary"][name*="relation_id"]').nth(i);
+      if (await relaSel.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await relaSel.selectOption({ label: benRela })
+          .catch(() => relaSel.selectOption(benRela).catch(() => {}));
+        console.log(`   ✅ ความสัมพันธ์: ${benRela}`);
+      }
+    }
+
+    // อายุ
+    if (benAge) {
+      const ageSel = page.locator('input[name$="[age]"]').nth(i);
+      if (await ageSel.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await ageSel.fill(benAge);
+        console.log(`   ✅ อายุ: ${benAge}`);
+      }
+    }
+  }
+
+  await clickButtonByText(page, 'ถัดไป');
+  await page.waitForURL('**/tax**', { timeout: 15000 });
+  await waitOptionalLoading(page);
+  await dismissPopups(page);
+
+  // ── H. Tax (ภาษี) ────────────────────────────────────────────────────────
+
+  console.log('📌 Step H: /tax/');
+  await page.waitForURL('**/tax**', { timeout: 15000 });
+  await waitOptionalLoading(page);
+  await dismissPopups(page);
+
+  // เลือก radio: index 0 = ไม่มีความประสงค์ขอยกเว้นภาษี
+  await page.evaluate(() => {
+    const radios = document.querySelectorAll('input[type="radio"]');
+    const r = radios[0];
+    if (r) { const lbl = r.nextElementSibling; if (lbl) lbl.click(); else r.click(); }
+  });
+  await page.waitForTimeout(300);
+  console.log('✅ เลือก: ไม่มีความประสงค์ขอยกเว้นภาษี');
+
+  await clickButtonByText(page, 'ถัดไป');
+  await page.waitForURL('**/document**', { timeout: 15000 });
+  await waitOptionalLoading(page);
+  await dismissPopups(page);
+
+  // ── I. Document (แนบเอกสาร) ─────────────────────────────────────────────
+
+  console.log('📌 Step I: /document/ — อัปโหลดเอกสาร');
+  await dismissOverlays(page);
+  await page.waitForTimeout(1000);
+
+  const idCardImagePath = path.resolve(__dirname, 'fixtures', 'id_card.jpg');
+
+  if (fs.existsSync(idCardImagePath)) {
+    await page.locator('input[name="idcard_front"]')
+      .setInputFiles(idCardImagePath).catch(() => {});
+    await page.waitForTimeout(1000);
+    console.log('   ✅ อัปโหลดภาพหน้าบัตรแล้ว');
+  } else {
+    console.warn(`   ⚠️ ไม่พบไฟล์: ${idCardImagePath} — ข้ามอัปโหลด`);
+  }
+
+  if (fs.existsSync(idCardImagePath)) {
+    await page.locator('input[name="idcard_selfie"]')
+      .setInputFiles(idCardImagePath).catch(() => {});
+    await page.waitForTimeout(1000);
+    console.log('   ✅ อัปโหลดภาพถ่ายคู่บัตรแล้ว');
+  }
+
+  await dismissOverlays(page);
+  await page.locator('button:has-text("ถัดไป")').click();
+  await page.waitForURL(/\/policy/, { timeout: 15000 }).catch(() => {});
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForTimeout(2000);
+  console.log('✅ อัปโหลดเอกสารเสร็จสิ้น');
+
+  // ── J. Policy delivery (วิธีรับกรมธรรม์) ───────────────────────────────
+
+  await page.waitForURL(/\/(policy|confirm)/, { timeout: 15000 }).catch(() => {});
+
+  if (page.url().includes('/policy')) {
+    console.log('📌 Step J: /policy/ — เลือกวิธีรับกรมธรรม์');
+    await page.waitForTimeout(1000);
+
+    const deliveryMap = { 'e-policy': 'EMAIL', 'ไปรษณีย์': 'POSTAL' };
+    const policyChoice = String(data.paperOrElectronic || 'e-policy').trim();
+    const deliveryVal = deliveryMap[policyChoice] || 'EMAIL';
+
+    const clickDeliveryLabel = async (fieldName, val) => {
+      const lbl = page.locator(`label[for="${fieldName}_${val.toLowerCase()}"]`);
+      if (await lbl.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await lbl.click();
+        await page.waitForTimeout(600);
+        const openModal = page.locator('.modal.show')
+          .filter({ has: page.locator('[data-dismiss="modal"]') });
+        if (await openModal.isVisible({ timeout: 500 }).catch(() => false)) {
+          await openModal.locator('[data-dismiss="modal"]').click();
+          await page.waitForTimeout(500);
+          console.log('   ปิด popup แจ้งเตือน');
+        }
+      }
+    };
+
+    await clickDeliveryLabel('policy_format', deliveryVal);
+    console.log(`✅ รับกรมธรรม์แบบ: ${policyChoice}`);
+    await clickDeliveryLabel('document_delivery_format', deliveryVal);
+    console.log(`✅ รับใบเสร็จแบบ: ${policyChoice}`);
+
+    await clickButtonByText(page, 'ถัดไป');
+    await page.waitForURL(/\/confirm/, { timeout: 15000 }).catch(() => {});
+    await waitOptionalLoading(page);
+    await dismissPopups(page);
+  }
+
+  // ── K. Confirm (ยืนยันคำสั่งซื้อ) ──────────────────────────────────────
+
+  console.log('📌 Step K: /confirm/ — ยืนยันคำสั่งซื้อ');
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForTimeout(1500);
+  await dismissOverlays(page);
+
+  const confirmOrderBtn = page.locator('button[wire\\:click*="confirmed"]');
+  await confirmOrderBtn.waitFor({ state: 'visible', timeout: 10000 });
+  await confirmOrderBtn.click();
+  await page.waitForTimeout(2000);
+
+  // force close quotationOutdatedModal ถ้ามี
+  const outdatedModal = page.locator('#quotationOutdatedModal');
+  if (await outdatedModal.isVisible({ timeout: 1000 }).catch(() => false)) {
+    console.log('   ⚠️ พบ quotationOutdatedModal — force close');
+    await page.evaluate(() => {
+      const m = document.querySelector('#quotationOutdatedModal');
+      if (m) { m.classList.remove('show'); m.style.display = 'none'; }
+      document.querySelector('.modal-backdrop')?.remove();
+      document.body.classList.remove('modal-open');
+    });
+    await page.waitForTimeout(500);
+  }
+  console.log('✅ กดยืนยันคำสั่งซื้อแล้ว');
+
+  // ── L. OTP ───────────────────────────────────────────────────────────────
+
+  console.log('📌 Step L: OTP');
+  const otpModal = page.locator('#confirmOtpModal');
+  await otpModal.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
+
+  if (await otpModal.isVisible({ timeout: 2000 }).catch(() => false)) {
+    // กรอกเบอร์โทร (ถ้ายังไม่มีค่า)
+    const phoneOtpInput = otpModal.locator(
+      'input[wire\\:model="phone_number"], input[wire\\:model\\.defer="phone_number"]'
+    );
+    if (await phoneOtpInput.isVisible({ timeout: 2000 }).catch(() => false)) {
+      const currentVal = await phoneOtpInput.inputValue().catch(() => '');
+      if (!currentVal) {
+        await phoneOtpInput.fill(phone);
+        console.log(`   กรอกเบอร์โทร ${phone} ใน OTP modal`);
+      }
+    }
+
+    // กด ขอรหัส
+    const sendOtpBtn = otpModal.locator('button[wire\\:click="send"]');
+    if (await sendOtpBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await sendOtpBtn.click();
+      await page.waitForTimeout(2000);
+      console.log('   กด "ขอรหัส" แล้ว — รอ OTP...');
+    }
+
+    // ดึง OTP จาก Debug OTP (UAT แสดง "Debug OTP: XXXXXX")
+    const otpDebugEl = otpModal.locator('p').filter({ hasText: /Debug OTP/i });
+    const otpDebugText = await otpDebugEl.innerText().catch(() => '');
+    const otpCode = otpDebugText.match(/Debug OTP[:\s]+(\d+)/i)?.[1] || '';
+
+    if (otpCode) {
+      console.log(`   OTP: ${otpCode}`);
+
+      // กรอก OTP ทีละ digit ผ่าน evaluate
+      const filledCount = await page.evaluate(({ otp }) => {
+        const modal = document.querySelector('#confirmOtpModal');
+        const inputs = modal
+          ? Array.from(modal.querySelectorAll('input')).filter(el => el.offsetParent !== null)
+          : [];
+        inputs.forEach((inp, i) => {
+          if (i < otp.length) {
+            inp.value = otp[i];
+            inp.dispatchEvent(new Event('input', { bubbles: true }));
+            inp.dispatchEvent(new Event('change', { bubbles: true }));
+            inp.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
+          }
+        });
+        return inputs.length;
+      }, { otp: otpCode });
+      console.log(`   กรอก OTP ใน ${filledCount} ช่อง`);
+      await page.waitForTimeout(500);
+
+      // กด ยืนยัน
+      const confirmed = await page.evaluate(() => {
+        const modal = document.querySelector('#confirmOtpModal');
+        const btn = modal && Array.from(modal.querySelectorAll('button'))
+          .find(b => b.textContent.trim() === 'ยืนยัน');
+        if (btn) { btn.click(); return true; }
+        return false;
+      });
+      if (confirmed) {
+        await page.waitForTimeout(3000);
+        console.log('   ✅ ยืนยัน OTP สำเร็จ');
+      } else {
+        console.warn('   ⚠️ ไม่พบปุ่ม "ยืนยัน" ใน OTP modal');
+      }
+    } else {
+      console.warn('   ⚠️ ไม่พบ Debug OTP — รอ manual 2 นาที...');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('📱  กรุณากรอก OTP บนหน้าจอแล้วกดยืนยันด้วยตัวเอง');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      await page.waitForTimeout(120000);
+    }
+  }
+
+  // ── M. Payment (เลือกช่องทางชำระเงิน: เงินสด) ───────────────────────────
+
+  const paymentMethodVal = String(data.paymentMethod || 'เงินสด').trim();
+  console.log(`📌 Step M: /payment/ — ${paymentMethodVal}`);
+  await page.waitForURL(/\/payment/, { timeout: 20000 }).catch(() => {});
+  await page.waitForLoadState('domcontentloaded');
+  await dismissOverlays(page);
+  await page.waitForTimeout(1000);
+  console.log(`🔎 URL ที่ Step M = ${page.url()}`);
+
+  const paymentInfo = await page.evaluate((method) => {
+    const labels = Array.from(document.querySelectorAll('label.payment__item'));
+    const labelTexts = labels.map(l => l.textContent.trim());
+    const target = labels.find(l => l.textContent.includes(method))
+      || labels.find(l => method.includes(l.textContent.trim()))
+      || labels[0];
+    if (target) { target.click(); return { found: true, chosen: target.textContent.trim(), labels: labelTexts }; }
+    return { found: false, chosen: null, labels: labelTexts };
+  }, paymentMethodVal);
+
+  console.log(`🔎 payment labels (${paymentInfo.labels.length}): ${paymentInfo.labels.join(' | ')}`);
+
+  if (paymentInfo.found) {
+    console.log(`✅ เลือกวิธีชำระ: "${paymentInfo.chosen}"`);
+    await page.waitForTimeout(500);
+    await page.evaluate(() => {
+      const btn = document.querySelector('button[type="submit"].btn--submit');
+      if (btn) btn.click();
+    });
+
+    const isCreditCard = paymentInfo.chosen.includes('บัตรเครดิต') || paymentMethodVal.includes('บัตรเครดิต');
+    if (isCreditCard) {
+      // รอ 4 วิ ดูว่าไปหน้า success เลย หรือต้องกรอก 2C2P
+      await page.waitForTimeout(4000);
+      if (!/\/success/.test(page.url())) {
+        console.log(`💳 URL หลัง submit: ${page.url()} — กรอก 2C2P form`);
+        await fill2C2PForm(page);
+        // รอ redirect หลัง Continue Payment (อาจผ่าน 3DS ก่อน)
+        await page.waitForTimeout(4000);
+        // ถ้ายังไม่ถึง success — ตรวจ 3DS challenge
+        if (!/\/success/.test(page.url())) {
+          const url3ds = page.url();
+          console.log(`🔒 URL หลัง Continue Payment: ${url3ds}`);
+          // รอให้หน้า 3DS โหลดเสร็จ
+          await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+          await page.waitForTimeout(3000);
+          // screenshot หน้า 3DS
+          const ss3ds = path.join(__dirname, 'screenshots', `3ds-${Date.now()}.png`);
+          await page.screenshot({ path: ss3ds, fullPage: true }).catch(() => {});
+          console.log(`📸 screenshot 3DS: ${ss3ds}`);
+
+          // ดึง Default OTP จากหน้า 3DS — ลองทั้ง page และ iframe
+          let otpCode3ds = '';
+
+          // ลองจาก page body ก่อน
+          const bodyText3ds = await page.locator('body').innerText({ timeout: 5000 }).catch(() => '');
+          const otpMatch = bodyText3ds.match(/(?:default|debug|otp)[^\d]*(\d{4,8})/i);
+          if (otpMatch) {
+            otpCode3ds = otpMatch[1];
+            console.log(`🔑 Default OTP (page): ${otpCode3ds}`);
+          }
+
+          // ถ้าไม่พบใน page — ลองหาใน iframe
+          if (!otpCode3ds) {
+            const frames = page.frames();
+            for (const frame of frames) {
+              const ftxt = await frame.locator('body').innerText({ timeout: 3000 }).catch(() => '');
+              const fm = ftxt.match(/(?:default|debug|otp)[^\d]*(\d{4,8})/i);
+              if (fm) {
+                otpCode3ds = fm[1];
+                console.log(`🔑 Default OTP (iframe ${frame.url()}): ${otpCode3ds}`);
+                break;
+              }
+            }
+          }
+
+          if (otpCode3ds) {
+            // หา input สำหรับกรอก OTP — ลองใน page ก่อน แล้วค่อย iframe
+            let otpFilled = false;
+
+            // ลองหา input ใน page
+            const otpInputPage = page.locator('input[type="text"], input[type="tel"], input[type="number"], input[type="password"]').first();
+            if (await otpInputPage.isVisible({ timeout: 3000 }).catch(() => false)) {
+              await otpInputPage.fill(otpCode3ds);
+              otpFilled = true;
+              console.log(`   ✅ กรอก OTP ใน page: ${otpCode3ds}`);
+            }
+
+            // ลองหา input ใน iframe ถ้ายังไม่ได้กรอก
+            if (!otpFilled) {
+              const frames = page.frames();
+              for (const frame of frames) {
+                const inp = frame.locator('input[type="text"], input[type="tel"], input[type="number"], input[type="password"]').first();
+                if (await inp.isVisible({ timeout: 2000 }).catch(() => false)) {
+                  await inp.fill(otpCode3ds);
+                  otpFilled = true;
+                  console.log(`   ✅ กรอก OTP ใน iframe (${frame.url()}): ${otpCode3ds}`);
+                  break;
+                }
+              }
+            }
+
+            if (otpFilled) {
+              // กด Submit
+              let submitted = false;
+              const submitBtn = page.locator('button[type="submit"], input[type="submit"], button').filter({ hasText: /submit|confirm|ยืนยัน|ok|continue/i }).first();
+              if (await submitBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+                await submitBtn.click();
+                submitted = true;
+                console.log('   ✅ กด Submit 3DS OTP (page)');
+              }
+
+              if (!submitted) {
+                // ลองหาปุ่มใน iframe
+                const frames = page.frames();
+                for (const frame of frames) {
+                  const fbtn = frame.locator('button[type="submit"], input[type="submit"], button').filter({ hasText: /submit|confirm|ยืนยัน|ok|continue/i }).first();
+                  if (await fbtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+                    await fbtn.click();
+                    submitted = true;
+                    console.log(`   ✅ กด Submit 3DS OTP (iframe ${frame.url()})`);
+                    break;
+                  }
+                }
+              }
+
+              if (!submitted) {
+                // กด Enter เป็น fallback
+                await page.keyboard.press('Enter');
+                console.log('   ✅ กด Enter เป็น fallback');
+              }
+            } else {
+              console.log('   ⚠️ ไม่พบ OTP input field');
+            }
+          } else {
+            console.log('   ⚠️ ไม่พบ Default OTP text บนหน้า 3DS');
+          }
+
+          // รอ redirect ไป success หลัง 3DS
+          console.log('   ⏳ รอ redirect ไป /success หลัง 3DS...');
+          await page.waitForURL(/\/success/, { timeout: 60000 }).catch(() => {});
+        }
+      } else {
+        console.log('✅ ผ่าน payment (UAT bypass ไม่ต้องกรอก 2C2P)');
+      }
+    } else {
+      await page.waitForURL(/\/success/, { timeout: 20000 }).catch(() => {});
+    }
+
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(1500);
+    console.log('✅ ชำระเงินเสร็จสิ้น');
+  } else {
+    throw new Error('❌ ไม่พบ payment option ใดๆ บนหน้า payment');
+  }
+
+  // ── N. Success — ดึงเลขที่อ้างอิง ────────────────────────────────────────
+
+  console.log('📌 Step N: /success/ — ดึงเลขอ้างอิง');
+  await page.waitForURL(/\/success/, { timeout: 15000 }).catch(() => {});
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForTimeout(1000);
+
+  const stepNUrl = page.url();
+  console.log(`🔎 URL ที่ Step N = ${stepNUrl}`);
+  if (!/\/success/.test(stepNUrl)) {
+    throw new Error(`❌ ไม่ได้อยู่บนหน้า /success (URL: ${stepNUrl})`);
+  }
+
+  const bodyText = await page.locator('body').innerText().catch(() => '');
+  const refMatch =
+    bodyText.match(/ตามเลขที่อ้างอิง\s+(\d+)/i) ||
+    bodyText.match(/(?:ใบคำขอ|เลขที่|อ้างอิง|Ref)[^\d]*(\d{6,12})/i) ||
+    bodyText.match(/\b(\d{7,12})\b/);
+  const referenceNumber = refMatch ? refMatch[1] : '';
+  console.log(`✅ เลขอ้างอิง: ${referenceNumber || '(ไม่พบ)'}`);
+
+  // กด เสร็จสิ้น
+  const finishBtn = page.getByRole('button', { name: /เสร็จสิ้น/i })
+    .or(page.locator('a').filter({ hasText: /เสร็จสิ้น/i }));
+  if (await finishBtn.first().isVisible({ timeout: 3000 }).catch(() => false)) {
+    await finishBtn.first().click();
+    await page.waitForTimeout(1000);
+    console.log('✅ กด "เสร็จสิ้น" แล้ว');
+  }
+
+  return referenceNumber;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main Test — Loop ดึงเคสจาก Google Sheet แล้วรัน Phase 1 Flow
+// ─────────────────────────────────────────────────────────────────────────────
+test('Digital Sale Phase 1 — Google Sheet Runner', async ({ browser }) => {
+  test.setTimeout(0);
+  const processedNos = new Set();
+  let idx = 0;
+
+  while (true) {
+    const caseDatas = await fetchRunnableCases(RUN_CREATE_BY);
+    if (!caseDatas.length) {
+      console.log('🎉 ไม่มีเคสให้รันแล้ว');
+      break;
+    }
+
+    const finalData = caseDatas[0];
+    idx++;
+    const { no, environment, linkProduct } = finalData;
+
+    if (processedNos.has(no)) {
+      console.log(`🛑 ข้ามซ้ำ: No ${no}`);
+      break;
+    }
+    processedNos.add(no);
+
+    const productSlug = String(linkProduct).split('/').pop();
+    const claimed = await claimCase(no, RUN_CREATE_BY);
+    if (!claimed) continue;
+
+    const context = await browser.newContext({ timezoneId: 'Asia/Bangkok' });
+    const page = await context.newPage();
+    await setupAutoPopupDismiss(page);
+
+    let status = 'FAIL';
+    let remark = '';
+    let referenceNumber = '';
+    const startTime = Date.now();
+
+    try {
+      const baseUrl = ENV_MAP[environment];
+      if (!baseUrl) throw new Error(`❌ ไม่รู้จัก Env: "${environment}"`);
+      const fullUrl = `${baseUrl}${linkProduct}`;
+
+      console.log(`\n${'━'.repeat(50)}`);
+      console.log(`🚀 [${idx}] No ${no} | ${productSlug} | ${environment}`);
+      console.log(`🌐 เปิด: ${fullUrl}`);
+      console.log('━'.repeat(50));
+
+      await page.goto(fullUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+      await dismissPopups(page);
+
+      referenceNumber = await runPhase1Flow(page, finalData, productSlug);
+
+      if (!referenceNumber) throw new Error('❌ ไม่พบเลขอ้างอิงบนหน้า success');
+      status = 'PASS';
+      remark = `เลขอ้างอิง: ${referenceNumber}`;
+      console.log(`\n✅ PASS: No ${no} | ${productSlug} | เลขอ้างอิง: ${referenceNumber}`);
+    } catch (err) {
+      const errorMessage = String(err?.message || err);
+      const isRunnerStopped =
+        page.isClosed?.() ||
+        /Target page, context or browser has been closed/i.test(errorMessage) ||
+        /Test ended/i.test(errorMessage);
+      if (isRunnerStopped) {
+        console.log(`🛑 Runner stopped: No ${no}`);
+        throw err;
+      }
+      status = 'FAIL';
+      remark = errorMessage;
+      console.error(`\n❌ FAIL: No ${no} | ${productSlug}:`, err);
+      try {
+        const screenshotPath = `reports/qa/screenshots/phase1_gsheet_fail_${no}_${Date.now()}.png`;
+        await page.screenshot({ path: screenshotPath, fullPage: true });
+        console.log(`📸 Screenshot: ${screenshotPath}`);
+      } catch {}
+    } finally {
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+      try {
+        await writeResult({
+          no,
+          status,
+          remark: `[${elapsed}s] ${remark}`.slice(0, 500),
+          applicationNo: referenceNumber,
+        });
+        console.log(`📝 Write result: No ${no} => ${status} [${elapsed}s]`);
+      } catch (writeErr) {
+        console.error(`❌ Write Sheet failed: No ${no}`, writeErr);
+      }
+      await context.close().catch(() => {});
+    }
+  }
+});
+
+/*
+ * SETUP:
+ * ──────────────────────────────────────────────────────
+ * 1. แก้ไข RUN_CREATE_BY บรรทัดด้านบนให้ตรงกับคอลัมน์ "Create By" ใน Google Sheet
+ *
+ * 2. ตรวจสอบว่า credentials/token.json พร้อมใช้งาน
+ *    (ถ้า token หมดอายุ ให้รัน node refresh-token.js ก่อน)
+ *
+ * 3. ใน Google Sheet ตั้งค่า Test Status เป็น "Ready for Test" หรือ "Ready for Retest"
+ *    และ Valid = TRUE, Create By = ค่าที่กำหนดใน RUN_CREATE_BY
+ *
+ * 4. รันคำสั่ง:
+ *    cd playwright
+ *    npx playwright test digital-sale/digital-sale-phase1-gsheet.spec.js --headed --workers=1
+ *
+ * Product ที่รองรับ (จาก linkProduct ใน Sheet):
+ *   - /our-products/savings/first-love1810      → flow เลือกเพศ + กด ต่อไป + กรอกเบี้ย
+ *   - /our-products/savings/save-and-protect888 → flow เลือกเพศ + กรอกทุน + เลือกโหมดชำระ
+ *
+ * Column ใน Google Sheet ที่จำเป็น:
+ *   No, Env, Link_Product, Valid, Create By, Test Status
+ *   เพศ/ประเภทเพศ, วันเดือนปีเกิด, เบี้ย/ทุนชดเชย, ทุน
+ *   สัญชาติ, เลขบัตร, วันที่บัตรหมดอายุ
+ *   คำนำหน้าลูกค้า, ชื่อลูกค้า, นามสกุลลูกค้า
+ *   อีเมล, โทรศัพท์มือถือ, ส่วนสูง, น้ำหนัก
+ *   สถานภาพ, อาชีพ, ลักษณะงานที่ทำ, รายได้ต่อปี
+ *   ที่อยู่ตามทะเบียนบ้าน-เลขที่/จังหวัด/อำเภอ/ตำบล
+ *   ที่อยู่ตามทะเบียนบ้าน-จังหวัด (ใช้เป็น birthPlace ใน FATCA ด้วย)
+ * ──────────────────────────────────────────────────────
+ */
