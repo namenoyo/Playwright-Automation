@@ -8,6 +8,7 @@ export class ReceiptListPage {
     }
 
     async SearchReceiptList(data) {
+        await this.page.waitForTimeout(10000); // รอ 10 วินาที กรณีข้อมูลยังไม่โหลด
         // กรอกเลขคำขอในช่องค้นหา
         await this.search_ReceiptList.receiptlist_txtrequestcode(data.requestcode);
         // กรอกวันที่ในช่อง จากวันที่

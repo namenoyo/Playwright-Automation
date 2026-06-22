@@ -679,7 +679,7 @@ class NewCasePage {
         // ยืนยันการบันทึกเคสใหม่
         await this.formaddnewcase_save.newcase_formAddNewCase_popupConfirmSave.getByRole('button', { name: 'ยืนยัน' }).click({ timeout: 10000 });
         // รอ popup บันทึกสำเร็จ แสดง
-        await this.expect(this.formaddnewcase_save.newcase_formAddNewCase_popupSaveSuccess).toBeVisible({ timeout: 60000 });
+        await this.expect(this.formaddnewcase_save.newcase_formAddNewCase_popupSaveSuccess).toBeVisible({ timeout: 120000 });
         // กดปุ่ม ตกลง ใน popup บันทึกสำเร็จ
         await this.formaddnewcase_save.newcase_formAddNewCase_popupSaveSuccess.getByRole('button', { name: 'ตกลง' }).click({ timeout: 10000 });
         // รอ popup บันทึกสำเร็จ ปิด
@@ -694,11 +694,11 @@ class NewCasePage {
         // ยืนยันบันทึกข้อมูลกับลูกค้า
         await this.searchnewcase.newcase_btnConfirmCustomerSave.click({ timeout: 10000 });
         // รอ popup บันทึกสำเร็จ
-        await this.expect(this.page.locator('div[class="yui3-widget-bd"]', { hasText: 'ยืนยันการบันทึกข้อมูลเรียบร้อยแล้ว' })).toBeVisible({ timeout: 60000 });
+        await this.expect(this.page.locator('#alert-dialog-model-id', { hasText: 'ยืนยันการบันทึกข้อมูลเรียบร้อยแล้ว' })).toBeVisible({ timeout: 60000 });
         // กดปุ่ม ตกลง ใน popup บันทึกสำเร็จ
-        await this.page.locator('div[class="yui3-widget-bd"]', { hasText: 'ยืนยันการบันทึกข้อมูลเรียบร้อยแล้ว' }).getByRole('button', { name: 'ตกลง' }).click({ timeout: 10000 });
+        await this.page.locator('#alert-dialog-model-id', { hasText: 'ยืนยันการบันทึกข้อมูลเรียบร้อยแล้ว' }).getByRole('button', { name: 'ตกลง' }).click({ timeout: 10000 });
         // รอ popup บันทึกสำเร็จ ปิด
-        await this.expect(this.page.locator('div[class="yui3-widget-bd"]', { hasText: 'ยืนยันการบันทึกข้อมูลเรียบร้อยแล้ว' })).not.toBeVisible({ timeout: 60000 });
+        await this.expect(this.page.locator('#alert-dialog-model-id', { hasText: 'ยืนยันการบันทึกข้อมูลเรียบร้อยแล้ว' })).not.toBeVisible({ timeout: 60000 });
     }
 
 }

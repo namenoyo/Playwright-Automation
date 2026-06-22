@@ -370,7 +370,7 @@ test('NBHQ realtime runner', async ({ browser }) => {
   const processedApplicationNos = new Set();
 
   // Section: กำหนด Create By ตามชื่อ
-  const RUN_CREATE_BY = 'เนม'; // 👈 วางก่อน loop (แนะนำ)
+  const RUN_CREATE_BY = 'QA'; // 👈 วางก่อน loop (แนะนำ)
 
 
   mainLoop:

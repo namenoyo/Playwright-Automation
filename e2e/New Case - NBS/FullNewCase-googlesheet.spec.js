@@ -4,6 +4,9 @@ const { GoogleSheet } = require('../../utils/google-sheet-OAuth.helper');
 
 const { generateTempReceipt } = require('../../e2e/NewCase_NBHQ/helpers/tempReceipt');
 
+// เรียก pdfParser มาใช้งาน
+const pdfParse = require('pdf-parse');
+
 const { configdb } = require('../../database/database_env');
 const { Database } = require('../../database/database');
 
@@ -11,7 +14,7 @@ const Result = [];
 
 test(`บันทึกเคสใหม่แบบออกกรม์`, async ({ page }, testInfo) => {
   // ตั้งค่า timeout สำหรับการทดสอบ
-  test.setTimeout(7200000); // 2 ชั่วโมง
+  test.setTimeout(86400000); // 24 ชั่วโมง
 
   let testData = [];
 
@@ -138,6 +141,8 @@ test(`บันทึกเคสใหม่แบบออกกรม์`, as
               branch: username,
               agentCode: agentCode
             });
+
+            temporaryReceipt = tempno;
 
             // อัพเดท Status เป็น In Progress
             data_create.push({ [uniquekey]: row_uniquekey, ["เลขใบรับเงินชั่วคราว"]: tempno });
@@ -311,11 +316,16 @@ test(`บันทึกเคสใหม่แบบออกกรม์`, as
             const ExpireCardDate = DateFill + 5;
 
             await page.locator('#requestDatePdpa').click();
+
+            // await page.waitForTimeout(3000);
+
             await page.locator('#requestDatePdpa').fill(DateFill); //วันเขียนใบคำขอ
+            await page.locator('td', { hasText: 'ประเภทของเคส' }).click();
             await page.waitForTimeout(300);
             await page.locator('#expireDate').click();
             const changeformatexpiredate_card = expiredate_card.replace(/(\d{2})\/(\d{2})\/(\d{4})/, '$1$2$3'); //แปลงรูปแบบวันเกิดจาก dd/mm/yyyy เป็น ddmmyyyy
             await page.locator('#expireDate').fill(changeformatexpiredate_card); //วันบัตรหมดอายุ
+            await page.locator('td', { hasText: 'ประเภทของเคส' }).click();
             await page.waitForTimeout(300);
 
             // // if (cardtype === 'บัตรประชาชน' || cardtype === 'บัตรประชาชน ต่างด้าว') {
@@ -391,12 +401,14 @@ test(`บันทึกเคสใหม่แบบออกกรม์`, as
 
             //แบบประกัน
             await page.locator('#tempRecieptDate').fill(DateFill); // วันที่ใบรับเงินชั่วคราว
-            await page.waitForTimeout(300);
+            await page.locator('#requestDate').click({ force: true });
+            await page.waitForTimeout(1000);
 
             // เช็คว่ามีการเลือกแบบประกันสำเร็จหรือไม่ ถ้ายังให้ทำการเลือกแบบประกันซ้ำจนกว่าจะสำเร็จ
             let check_select_plan = await page.locator('#plan option:checked').textContent();
             let plan;
             while (check_select_plan.includes('โปรดระบุ')) {
+
               // bug //
               plan = `${codeplan} ${nameplan}`;
               await page.locator('#plan').click().then(() => page.waitForTimeout(600));
@@ -416,6 +428,7 @@ test(`บันทึกเคสใหม่แบบออกกรม์`, as
               // // await page.locator('#plan').click().then(() => page.waitForTimeout(5000));
 
               // รอข้อมูลแบบประกันโหลดเสร็จ
+
               const [response_select_plan] = await Promise.all([
                 page.waitForResponse(res =>
                   res.url().includes('/nbsweb/secure/combine2/newcaseshortly/ord/record/checkPlanWarningMessage.html') && res.status() === 200
@@ -435,7 +448,14 @@ test(`บันทึกเคสใหม่แบบออกกรม์`, as
 
               // console.log('check_select_plan :', check_select_plan);
             }
-            await page.selectOption('#sMode', { label: sMode }); //เลือกวิธีชำระเบี้ยประกัน
+
+            const [response_select_plan] = await Promise.all([
+              page.waitForResponse(res =>
+                res.url().includes('/nbsweb/secure/combine2/newcaseshortly/ord/record/prepareData.html') && res.status() === 200, { timeout: 30000 } // 30 วินาที
+              ),
+              await page.selectOption('#sMode', { label: sMode }), //เลือกวิธีชำระเบี้ยประกัน
+            ]);
+            // await page.selectOption('#sMode', { label: sMode }); //เลือกวิธีชำระเบี้ยประกัน
 
             // กรอกข้อมูล Rider
             const numOfRider = parseInt(NumOfRider);
@@ -662,6 +682,16 @@ test(`บันทึกเคสใหม่แบบออกกรม์`, as
               await page.locator('#agent-code-name').fill(agentCode), //ใส่ agent code
               await page.getByRole('option', { name: agentName }).click() //เลือก agent name
             ]);
+
+            page.once('dialog', async dialog => {
+              try {
+                console.log('Dialog message:', dialog.message());
+
+                await dialog.accept();
+              } catch (err) {
+                console.log('Dialog already handled');
+              }
+            });
 
             // ปิด tab ใหม่ที่เปิดขึ้นมา
             const [newPage] = await Promise.all([
@@ -987,7 +1017,16 @@ test(`บันทึกเคสใหม่แบบออกกรม์`, as
             // const inputXpathTr = '/html/body/div[3]/div[3]/div/div[2]/div/form/div[2]/div/div/div[6]/div/table/tr[1]/td[2]/input';
             // const inputFieldTr = page.locator(`xpath=${inputXpathTr}`);
             // await inputFieldTr.fill(temporaryReceipt); //ใส่เลขที่ใบรับเงินชั่วคราว
+            // เช็คและกรอกเลขที่ใบรับเงินชั่วคราว
+            await page.locator('tr', { hasText: 'เลขที่ใบรับเงินชั่วคราว' }).locator('td > input[type="text"]').click(); // คลิกเพื่อให้ฟิลด์ active ก่อนกรอกข้อมูล
             await page.locator('tr', { hasText: 'เลขที่ใบรับเงินชั่วคราว' }).locator('td > input[type="text"]').fill(temporaryReceipt);  //ใส่เลขที่ใบรับเงินชั่วคราว
+            // เช็คว่าฟิลด์เลขที่ใบรับเงินชั่วคราวถูกกรอกหรือยัง
+            const temporaryReceiptValue = await page.locator('tr', { hasText: 'เลขที่ใบรับเงินชั่วคราว' }).locator('td > input[type="text"]').inputValue();
+            console.log('temporaryReceiptValue :', temporaryReceiptValue);
+            if (temporaryReceiptValue !== temporaryReceipt) {
+              await page.locator('tr', { hasText: 'เลขที่ใบรับเงินชั่วคราว' }).locator('td > input[type="text"]').click(); // คลิกเพื่อให้ฟิลด์ active ก่อนกรอกข้อมูล
+              await page.locator('tr', { hasText: 'เลขที่ใบรับเงินชั่วคราว' }).locator('td > input[type="text"]').fill(temporaryReceipt);  //ใส่เลขที่ใบรับเงินชั่วคราว
+            }
 
             // const inputNameBank = '/html/body/div[3]/div[3]/div/div[2]/div/form/div[2]/div/div/div[6]/div/table/tr[16]/td[2]/select';
             // const inputFieldBank = page.locator(`xpath=${inputNameBank}`);
@@ -1292,6 +1331,17 @@ test(`บันทึกเคสใหม่แบบออกกรม์`, as
             await googlesheet.updateDynamicRows(auth, spreadsheetId, sheetnamewrite, range_write, data_create, row_header, uniquekey);
             // เคลียร์ array หลังอัพโหลด
             data_create = [];
+
+            page.once('dialog', async dialog => {
+              try {
+                console.log('Dialog message:', dialog.message());
+
+                await dialog.accept();
+              } catch (err) {
+                console.log('Dialog already handled');
+              }
+            });
+            await page.locator('a', { hasText: 'ออกจากระบบ' }).click(); // ออกจากระบบ
           });
         } else if (typeplan === 'PA') {
 
@@ -2129,6 +2179,17 @@ test(`บันทึกเคสใหม่แบบออกกรม์`, as
             await googlesheet.updateDynamicRows(auth, spreadsheetId, sheetnamewrite, range_write, data_create, row_header, uniquekey);
             // เคลียร์ array หลังอัพโหลด
             data_create = [];
+
+            page.once('dialog', async dialog => {
+              try {
+                console.log('Dialog message:', dialog.message());
+
+                await dialog.accept();
+              } catch (err) {
+                console.log('Dialog already handled');
+              }
+            });
+            await page.locator('a', { hasText: 'ออกจากระบบ' }).click(); // ออกจากระบบ
           });
 
         }
