@@ -29,35 +29,27 @@ async function waitOptionalLoading(page, text = 'กรุณารอสัก�
   }
 }
 
-async function gotoLoginWithRetry(page, url) {
-  const MAX_RETRY = 2; // refresh ได้ 2 ครั้ง (รวมครั้งแรก = 3 รอบ)
-
-  for (let attempt = 0; attempt <= MAX_RETRY; attempt++) {
-    console.log(`🌐 เข้า URL [รอบที่ ${attempt + 1}]`);
+async function gotoLoginWithRetry(page, url, maxTry = 3) {
+  // ก่อนกรอก username/password ต้องอยู่หน้า login ที่ถูกต้อง (url ที่ส่งมา) เท่านั้น
+  // ถ้าไม่ใช่ (โดน redirect ไปที่อื่น) → goto กลับมาหน้านี้
+  for (let i = 1; i <= maxTry; i++) {
+    console.log(`🌐 เข้า URL: ${url} (รอบ ${i})`);
 
     await page.goto(url, { waitUntil: 'domcontentloaded' });
 
-    try {
-      // รอ #username ไม่เกิน 10 วิ
-      await page.locator('#username').waitFor({
-        state: 'visible',
-        timeout: 10000
-      });
+    // รอให้ redirect แบบ client-side (JS) นิ่งก่อน แล้วค่อยเช็ค URL
+    await page.waitForTimeout(1500);
 
-      console.log('✅ เจอ #username แล้ว');
-      return true; // ผ่าน
-    } catch (err) {
-      console.log(`⚠️ ไม่เจอ #username (รอบ ${attempt + 1})`);
-
-      if (attempt === MAX_RETRY) {
-        console.log('❌ retry ครบแล้ว → FAIL');
-        throw new Error('Login page not loaded (#username not found)');
-      }
-
-      console.log('🔄 refresh แล้วลองใหม่...');
-      await page.reload({ waitUntil: 'domcontentloaded' });
+    if (page.url().includes(url)) {
+      await page.locator('#username').waitFor({ state: 'visible', timeout: 10000 });
+      console.log('✅ อยู่หน้า login ที่ถูกต้อง → พร้อมกรอก username/password');
+      return true;
     }
+
+    console.log(`⚠️ ไม่ใช่หน้า login (อยู่ที่ ${page.url()}) → goto กลับมาหน้า login`);
   }
+
+  throw new Error(`ไปหน้า login ไม่สำเร็จ ติดอยู่ที่ ${page.url()}`);
 }
 
 async function waitCheckerTableReady(page, timeout = 20000) {
@@ -85,12 +77,17 @@ async function handleConcurrentRemark(page, environment, applicationNo) {
   console.log('🔧 เริ่ม handleConcurrentRemark');
 
   // logout ก่อน
-  await page.goto(
-    environment === 'SIT'
-      ? 'https://sitnbs.thaisamut.co.th/nbsweb/secure/logout.html'
-      : 'https://uatnbs.thaisamut.co.th/nbsweb/secure/logout.html',
-    { waitUntil: 'domcontentloaded' }
-  );
+  try {
+    await page.goto(
+      environment === 'SIT'
+        ? 'https://sitnbs.thaisamut.co.th/nbsweb/secure/logout.html'
+        : 'https://uatnbs.thaisamut.co.th/nbsweb/secure/logout.html',
+      { waitUntil: 'domcontentloaded', timeout: 3000 }
+    );
+  } catch (err) {
+    console.log('⚠️ logout เกิน 3 วิ / ไม่ redirect → ข้ามไป step ถัดไป');
+  }
+
 
   await page.waitForTimeout(1000);
 
@@ -189,12 +186,17 @@ async function handleConcurrentRemark(page, environment, applicationNo) {
   await page.waitForTimeout(1000);
 
   // logout boss เพื่อกลับไป login mg0001 ใหม่
-  await page.goto(
-    environment === 'SIT'
-      ? 'https://sitnbs.thaisamut.co.th/nbsweb/secure/logout.html'
-      : 'https://uatnbs.thaisamut.co.th/nbsweb/secure/logout.html',
-    { waitUntil: 'domcontentloaded' }
-  );
+  try {
+    await page.goto(
+      environment === 'SIT'
+        ? 'https://sitnbs.thaisamut.co.th/nbsweb/secure/logout.html'
+        : 'https://uatnbs.thaisamut.co.th/nbsweb/secure/logout.html',
+      { waitUntil: 'domcontentloaded', timeout: 3000 }
+    );
+  } catch (err) {
+    console.log('⚠️ logout เกิน 3 วิ / ไม่ redirect → ข้ามไป step ถัดไป');
+  }
+
 
   await page.waitForTimeout(1000);
 
@@ -645,12 +647,17 @@ test('NBHQ realtime runner', async ({ browser }) => {
 
           console.log('🔓 generate temp receipt เสร็จแล้ว → logout NBS เพื่อเริ่ม flow หลักใหม่');
 
-          await page.goto(
-            environment === 'SIT'
-              ? 'https://sitnbs.thaisamut.co.th/nbsweb/secure/logout.html'
-              : 'https://uatnbs.thaisamut.co.th/nbsweb/secure/logout.html',
-            { waitUntil: 'domcontentloaded' }
-          );
+          try {
+            await page.goto(
+              environment === 'SIT'
+                ? 'https://sitnbs.thaisamut.co.th/nbsweb/secure/logout.html'
+                : 'https://uatnbs.thaisamut.co.th/nbsweb/secure/logout.html',
+              { waitUntil: 'domcontentloaded', timeout: 3000 }
+            );
+          } catch (err) {
+            console.log('⚠️ logout เกิน 3 วิ / ไม่ redirect → ข้ามไป step ถัดไป');
+          }
+
 
           await page.waitForTimeout(1000);
         }
@@ -5756,7 +5763,28 @@ test('NBHQ realtime runner', async ({ browser }) => {
         await page.getByRole('button', { name: 'ตกลง' }).click();
         await page.waitForTimeout(1000);
 
+        // logout NBS จริงๆ ผ่าน url เพื่อเคลียร์ session ก่อน login boss
+        try {
+          await page.goto(
+            environment === 'SIT'
+              ? 'https://sitnbs.thaisamut.co.th/nbsweb/secure/logout.html'
+              : 'https://uatnbs.thaisamut.co.th/nbsweb/secure/logout.html',
+            { waitUntil: 'domcontentloaded', timeout: 3000 }
+          );
+        } catch (err) {
+          console.log('⚠️ logout เกิน 3 วิ / ไม่ redirect → ข้ามไป step ถัดไป');
+        }
+
         // Login NBS as boss
+        // ก่อนกรอก username/password ต้องอยู่หน้า login nbsweb (home.html) เท่านั้น
+        // ถ้าไม่ใช่ (เด้งไป nbsportal) gotoLoginWithRetry จะ goto กลับมาให้
+        await gotoLoginWithRetry(
+          page,
+          environment === 'SIT'
+            ? 'https://sitnbs.thaisamut.co.th/nbsweb/secure/home.html'
+            : 'https://uatnbs.thaisamut.co.th/nbsweb/secure/home.html'
+        );
+
         await page.locator('#username').click();
         await page.locator('#username').fill('boss'); // ยังคง Hardcode เนื่องจากข้อมูล Login ไม่ได้อยู่ใน NewCaseData
         await page.locator('#password').click();
@@ -5863,6 +5891,27 @@ test('NBHQ realtime runner', async ({ browser }) => {
 
         for (let stage2Attempt = 1; stage2Attempt <= 2; stage2Attempt++) {
           console.log(`🔁 Stage 2 Attempt ${stage2Attempt}`);
+
+          // logout NBS จริงๆ ผ่าน url เพื่อเคลียร์ session ก่อน login mg0001
+          try {
+            await page.goto(
+              environment === 'SIT'
+                ? 'https://sitnbs.thaisamut.co.th/nbsweb/secure/logout.html'
+                : 'https://uatnbs.thaisamut.co.th/nbsweb/secure/logout.html',
+              { waitUntil: 'domcontentloaded', timeout: 3000 }
+            );
+          } catch (err) {
+            console.log('⚠️ logout เกิน 3 วิ / ไม่ redirect → ข้ามไป step ถัดไป');
+          }
+
+          // ก่อนกรอก username/password ต้องอยู่หน้า login nbsweb (home.html) เท่านั้น
+          await gotoLoginWithRetry(
+            page,
+            environment === 'SIT'
+              ? 'https://sitnbs.thaisamut.co.th/nbsweb/secure/home.html'
+              : 'https://uatnbs.thaisamut.co.th/nbsweb/secure/home.html'
+          );
+
           // ===== Login ด้วย mg0001 =====
           await page.locator('#username').fill('mg0001');
           await page.locator('#password').fill('12');
@@ -5965,12 +6014,17 @@ test('NBHQ realtime runner', async ({ browser }) => {
 
             console.log('🔓 Logout mg0001 ก่อนเข้า Stage 3');
 
-            await page.goto(
-              environment === 'SIT'
-                ? 'https://sitnbs.thaisamut.co.th/nbsweb/secure/logout.html'
-                : 'https://uatnbs.thaisamut.co.th/nbsweb/secure/logout.html',
-              { waitUntil: 'domcontentloaded' }
-            );
+            try {
+              await page.goto(
+                environment === 'SIT'
+                  ? 'https://sitnbs.thaisamut.co.th/nbsweb/secure/logout.html'
+                  : 'https://uatnbs.thaisamut.co.th/nbsweb/secure/logout.html',
+                { waitUntil: 'domcontentloaded', timeout: 3000 }
+              );
+            } catch (err) {
+              console.log('⚠️ logout เกิน 3 วิ / ไม่ redirect → ข้ามไป step ถัดไป');
+            }
+
 
             await page.waitForTimeout(1000);
 
@@ -6001,12 +6055,17 @@ test('NBHQ realtime runner', async ({ browser }) => {
 
             alreadyWroteResult = true;
 
-            await page.goto(
-              environment === 'SIT'
-                ? 'https://sitnbs.thaisamut.co.th/nbsweb/secure/logout.html'
-                : 'https://uatnbs.thaisamut.co.th/nbsweb/secure/logout.html',
-              { waitUntil: 'domcontentloaded' }
-            );
+            try {
+              await page.goto(
+                environment === 'SIT'
+                  ? 'https://sitnbs.thaisamut.co.th/nbsweb/secure/logout.html'
+                  : 'https://uatnbs.thaisamut.co.th/nbsweb/secure/logout.html',
+                { waitUntil: 'domcontentloaded', timeout: 3000 }
+              );
+            } catch (err) {
+              console.log('⚠️ logout เกิน 3 วิ / ไม่ redirect → ข้ามไป step ถัดไป');
+            }
+
 
             await page.waitForTimeout(1000);
 
@@ -6034,12 +6093,17 @@ test('NBHQ realtime runner', async ({ browser }) => {
 
             alreadyWroteResult = true;
 
-            await page.goto(
-              environment === 'SIT'
-                ? 'https://sitnbs.thaisamut.co.th/nbsweb/secure/logout.html'
-                : 'https://uatnbs.thaisamut.co.th/nbsweb/secure/logout.html',
-              { waitUntil: 'domcontentloaded' }
-            );
+            try {
+              await page.goto(
+                environment === 'SIT'
+                  ? 'https://sitnbs.thaisamut.co.th/nbsweb/secure/logout.html'
+                  : 'https://uatnbs.thaisamut.co.th/nbsweb/secure/logout.html',
+                { waitUntil: 'domcontentloaded', timeout: 3000 }
+              );
+            } catch (err) {
+              console.log('⚠️ logout เกิน 3 วิ / ไม่ redirect → ข้ามไป step ถัดไป');
+            }
+
 
             await page.waitForTimeout(1000);
 
@@ -6397,12 +6461,17 @@ test('NBHQ realtime runner', async ({ browser }) => {
 
             alreadyWroteResult = true;
 
-            await page.goto(
-              environment === 'SIT'
-                ? 'https://sitnbs.thaisamut.co.th/nbsweb/secure/logout.html'
-                : 'https://uatnbs.thaisamut.co.th/nbsweb/secure/logout.html',
-              { waitUntil: 'domcontentloaded' }
-            );
+            try {
+              await page.goto(
+                environment === 'SIT'
+                  ? 'https://sitnbs.thaisamut.co.th/nbsweb/secure/logout.html'
+                  : 'https://uatnbs.thaisamut.co.th/nbsweb/secure/logout.html',
+                { waitUntil: 'domcontentloaded', timeout: 3000 }
+              );
+            } catch (err) {
+              console.log('⚠️ logout เกิน 3 วิ / ไม่ redirect → ข้ามไป step ถัดไป');
+            }
+
 
             await page.waitForTimeout(1000);
 
@@ -6493,6 +6562,26 @@ test('NBHQ realtime runner', async ({ browser }) => {
       //============ เริ่ม Stage 3 = Check Policy No ==================
 
       // ===== Login ด้วย Boss เพื่อตรวจสอบ Step การออก Policy =====
+      // logout NBS จริงๆ ผ่าน url เพื่อเคลียร์ session ก่อน login boss
+      try {
+        await page.goto(
+          environment === 'SIT'
+            ? 'https://sitnbs.thaisamut.co.th/nbsweb/secure/logout.html'
+            : 'https://uatnbs.thaisamut.co.th/nbsweb/secure/logout.html',
+          { waitUntil: 'domcontentloaded', timeout: 3000 }
+        );
+      } catch (err) {
+        console.log('⚠️ logout เกิน 3 วิ / ไม่ redirect → ข้ามไป step ถัดไป');
+      }
+
+      // ก่อนกรอก username/password ต้องอยู่หน้า login nbsweb (home.html) เท่านั้น
+      await gotoLoginWithRetry(
+        page,
+        environment === 'SIT'
+          ? 'https://sitnbs.thaisamut.co.th/nbsweb/secure/home.html'
+          : 'https://uatnbs.thaisamut.co.th/nbsweb/secure/home.html'
+      );
+
       await page.locator('#username').fill('boss');
       await page.locator('#password').fill('12');
       await page.getByRole('button', { name: 'Login' }).click();
