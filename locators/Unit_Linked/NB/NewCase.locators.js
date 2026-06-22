@@ -195,5 +195,5 @@ export const form_AddNewCase_SaveDraft = (page) => ({
 export const form_AddNewCase_Save = (page) => ({
     newcase_formAddNewCase_btnSave: page.locator('#mainDialogId').getByRole('button', { name: 'บันทึก', exact: true }),
     newcase_formAddNewCase_popupConfirmSave: page.locator('#show-cis-confirm-content'),
-    newcase_formAddNewCase_popupSaveSuccess: page.locator('div[class="yui3-widget-bd"]', { hasText: 'บันทึกข้อมูลเรียบร้อยแล้ว' }),
+    newcase_formAddNewCase_popupSaveSuccess: page.locator('#alert-dialog-model-id', { hasText: 'บันทึกข้อมูลเรียบร้อยแล้ว' }),
 });
